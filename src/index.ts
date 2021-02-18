@@ -1,5 +1,6 @@
 import WorkerLoader from './Worker/getInventory';
 import RawLoader, {getTag, getImageURL, getLargeImageURL, AzulInventoryResponse} from './getInventory';
+import {CleanCache} from './Database'
 
 interface Config {
     Cache?: boolean,
@@ -40,5 +41,5 @@ export default {
         Worker,
         Raw: rawLoader
     },
-    getTag, getImageURL, getLargeImageURL
+    getTag, getImageURL, getLargeImageURL, CleanCache
 };
