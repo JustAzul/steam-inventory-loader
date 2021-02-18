@@ -1,9 +1,16 @@
-import got from 'got';
+import _got from 'got';
 import HttpAgent from 'agentkeepalive';
 import {duration} from 'moment';
 import CEconItem, {Tag, ItemAsset, ItemDescription, ItemDetails} from './CEconItem';
 import CookieParser from './CookieParser';
 import Database from './Database';
+
+const agent = {
+    http: new HttpAgent(),
+    https: new HttpAgent.HttpsAgent()
+}
+
+const got = _got.extend({agent, timeout: duration(50, 'seconds').asMilliseconds()});
 
 interface SteamBodyResponse {
     error?: string,
@@ -79,21 +86,13 @@ async function getInventory(SteamID64: string, appID: string | number, contextID
             count: 5000,
             start_assetid
         };
-
-        const agent = {
-            http: new HttpAgent(),
-            https: new HttpAgent.HttpsAgent()
-        }
         
         const got_o = {
             url: `https://steamcommunity.com/inventory/${SteamID64}/${appID}/${contextID}`,
             headers,
             searchParams,
             cookieJar: SteamCommunity_Jar ? CookieParser(SteamCommunity_Jar._jar.store.idx) : undefined,
-            //repsonseType: "json",
-            throwHttpErrors: false,
-            timeout: duration(50, 'seconds').asMilliseconds(),
-            agent
+            throwHttpErrors: false
         };
 
         const { statusCode, body }: {
