@@ -4,9 +4,14 @@
   "description": "Steam Inventory Loader with Caching and sqlite support for reduce memory usage",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "keywords": [
+    "azul",
+    "justazul",
+    "justazul.xyz"
+  ],
   "scripts": {
-    "build": "npm run clean && tsc",
-    "clean": "rimraf ./dist",
+    "build": "tsc",
+    "prebuild": "rimraf ./dist",
     "prepublish": "npm run build"
   },
   "author": "https://justazul.xyz",
