@@ -4,6 +4,7 @@ import {duration} from 'moment';
 import CEconItem, {Tag, ItemAsset, ItemDescription, ItemDetails} from './CEconItem';
 import CookieParser from './CookieParser';
 import Database from './Database';
+import steamID from 'steamid';
 
 const agent = {
     http: new HttpAgent(),
@@ -57,8 +58,10 @@ export const isCardType = (tags: Tag[]) => {
      }
 };
 
-async function getInventory(SteamID64: string, appID: string | number, contextID: string | number, tradableOnly: boolean = true, SteamCommunity_Jar: any, useSqlite: boolean = false, useCache: boolean = true, CacheDuration: number = 15) {
+async function getInventory(SteamID64: string | steamID , appID: string | number, contextID: string | number, tradableOnly: boolean = true, SteamCommunity_Jar: any, useSqlite: boolean = false, useCache: boolean = true, CacheDuration: number = 15, test: boolean = false) {
     
+    if(typeof SteamID64 !== "string") SteamID64 = SteamID64.getSteamID64();
+
     const CacheKey = `${SteamID64}_${appID}_${contextID}_${tradableOnly}`;
     
     if (useCache) {
@@ -79,6 +82,8 @@ async function getInventory(SteamID64: string, appID: string | number, contextID
         [key: string]: ItemDescription
     } = {};
 
+    const cookieJar = SteamCommunity_Jar ? CookieParser(SteamCommunity_Jar._jar.store.idx) : undefined;
+
     async function Get(inventory: ItemDetails[], start_assetid: string | undefined): Promise<AzulInventoryResponse> {
         
         const searchParams = {
@@ -91,14 +96,18 @@ async function getInventory(SteamID64: string, appID: string | number, contextID
             url: `https://steamcommunity.com/inventory/${SteamID64}/${appID}/${contextID}`,
             headers,
             searchParams,
-            cookieJar: SteamCommunity_Jar ? CookieParser(SteamCommunity_Jar._jar.store.idx) : undefined,
+            cookieJar,
             throwHttpErrors: false
         };
+
+        if(test) console.time(`${SteamID64}/${inventory.length} Request`);
 
         const { statusCode, body }: {
             statusCode: number,
             body: string
         } = await got(got_o);
+
+        if(test) console.timeEnd(`${SteamID64}/${inventory.length} Request`);
 
         if (statusCode === 403 && body == "null") throw new Error("This profile is private.");
         if(statusCode === 429) throw new Error("rate limited");
@@ -133,6 +142,8 @@ async function getInventory(SteamID64: string, appID: string | number, contextID
             if (data) throw new Error(data?.error || data?.Error || "Malformed response");
             throw new Error("Malformed response");
         }
+
+        if(test) console.time(`${SteamID64}/${inventory.length} Parse`);
         
         //parse descs
         for(const i in data.descriptions) {
@@ -162,6 +173,8 @@ async function getInventory(SteamID64: string, appID: string | number, contextID
                 inventory.push(item);
             }
         }
+
+        if(test) console.timeEnd(`${SteamID64}/${inventory.length} Parse`);
 
         if(global?.gc) global?.gc();
         if (data.more_items) return Get(inventory, data.last_assetid);

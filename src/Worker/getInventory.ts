@@ -1,11 +1,11 @@
 import {isMainThread, parentPort, Worker, workerData} from 'worker_threads';
 import raw_getInventory, {AzulInventoryResponse} from '../getInventory';
 
-export const getInventory = (SteamID64: string, appID: string | number, contextID: string | number, tradableOnly: boolean = true, SteamCommunity_Jar: any, useSqlite: boolean = false, useCache: boolean = true, CacheDuration: number = 15): Promise<AzulInventoryResponse> => {
+const getInventory = (SteamID64: string, appID: string | number, contextID: string | number, tradableOnly: boolean = true, SteamCommunity_Jar: any, useSqlite: boolean = false, useCache: boolean = true, CacheDuration: number = 15, test: boolean = false): Promise<AzulInventoryResponse> => {
     return new Promise((resolve, reject) => {
         const o = {
             workerData: {
-                SteamID64, appID, contextID, tradableOnly, SteamCommunity_Jar, useSqlite, useCache, CacheDuration
+                SteamID64, appID, contextID, tradableOnly, SteamCommunity_Jar, useSqlite, useCache, CacheDuration, test
             }
         }
     
@@ -25,7 +25,7 @@ export const getInventory = (SteamID64: string, appID: string | number, contextI
 
 if(!isMainThread) {
     (async () => {
-        const Result = await raw_getInventory(workerData.SteamID64, workerData.appID, workerData.contextID, workerData.tradableOnly, workerData.SteamCommunity_Jar, workerData.useSqlite, workerData.useCache, workerData.CacheDuration);
+        const Result = await raw_getInventory(workerData.SteamID64, workerData.appID, workerData.contextID, workerData.tradableOnly, workerData.SteamCommunity_Jar, workerData.useSqlite, workerData.useCache, workerData.CacheDuration, workerData.test);
         parentPort?.postMessage(Result);
     })();
 }

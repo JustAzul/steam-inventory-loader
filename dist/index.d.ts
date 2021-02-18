@@ -5,6 +5,7 @@ export interface Config {
     Sqlite?: boolean;
     SteamCommunity_Jar?: any;
     tradableOnly?: boolean;
+    Test?: boolean;
 }
 declare const _default: {
     Loader: {
