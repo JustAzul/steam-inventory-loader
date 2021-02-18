@@ -159,7 +159,7 @@ async function getInventory(SteamID64: string | steamID , appID: string | number
 
         for (const i in data.assets) {
             const Key = `${data.assets[i].classid}_${(data.assets[i].instanceid || '0')}_${data.assets[i].appid}`;
-            let description: any = Cache.take(Key);
+            let description: any = Cache.get(Key);
 
             if (!tradableOnly || (description && description.tradable)) {
                 if (data.assets[i].currencyid) continue; //Ignore Currencies..

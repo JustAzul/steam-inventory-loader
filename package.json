@@ -1,6 +1,6 @@
 {
   "name": "azul-steam-inventory-loader",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Steam Inventory Loader By Azul, with built-in Caching support, and memory friendly",
   "main": "index.js",
   "types": "index.d.ts",
