@@ -14,6 +14,8 @@ declare const _default: {
     getTag: (tags: import("./CEconItem").Tag[], category: string) => import("./CEconItem").Tag | null;
     getImageURL: ({ icon_url }: import("./CEconItem").ItemDescription | import("./CEconItem").ItemDetails) => string;
     getLargeImageURL: ({ icon_url_large, icon_url }: import("./CEconItem").ItemDescription | import("./CEconItem").ItemDetails) => string;
+    CleanCache: (MaxDuration: number) => void;
+    isCardType: (tags: import("./CEconItem").Tag[]) => false | "Normal" | "Foil" | undefined;
 };
 export default _default;
 //# sourceMappingURL=index.d.ts.map

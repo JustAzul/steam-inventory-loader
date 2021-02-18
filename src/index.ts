@@ -1,5 +1,5 @@
 import WorkerLoader from './Worker/getInventory';
-import RawLoader, {getTag, getImageURL, getLargeImageURL, AzulInventoryResponse} from './getInventory';
+import RawLoader, {getTag, getImageURL, getLargeImageURL, AzulInventoryResponse, isCardType} from './getInventory';
 import {CleanCache} from './Database'
 
 interface Config {
@@ -41,5 +41,5 @@ export default {
         Worker,
         Raw: rawLoader
     },
-    getTag, getImageURL, getLargeImageURL, CleanCache
+    getTag, getImageURL, getLargeImageURL, CleanCache, isCardType
 };
