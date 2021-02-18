@@ -13,11 +13,11 @@ export interface Config {
 const Worker = (SteamID64: string, appID: string | number, contextID: string | number, Config: Config): Promise<AzulInventoryResponse> => {
 
     const Defaults = {
-        Cache: Config.Cache || false,
-        Duration: Config.Duration || 15,
-        Sqlite: Config.Sqlite || false,
-        SteamCommunity_Jar: Config.SteamCommunity_Jar || undefined,
-        tradableOnly: Config.tradableOnly || true
+        Cache: Config?.Cache || false,
+        Duration: Config?.Duration || 15,
+        Sqlite: Config?.Sqlite || false,
+        SteamCommunity_Jar: Config?.SteamCommunity_Jar || undefined,
+        tradableOnly: Config?.tradableOnly || true
     };
 
     return WorkerLoader(SteamID64, appID, contextID, Defaults.tradableOnly, Defaults.SteamCommunity_Jar, Defaults.Sqlite, Defaults.Cache, Defaults.Duration);
@@ -26,11 +26,11 @@ const Worker = (SteamID64: string, appID: string | number, contextID: string | n
 const rawLoader = (SteamID64: string, appID: string | number, contextID: string | number, Config: Config): Promise<AzulInventoryResponse> => {
 
     const Defaults = {
-        Cache: Config.Cache || false,
-        Duration: Config.Duration || 15,
-        Sqlite: Config.Sqlite || false,
-        SteamCommunity_Jar: Config.SteamCommunity_Jar || undefined,
-        tradableOnly: Config.tradableOnly || true
+        Cache: Config?.Cache || false,
+        Duration: Config?.Duration || 15,
+        Sqlite: Config?.Sqlite || false,
+        SteamCommunity_Jar: Config?.SteamCommunity_Jar || undefined,
+        tradableOnly: Config?.tradableOnly || true
     };
 
     return RawLoader(SteamID64, appID, contextID, Defaults.tradableOnly, Defaults.SteamCommunity_Jar, Defaults.Sqlite, Defaults.Cache, Defaults.Duration);

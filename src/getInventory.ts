@@ -157,6 +157,7 @@ async function getInventory(SteamID64: string, appID: string | number, contextID
             }
         }
 
+        if(global?.gc) global?.gc();
         if (data.more_items) return Get(inventory, data.last_assetid);
 
         const o = {
