@@ -1,4 +1,5 @@
 import got from 'got';
+import HttpAgent from 'agentkeepalive';
 import {duration} from 'moment';
 import CEconItem, {Tag, ItemAsset, ItemDescription, ItemDetails} from './CEconItem';
 import CookieParser from './CookieParser';
@@ -78,6 +79,11 @@ async function getInventory(SteamID64: string, appID: string | number, contextID
             count: 5000,
             start_assetid
         };
+
+        const agent = {
+            http: new HttpAgent(),
+            https: new HttpAgent.HttpsAgent()
+        }
         
         const got_o = {
             url: `https://steamcommunity.com/inventory/${SteamID64}/${appID}/${contextID}`,
@@ -86,7 +92,8 @@ async function getInventory(SteamID64: string, appID: string | number, contextID
             cookieJar: SteamCommunity_Jar ? CookieParser(SteamCommunity_Jar._jar.store.idx) : undefined,
             //repsonseType: "json",
             throwHttpErrors: false,
-            timeout: duration(50, 'seconds').asMilliseconds()
+            timeout: duration(50, 'seconds').asMilliseconds(),
+            agent
         };
 
         const { statusCode, body }: {
