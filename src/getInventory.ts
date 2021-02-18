@@ -5,6 +5,7 @@ import CEconItem, {Tag, ItemAsset, ItemDescription, ItemDetails} from './CEconIt
 import CookieParser from './CookieParser';
 import Database from './Database';
 import steamID from 'steamid';
+import NodeCache from 'node-cache';
 
 const agent = {
     http: new HttpAgent(),
@@ -58,29 +59,24 @@ export const isCardType = (tags: Tag[]) => {
      }
 };
 
-async function getInventory(SteamID64: string | steamID , appID: string | number, contextID: string | number, tradableOnly: boolean = true, SteamCommunity_Jar: any, useSqlite: boolean = false, useCache: boolean = true, CacheDuration: number = 15, test: boolean = false) {
+async function getInventory(SteamID64: string | steamID , appID: string | number, contextID: string | number, tradableOnly: boolean = true, SteamCommunity_Jar: any, useCache: boolean = true, CacheDuration: number = 15, test: boolean = false, useGC: boolean = false) {
     
     if(typeof SteamID64 !== "string") SteamID64 = SteamID64.getSteamID64();
-
-    const CacheKey = `${SteamID64}_${appID}_${contextID}_${tradableOnly}`;
     
+    const CacheKey = `${SteamID64}_${appID}_${contextID}_${tradableOnly}`;
+
+    const Cache = new NodeCache();
+
     if (useCache) {
         Database.InitCache();
         const Cache = Database.GetCache(CacheKey, CacheDuration);
         if (Cache) return Cache;
     }
 
-    if (useSqlite) Database.InitDescriptions();
-    
     const headers = {
         Referer: `https://steamcommunity.com/profiles/${SteamID64}/inventory`,
         Host: "steamcommunity.com"
-    }; 
-
-    // let pos = 1;
-    let quickLookup: {
-        [key: string]: ItemDescription
-    } = {};
+    };
 
     const cookieJar = SteamCommunity_Jar ? CookieParser(SteamCommunity_Jar._jar.store.idx) : undefined;
 
@@ -100,14 +96,16 @@ async function getInventory(SteamID64: string | steamID , appID: string | number
             throwHttpErrors: false
         };
 
-        if(test) console.time(`${SteamID64}/${inventory.length} Request`);
+        const TestKey = `${SteamID64}/${inventory.length}`;
+
+        if(test) console.time(`${TestKey} Request`);
 
         const { statusCode, body }: {
             statusCode: number,
             body: string
         } = await got(got_o);
 
-        if(test) console.timeEnd(`${SteamID64}/${inventory.length} Request`);
+        if(test) console.timeEnd(`${TestKey} Request`);
 
         if (statusCode === 403 && body == "null") throw new Error("This profile is private.");
         if(statusCode === 429) throw new Error("rate limited");
@@ -143,40 +141,40 @@ async function getInventory(SteamID64: string | steamID , appID: string | number
             throw new Error("Malformed response");
         }
 
-        if(test) console.time(`${SteamID64}/${inventory.length} Parse`);
-        
-        //parse descs
-        for(const i in data.descriptions) {
-            const Key = `${data.descriptions[i].classid}_${(data.descriptions[i].instanceid || '0')}_${data.descriptions[i].appid}`;            
-            if(useSqlite) Database.saveDescription(Key, data.descriptions[i]);
-            else if(!quickLookup[Key]) quickLookup[Key] = data.descriptions[i];
-        }
+        if (test) console.time(`${TestKey} Parse`);
 
+        //parse descs
+        for (const i in data.descriptions) {
+            const Key = `${data.descriptions[i].classid}_${(data.descriptions[i].instanceid || '0')}_${data.descriptions[i].appid}`;
+            if (!Cache.has(Key)) Cache.set(Key, data.descriptions[i]);
+        }
+        
         // @ts-expect-error
         data.descriptions = null;
-        
+
+        if (test) {
+            console.timeEnd(`${TestKey} Parse`);
+            console.time(`${TestKey} Set`);
+        }
+
         for (const i in data.assets) {
             const Key = `${data.assets[i].classid}_${(data.assets[i].instanceid || '0')}_${data.assets[i].appid}`;
-            let description = useSqlite ? Database.getDescription(Key) : quickLookup[Key];
-            //const description = JSON.parse(getItemDesc(Key)) || undefined;
-            
+            let description: any = Cache.take(Key);
+
             if (!tradableOnly || (description && description.tradable)) {
-                // data.assets[i].pos = pos++;
-
-                if(data.assets[i].currencyid) continue; //Ignore Currencies..
-
-                let item = await CEconItem(data.assets[i], description, contextID.toString());
-
-                /* // @ts-expect-error */
-                description = null;
-
-                inventory.push(item);
+                if (data.assets[i].currencyid) continue; //Ignore Currencies..
+                inventory.push(await CEconItem(data.assets[i], description, contextID.toString()));
             }
         }
 
-        if(test) console.timeEnd(`${SteamID64}/${inventory.length} Parse`);
+        // @ts-expect-error
+        data.assets = null;
 
-        if(global?.gc) global?.gc();
+        if (test) console.timeEnd(`${TestKey} Set`);
+        
+        // if(test) console.timeEnd(`${TestKey} Parse`);
+        
+        if(useGC && global?.gc) global?.gc();
         if (data.more_items) return Get(inventory, data.last_assetid);
 
         const o = {
@@ -188,12 +186,17 @@ async function getInventory(SteamID64: string | steamID , appID: string | number
         return o;    
     }
     
+    if(test) console.time(`${SteamID64}`);
+    
     const InventoryResult = await Get([], undefined);
     
-    // @ts-expect-error
-    quickLookup = null;
+    if(test) {
+        console.timeEnd(`${SteamID64}`);
+        console.log(`Inventory Size: ${InventoryResult.count}`)
+    }
     
-    if(global?.gc) global?.gc();
+    // if(useGC && global?.gc) global?.gc();
+    Cache.flushAll();
 
     if (useCache) Database.SaveCache(CacheKey, InventoryResult);
     return InventoryResult;

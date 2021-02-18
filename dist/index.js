@@ -18,40 +18,21 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const getInventory_1 = __importDefault(require("./Worker/getInventory"));
-const getInventory_2 = __importStar(require("./getInventory"));
+const getInventory_1 = __importStar(require("./getInventory"));
 const Database_1 = require("./Database");
-const Worker = (SteamID64, appID, contextID, Config) => {
+const Loader = (SteamID64, appID, contextID, Config) => {
     const Defaults = {
         Cache: Config?.Cache || false,
         Duration: Config?.Duration || 15,
-        Sqlite: Config?.Sqlite || false,
         SteamCommunity_Jar: Config?.SteamCommunity_Jar || undefined,
         tradableOnly: Config?.tradableOnly || true,
         Test: Config?.Test || false,
+        enableGC: Config?.enableGC || false
     };
-    return getInventory_1.default(SteamID64, appID, contextID, Defaults.tradableOnly, Defaults.SteamCommunity_Jar, Defaults.Sqlite, Defaults.Cache, Defaults.Duration, Defaults.Test);
-};
-const rawLoader = (SteamID64, appID, contextID, Config) => {
-    const Defaults = {
-        Cache: Config?.Cache || false,
-        Duration: Config?.Duration || 15,
-        Sqlite: Config?.Sqlite || false,
-        SteamCommunity_Jar: Config?.SteamCommunity_Jar || undefined,
-        tradableOnly: Config?.tradableOnly || true,
-        Test: Config?.Test || false,
-    };
-    return getInventory_2.default(SteamID64, appID, contextID, Defaults.tradableOnly, Defaults.SteamCommunity_Jar, Defaults.Sqlite, Defaults.Cache, Defaults.Duration, Defaults.Test);
+    return getInventory_1.default(SteamID64, appID, contextID, Defaults.tradableOnly, Defaults.SteamCommunity_Jar, Defaults.Cache, Defaults.Duration, Defaults.Test, Defaults.enableGC);
 };
 exports.default = {
-    Loader: {
-        Worker,
-        Raw: rawLoader
-    },
-    getTag: getInventory_2.getTag, getImageURL: getInventory_2.getImageURL, getLargeImageURL: getInventory_2.getLargeImageURL, CleanCache: Database_1.CleanCache, isCardType: getInventory_2.isCardType
+    Loader, getTag: getInventory_1.getTag, getImageURL: getInventory_1.getImageURL, getLargeImageURL: getInventory_1.getLargeImageURL, CleanCache: Database_1.CleanCache, isCardType: getInventory_1.isCardType
 };
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi9zcmMvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQUEseUVBQWlEO0FBQ2pELCtEQUFtSDtBQUNuSCx5Q0FBc0M7QUFXdEMsTUFBTSxNQUFNLEdBQUcsQ0FBQyxTQUFpQixFQUFFLEtBQXNCLEVBQUUsU0FBMEIsRUFBRSxNQUFjLEVBQWtDLEVBQUU7SUFFckksTUFBTSxRQUFRLEdBQUc7UUFDYixLQUFLLEVBQUUsTUFBTSxFQUFFLEtBQUssSUFBSSxLQUFLO1FBQzdCLFFBQVEsRUFBRSxNQUFNLEVBQUUsUUFBUSxJQUFJLEVBQUU7UUFDaEMsTUFBTSxFQUFFLE1BQU0sRUFBRSxNQUFNLElBQUksS0FBSztRQUMvQixrQkFBa0IsRUFBRSxNQUFNLEVBQUUsa0JBQWtCLElBQUksU0FBUztRQUMzRCxZQUFZLEVBQUUsTUFBTSxFQUFFLFlBQVksSUFBSSxJQUFJO1FBQzFDLElBQUksRUFBRSxNQUFNLEVBQUUsSUFBSSxJQUFJLEtBQUs7S0FDOUIsQ0FBQztJQUVGLE9BQU8sc0JBQVksQ0FBQyxTQUFTLEVBQUUsS0FBSyxFQUFFLFNBQVMsRUFBRSxRQUFRLENBQUMsWUFBWSxFQUFFLFFBQVEsQ0FBQyxrQkFBa0IsRUFBRSxRQUFRLENBQUMsTUFBTSxFQUFFLFFBQVEsQ0FBQyxLQUFLLEVBQUUsUUFBUSxDQUFDLFFBQVEsRUFBRSxRQUFRLENBQUMsSUFBSSxDQUFDLENBQUM7QUFDNUssQ0FBQyxDQUFBO0FBRUQsTUFBTSxTQUFTLEdBQUcsQ0FBQyxTQUFpQixFQUFFLEtBQXNCLEVBQUUsU0FBMEIsRUFBRSxNQUFjLEVBQWtDLEVBQUU7SUFFeEksTUFBTSxRQUFRLEdBQUc7UUFDYixLQUFLLEVBQUUsTUFBTSxFQUFFLEtBQUssSUFBSSxLQUFLO1FBQzdCLFFBQVEsRUFBRSxNQUFNLEVBQUUsUUFBUSxJQUFJLEVBQUU7UUFDaEMsTUFBTSxFQUFFLE1BQU0sRUFBRSxNQUFNLElBQUksS0FBSztRQUMvQixrQkFBa0IsRUFBRSxNQUFNLEVBQUUsa0JBQWtCLElBQUksU0FBUztRQUMzRCxZQUFZLEVBQUUsTUFBTSxFQUFFLFlBQVksSUFBSSxJQUFJO1FBQzFDLElBQUksRUFBRSxNQUFNLEVBQUUsSUFBSSxJQUFJLEtBQUs7S0FDOUIsQ0FBQztJQUVGLE9BQU8sc0JBQVMsQ0FBQyxTQUFTLEVBQUUsS0FBSyxFQUFFLFNBQVMsRUFBRSxRQUFRLENBQUMsWUFBWSxFQUFFLFFBQVEsQ0FBQyxrQkFBa0IsRUFBRSxRQUFRLENBQUMsTUFBTSxFQUFFLFFBQVEsQ0FBQyxLQUFLLEVBQUUsUUFBUSxDQUFDLFFBQVEsRUFBRSxRQUFRLENBQUMsSUFBSSxDQUFDLENBQUM7QUFDekssQ0FBQyxDQUFBO0FBRUQsa0JBQWU7SUFDWCxNQUFNLEVBQUU7UUFDSixNQUFNO1FBQ04sR0FBRyxFQUFFLFNBQVM7S0FDakI7SUFDRCxNQUFNLEVBQU4scUJBQU0sRUFBRSxXQUFXLEVBQVgsMEJBQVcsRUFBRSxnQkFBZ0IsRUFBaEIsK0JBQWdCLEVBQUUsVUFBVSxFQUFWLHFCQUFVLEVBQUUsVUFBVSxFQUFWLHlCQUFVO0NBQ2hFLENBQUMifQ==
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi9zcmMvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQUEsK0RBQW1IO0FBQ25ILHlDQUFzQztBQVd0QyxNQUFNLE1BQU0sR0FBRyxDQUFDLFNBQWlCLEVBQUUsS0FBc0IsRUFBRSxTQUEwQixFQUFFLE1BQWMsRUFBa0MsRUFBRTtJQUVySSxNQUFNLFFBQVEsR0FBRztRQUNiLEtBQUssRUFBRSxNQUFNLEVBQUUsS0FBSyxJQUFJLEtBQUs7UUFDN0IsUUFBUSxFQUFFLE1BQU0sRUFBRSxRQUFRLElBQUksRUFBRTtRQUNoQyxrQkFBa0IsRUFBRSxNQUFNLEVBQUUsa0JBQWtCLElBQUksU0FBUztRQUMzRCxZQUFZLEVBQUUsTUFBTSxFQUFFLFlBQVksSUFBSSxJQUFJO1FBQzFDLElBQUksRUFBRSxNQUFNLEVBQUUsSUFBSSxJQUFJLEtBQUs7UUFDM0IsUUFBUSxFQUFFLE1BQU0sRUFBRSxRQUFRLElBQUksS0FBSztLQUN0QyxDQUFDO0lBRUYsT0FBTyxzQkFBUyxDQUFDLFNBQVMsRUFBRSxLQUFLLEVBQUUsU0FBUyxFQUFFLFFBQVEsQ0FBQyxZQUFZLEVBQUUsUUFBUSxDQUFDLGtCQUFrQixFQUFFLFFBQVEsQ0FBQyxLQUFLLEVBQUUsUUFBUSxDQUFDLFFBQVEsRUFBRSxRQUFRLENBQUMsSUFBSSxFQUFFLFFBQVEsQ0FBQyxRQUFRLENBQUMsQ0FBQztBQUMzSyxDQUFDLENBQUE7QUFFRCxrQkFBZTtJQUNYLE1BQU0sRUFBRSxNQUFNLEVBQU4scUJBQU0sRUFBRSxXQUFXLEVBQVgsMEJBQVcsRUFBRSxnQkFBZ0IsRUFBaEIsK0JBQWdCLEVBQUUsVUFBVSxFQUFWLHFCQUFVLEVBQUUsVUFBVSxFQUFWLHlCQUFVO0NBQ3hFLENBQUMifQ==

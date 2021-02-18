@@ -61,6 +61,7 @@ export interface ItemDescription {
 	name: string,
 	tags: rawTag[],
 	tradable: number,
+	owner?: any,
 	type: string,
 	item_expiration?: string,
 	[ListingKey: string]: any
@@ -110,7 +111,7 @@ export interface ItemDetails {
 	market_name: string,
 	name: string,
 	type: string,
-	//[ListingKey: string]: any
+	owner?: any,
 
 }
 
@@ -172,12 +173,11 @@ async function ItemParser(item: ItemAsset, description: ItemDescription, context
 		icon_url_large: description.icon_url_large,
 		market_name: description.market_name,
 		name: description.name,
-		type: description.type
+		type: description.type,
+
+		owner: (description.owner && JSON.stringify(description.owner) == '{}') ? undefined : description.owner
 
 	};
-
-	//if(description) ItemDetails = { ...ItemDetails, ...description }; //merge
-	// if (this.owner && JSON.stringify(this.owner) == '{}') delete this.owner;
 
 	if(description?.tags) ItemDetails.tags = ParseTags(description.tags);
 

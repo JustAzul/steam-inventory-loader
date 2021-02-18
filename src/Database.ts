@@ -4,18 +4,11 @@ import Path from 'path';
 import moment from 'moment';
 
 const Paths = {
-    Descriptions: Path.join(__dirname, './descriptions.db'),
     Cache: Path.join(__dirname, './cache.db')
-}
+};
 
 const DB = {
-    Descriptions: new Database(Paths.Descriptions),
     Cache: new Database(Paths.Cache)
-}
-
-export const InitDescriptions = () => {
-    const SQL = readFileSync(Path.resolve(__dirname, "../", "./sql/Descriptions.sql"), "utf-8");
-    DB.Descriptions.exec(SQL);
 };
 
 export const InitCache = () => {
@@ -42,22 +35,6 @@ export const SaveCache = (Key: string, contents: any) => {
     Insert.run(Key, Buffer.from(JSON.stringify(contents)), new Date().toISOString());
 }
 
-export const saveDescription = (Key: string, Value: object) => {
-    const Insert = DB.Descriptions.prepare(`INSERT OR IGNORE INTO descriptions(id, value) VALUES(?, ?)`);
-    Insert.run(Key, Buffer.from(JSON.stringify(Value)));
-}
-
-interface DescriptionResult {
-    value?: Buffer
-}
-
-export const getDescription = (Key: string) => {
-    const Select = DB.Descriptions.prepare(`SELECT value FROM descriptions where id = ?`);
-    const Result: DescriptionResult | null = Select.get(Key) || null;
-    if (Result?.value) return JSON.parse(Result.value.toString());
-    return null;
-}
-
 export default {
-    InitDescriptions, saveDescription, getDescription, InitCache, GetCache, SaveCache
+    InitCache, GetCache, SaveCache
 }

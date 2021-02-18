@@ -4,11 +4,7 @@ import type {Tag, ItemDescription, ItemDetails} from './src/CEconItem';
 
 declare namespace AzulInventoryLoader {
 
-    export const Loader: {
-        Worker: (SteamID64: string, appID: string | number, contextID: string | number, Config: Config) => Promise<AzulInventoryResponse>;
-        Raw: (SteamID64: string, appID: string | number, contextID: string | number, Config: Config) => Promise<AzulInventoryResponse>;
-    }
-
+    export function Loader(SteamID64: string, appID: string | number, contextID: string | number, Config: Config): Promise<AzulInventoryResponse>;
     export function getTag(tags: Tag[], category: string): Tag | null;
     export function getImageURL(CEconItem: ItemDescription | ItemDetails): string;
     export function getLargeImageURL(CEconItem: ItemDescription | ItemDetails): string;

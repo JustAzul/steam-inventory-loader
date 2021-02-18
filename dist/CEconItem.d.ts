@@ -53,6 +53,7 @@ export interface ItemDescription {
     name: string;
     tags: rawTag[];
     tradable: number;
+    owner?: any;
     type: string;
     item_expiration?: string;
     [ListingKey: string]: any;
@@ -88,6 +89,7 @@ export interface ItemDetails {
     market_name: string;
     name: string;
     type: string;
+    owner?: any;
 }
 declare function ItemParser(item: ItemAsset, description: ItemDescription, contextID: string, useSqlite?: boolean): Promise<ItemDetails>;
 export default ItemParser;
