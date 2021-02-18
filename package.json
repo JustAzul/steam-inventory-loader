@@ -1,9 +1,9 @@
 {
   "name": "azul-steam-inventory-loader",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "Steam Inventory Loader with Caching and sqlite support for reduce memory usage",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "index.js",
+  "types": "index.d.ts",
   "keywords": [
     "azul",
     "justazul",

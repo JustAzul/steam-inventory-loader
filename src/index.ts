@@ -1,8 +1,8 @@
 import WorkerLoader from './Worker/getInventory';
 import RawLoader, {getTag, getImageURL, getLargeImageURL, AzulInventoryResponse, isCardType} from './getInventory';
-import {CleanCache} from './Database'
+import {CleanCache} from './Database';
 
-interface Config {
+export interface Config {
     Cache?: boolean,
     Duration?: number,
     Sqlite?: boolean,

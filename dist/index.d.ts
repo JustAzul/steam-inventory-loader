@@ -1,5 +1,5 @@
 import { AzulInventoryResponse } from './getInventory';
-interface Config {
+export interface Config {
     Cache?: boolean;
     Duration?: number;
     Sqlite?: boolean;
