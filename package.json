@@ -13,7 +13,7 @@
     "build": "tsc",
     "prebuild": "rimraf ./dist",
     "prepublish": "npm run build",
-    "test": "npm run build && node ./test/AzulRaw && node./test/SteamCommunity"
+    "test": "npm run build && node ./test/AzulRaw && node ./test/SteamCommunity"
   },
   "author": "https://justazul.xyz",
   "repository": {
