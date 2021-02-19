@@ -130,7 +130,7 @@ function ParseTags(tags: rawTag[]): Tag[] {
 	});
 }
 
-async function ItemParser(item: ItemAsset, description: ItemDescription, contextID: string, useSqlite: boolean = false) {
+async function ItemParser(item: ItemAsset, description: ItemDescription, contextID: string) {
 
 	const is_currency = !!(item.is_currency || item.currency) || typeof item.currencyid !== 'undefined';
 	const id = is_currency ? item.currencyid : item.assetid;
