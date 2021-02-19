@@ -5,7 +5,6 @@ import CEconItem, {Tag, ItemAsset, ItemDescription, ItemDetails} from './CEconIt
 import CookieParser from './CookieParser';
 import Database from './Database';
 import steamID from 'steamid';
-import NodeCache from 'node-cache';
 
 const agent = {
     http: new HttpAgent(),
@@ -65,7 +64,9 @@ async function getInventory(SteamID64: string | steamID , appID: string | number
     
     const CacheKey = `${SteamID64}_${appID}_${contextID}_${tradableOnly}`;
 
-    const Cache = new NodeCache();
+    let DescriptionsCache: {
+        [Key: string]: ItemDescription
+    } = {};
 
     if (useCache) {
         Database.InitCache();
@@ -146,7 +147,7 @@ async function getInventory(SteamID64: string | steamID , appID: string | number
         //parse descs
         for (const i in data.descriptions) {
             const Key = `${data.descriptions[i].classid}_${(data.descriptions[i].instanceid || '0')}_${data.descriptions[i].appid}`;
-            if (!Cache.has(Key)) Cache.set(Key, data.descriptions[i]);
+            if (!DescriptionsCache.hasOwnProperty(Key)) DescriptionsCache[Key] = data.descriptions[i];
         }
         
         // @ts-expect-error
@@ -159,7 +160,7 @@ async function getInventory(SteamID64: string | steamID , appID: string | number
 
         for (const i in data.assets) {
             const Key = `${data.assets[i].classid}_${(data.assets[i].instanceid || '0')}_${data.assets[i].appid}`;
-            let description: any = Cache.get(Key);
+            let description: ItemDescription = DescriptionsCache[Key];
 
             if (!tradableOnly || (description && description.tradable)) {
                 if (data.assets[i].currencyid) continue; //Ignore Currencies..
@@ -174,7 +175,7 @@ async function getInventory(SteamID64: string | steamID , appID: string | number
         
         // if(test) console.timeEnd(`${TestKey} Parse`);
         
-        if(useGC && global?.gc) global?.gc();
+        // if(useGC && global?.gc) global?.gc();
         if (data.more_items) return Get(inventory, data.last_assetid);
 
         const o = {
@@ -195,8 +196,10 @@ async function getInventory(SteamID64: string | steamID , appID: string | number
         console.log(`Inventory Size: ${InventoryResult.count}`)
     }
     
-    // if(useGC && global?.gc) global?.gc();
-    Cache.flushAll();
+    // @ts-expect-error
+    DescriptionsCache = null;
+
+    if(useGC && global?.gc) global?.gc();
 
     if (useCache) Database.SaveCache(CacheKey, InventoryResult);
     return InventoryResult;
