@@ -1,207 +1,242 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable max-len */
 export interface ItemAsset {
-	amount: string,
-	appid: number,
-	assetid: string,
-	classid: string,
-	contextid: string,
-	instanceid: string,
-	// pos?: number,
+amount: string,
+appid: number,
+assetid: string,
+classid: string,
+contextid: string,
+instanceid: string,
+// pos?: number,
 
-	// TODO: ??
-	is_currency?: any,
-	currency?: any,
-	currencyid?: any,
+// eslint-disable-next-line camelcase
+is_currency?: any,
+currency?: any,
+currencyid?: any,
 }
 
 export interface Tag {
-	internal_name: string,
-	name: string,
-	category: string,
-	color: string,
-	category_name: string
+// eslint-disable-next-line camelcase
+internal_name: string,
+name: string,
+category: string,
+color: string,
+// eslint-disable-next-line camelcase
+category_name: string
 }
 
 export interface rawTag {
-	category: string,
-	internal_name: string,
-	localized_category_name?: string,
-	localized_tag_name: string,
-	category_name: string,
-	color?: string,
-	name?: string
+category: string,
+// eslint-disable-next-line camelcase
+internal_name: string,
+// eslint-disable-next-line camelcase
+localized_category_name?: string,
+// eslint-disable-next-line camelcase
+localized_tag_name: string,
+// eslint-disable-next-line camelcase
+category_name: string,
+color?: string,
+name?: string
 }
 
 export interface InnerItemDescription {
-	value: string
+value: string
 }
 
 export interface ItemActions {
-	link: string,
-	name: string
+link: string,
+name: string
 }
 
 export interface ItemDescription {
-	actions: ItemActions[],
-	appid: number,
-	background_color: string,
-	classid: string,
-	commodity: number,
-	currency: number,
-	descriptions: InnerItemDescription[],
-	owner_descriptions?: InnerItemDescription[],
-	icon_url: string,
-	icon_url_large: string,
-	instanceid: string,
-	market_fee_app: number,
-	market_hash_name: string,
-	market_marketable_restriction: number,
-	market_name: string,
-	market_tradable_restriction: number,
-	marketable: number,
-	name: string,
-	tags: rawTag[],
-	tradable: number,
-	owner?: any,
-	type: string,
-	item_expiration?: string,
-	[ListingKey: string]: any
+actions: ItemActions[],
+appid: number,
+// eslint-disable-next-line camelcase
+background_color: string,
+classid: string,
+commodity: number,
+currency: number,
+descriptions: InnerItemDescription[],
+// eslint-disable-next-line camelcase
+owner_descriptions?: InnerItemDescription[],
+// eslint-disable-next-line camelcase
+icon_url: string,
+// eslint-disable-next-line camelcase
+icon_url_large: string,
+instanceid: string,
+// eslint-disable-next-line camelcase
+market_fee_app: number,
+// eslint-disable-next-line camelcase
+market_hash_name: string,
+// eslint-disable-next-line camelcase
+market_marketable_restriction: number,
+// eslint-disable-next-line camelcase
+market_name: string,
+// eslint-disable-next-line camelcase
+market_tradable_restriction: number,
+marketable: number,
+name: string,
+tags: rawTag[],
+tradable: number,
+owner?: any,
+type: string,
+// eslint-disable-next-line camelcase
+item_expiration?: string,
+[ListingKey: string]: any
 }
 
 export interface ItemDetails {
-	id: string
-	
-	is_currency: boolean,
-	instanceid: string,
-	amount: number,
-	contextid: string
+id: string
 
-	appid: number,
-	assetid: string,
-	classid: string,
-	// pos: number,
+// eslint-disable-next-line camelcase
+is_currency: boolean,
+instanceid: string,
+amount: number,
+contextid: string
 
-	tradable: boolean,
-	marketable: boolean,
-	commodity: boolean,
+appid: number,
+assetid: string,
+classid: string,
+// pos: number,
 
-	fraudwarnings: [],
-	descriptions: InnerItemDescription[],
-	owner_descriptions?: InnerItemDescription[],
-	
-	market_hash_name: string,
-	market_tradable_restriction: number,
-	market_marketable_restriction: number
-	market_fee_app?: number,
+tradable: boolean,
+marketable: boolean,
+commodity: boolean,
 
-	cache_expiration?: string
-	item_expiration?: string
+fraudwarnings: [],
+descriptions: InnerItemDescription[],
+// eslint-disable-next-line camelcase
+owner_descriptions?: InnerItemDescription[],
 
-	tags?: Tag[],
-	actions:ItemActions[],
+// eslint-disable-next-line camelcase
+market_hash_name: string,
+// eslint-disable-next-line camelcase
+market_tradable_restriction: number,
+// eslint-disable-next-line camelcase
+market_marketable_restriction: number
+// eslint-disable-next-line camelcase
+market_fee_app?: number,
 
-	owner_actions?: ItemActions[],
+// eslint-disable-next-line camelcase
+cache_expiration?: string
+// eslint-disable-next-line camelcase
+item_expiration?: string
 
-	//descs
-	
-	background_color: string,
-	currency: number,
-	icon_url: string,
-	icon_url_large: string,
-	
-	market_name: string,
-	name: string,
-	type: string,
-	owner?: any,
+tags?: Tag[],
+actions:ItemActions[],
+
+// eslint-disable-next-line camelcase
+owner_actions?: ItemActions[],
+
+// descs
+
+// eslint-disable-next-line camelcase
+background_color: string,
+currency: number,
+// eslint-disable-next-line camelcase
+icon_url: string,
+// eslint-disable-next-line camelcase
+icon_url_large: string,
+
+// eslint-disable-next-line camelcase
+market_name: string,
+name: string,
+type: string,
+owner?: any,
 
 }
 
 function ParseTags(tags: rawTag[]): Tag[] {
-	return tags.map(tag => {
+  return tags.map((tag) => {
+    const o: Tag = {
+      internal_name: tag.internal_name,
+      name: tag?.localized_tag_name || tag.name || '',
+      category: tag?.category,
+      color: tag.color || '',
+      category_name: tag?.localized_category_name || tag.category_name,
+    };
 
-		const o: Tag = {
-			internal_name: tag.internal_name,
-			name: tag?.localized_tag_name || tag.name || "",
-			category: tag?.category,
-			color: tag.color || "",
-			category_name: tag?.localized_category_name || tag.category_name
-		};
-
-		return o;
-	});
+    return o;
+  });
 }
 
-async function ItemParser(item: ItemAsset, description: ItemDescription, contextID: string) {
+function ItemParser(item: ItemAsset, description: ItemDescription, contextID: string): ItemDetails {
+  // eslint-disable-next-line camelcase
+  const is_currency = !!(item.is_currency || item.currency) || typeof item.currencyid !== 'undefined';
+  // eslint-disable-next-line camelcase
+  const id = is_currency ? item.currencyid : item.assetid;
 
-	const is_currency = !!(item.is_currency || item.currency) || typeof item.currencyid !== 'undefined';
-	const id = is_currency ? item.currencyid : item.assetid;
-	
-	if (description) {
-		// Is this a listing of descriptions?
-		const ListingKey = `${item.classid}_${item.instanceid}`;
-		if(description.hasOwnProperty(ListingKey)) description = description[ListingKey];		
-	}
-	
-	let ItemDetails: ItemDetails = { 
-		is_currency, 
-		id,
-		appid: item.appid,
-		// pos: item.pos,
-		classid: item.classid,
-		assetid: item.assetid,
-		instanceid: item.instanceid || "0",
-		amount: parseInt(item.amount, 10),
-		contextid: item.contextid || contextID,
+  if (description) {
+    // Is this a listing of descriptions?
+    const ListingKey = `${item.classid}_${item.instanceid}`;
+    // eslint-disable-next-line no-param-reassign
+    if (Object.prototype.hasOwnProperty.call(description, ListingKey)) description = description[ListingKey];
+  }
 
-		tradable: !!description?.tradable,
-		marketable: !!description?.marketable,
-		commodity: !!description?.commodity,
+  const Details: ItemDetails = {
+    is_currency,
+    id,
+    appid: item.appid,
+    // pos: item.pos,
+    classid: item.classid,
+    assetid: item.assetid,
+    instanceid: item.instanceid || '0',
+    amount: parseInt(item.amount, 10),
+    contextid: item.contextid || contextID,
 
-		owner_descriptions: description?.owner_descriptions || undefined,
-		item_expiration: description?.item_expiration || undefined,
+    tradable: !!description?.tradable,
+    marketable: !!description?.marketable,
+    commodity: !!description?.commodity,
 
-		fraudwarnings: description?.fraudwarnings || [],
-		descriptions: description?.descriptions || [],
-		
-		market_tradable_restriction: description?.market_tradable_restriction ? parseInt(description.market_tradable_restriction.toString(), 10) : 0,
-		market_marketable_restriction: description?.market_marketable_restriction ? parseInt(description.market_marketable_restriction.toString(), 10) : 0,
-		market_hash_name: description?.market_hash_name,
-		
-		actions: description?.actions || [],
-		background_color: description.background_color,
-		currency: description.currency,
-		icon_url: description.icon_url,
-		icon_url_large: description.icon_url_large,
-		market_name: description.market_name,
-		name: description.name,
-		type: description.type,
+    owner_descriptions: description?.owner_descriptions || undefined,
+    item_expiration: description?.item_expiration || undefined,
 
-		owner: (description.owner && JSON.stringify(description.owner) == '{}') ? undefined : description.owner
+    fraudwarnings: description?.fraudwarnings || [],
+    descriptions: description?.descriptions || [],
 
-	};
+    market_tradable_restriction: description?.market_tradable_restriction ? parseInt(description.market_tradable_restriction.toString(), 10) : 0,
+    market_marketable_restriction: description?.market_marketable_restriction ? parseInt(description.market_marketable_restriction.toString(), 10) : 0,
+    market_hash_name: description?.market_hash_name,
 
-	if(description?.tags) ItemDetails.tags = ParseTags(description.tags);
+    actions: description?.actions || [],
+    background_color: description.background_color,
+    currency: description.currency,
+    icon_url: description.icon_url,
+    icon_url_large: description.icon_url_large,
+    market_name: description.market_name,
+    name: description.name,
+    type: description.type,
 
-	// Restore market_fee_app, if applicable
-	if(ItemDetails.appid == 753 && ItemDetails.contextid == "6" && ItemDetails.market_hash_name) {
-		const _match = ItemDetails.market_hash_name.match(/^(\d+)\-/);
-		if(_match) ItemDetails.market_fee_app = parseInt(_match[1], 10);
-	}
-	
-	// If we have item_expiration, also set cache_expiration to the same value
-	if (ItemDetails.item_expiration) ItemDetails.cache_expiration = ItemDetails.item_expiration;
-	else {
-		if(ItemDetails.appid == 730 && ItemDetails.contextid == "2" && ItemDetails.owner_descriptions) {
-			const Desc = ItemDetails.owner_descriptions.find(d => d.value && d.value.indexOf('Tradable After ') == 0);
-			if(Desc) {
-				const date = new Date(Desc.value.substring(15).replace(/[,()]/g, ''));
-				if (date) ItemDetails.cache_expiration = date.toISOString();
-			}
-		}
-	}	
+    // eslint-disable-next-line eqeqeq
+    owner: (description.owner && JSON.stringify(description.owner) == '{}') ? undefined : description.owner,
 
-	if(item.currency) item.currency = null;
+  };
 
-	return ItemDetails;
-};
+  if (description?.tags) Details.tags = ParseTags(description.tags);
+
+  // Restore market_fee_app, if applicable
+  // eslint-disable-next-line eqeqeq
+  if (Details.appid == 753 && Details.contextid == '6' && Details.market_hash_name) {
+    // eslint-disable-next-line no-underscore-dangle
+    const _match = Details.market_hash_name.match(/^(\d+)-/);
+    if (_match) Details.market_fee_app = parseInt(_match[1], 10);
+  }
+
+  // If we have item_expiration, also set cache_expiration to the same value
+  if (Details.item_expiration) Details.cache_expiration = Details.item_expiration;
+  // eslint-disable-next-line eqeqeq
+  else if (Details.appid == 730 && Details.contextid == '2' && Details.owner_descriptions) {
+    const Desc = Details.owner_descriptions.find((d) => d.value && d.value.indexOf('Tradable After ') === 0);
+    if (Desc) {
+      const date = new Date(Desc.value.substring(15).replace(/[,()]/g, ''));
+      if (date) Details.cache_expiration = date.toISOString();
+    }
+  }
+
+  // eslint-disable-next-line no-param-reassign
+  if (item.currency) item.currency = null;
+
+  return Details;
+}
 
 export default ItemParser;

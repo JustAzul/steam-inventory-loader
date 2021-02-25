@@ -4,7 +4,6 @@ export interface Config {
     Duration?: number;
     SteamCommunity_Jar?: any;
     tradableOnly?: boolean;
-    Test?: boolean;
     enableGC?: boolean;
 }
 declare const _default: {
