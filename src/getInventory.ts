@@ -179,11 +179,9 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
     for (let i = 0; i < data.assets.length; i += 1) {
       if (!data.assets[i].currencyid) {
         const Key = getDescriptionKey(data.assets[i]);
-        const Description = DescriptionsCache[Key];
 
-        if (!tradableOnly || (Description && Description.tradable)) {
-          /* // eslint-disable-next-line no-await-in-loop */
-          inventory.push(CEconItem(data.assets[i], Description, contextID.toString()));
+        if (!tradableOnly || (Object.prototype.hasOwnProperty.call(DescriptionsCache, Key) && DescriptionsCache[Key]?.tradable)) {
+          inventory.push(CEconItem(data.assets[i], DescriptionsCache[Key], contextID.toString()));
         }
       }
     }
