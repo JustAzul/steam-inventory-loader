@@ -1,5 +1,3 @@
-/* eslint-disable no-shadow */
-/* eslint-disable max-len */
 import RawLoader, {
   getTag, getImageURL, getLargeImageURL, AzulInventoryResponse, isCardType,
 } from './getInventory';
@@ -14,13 +12,13 @@ export interface Config {
     enableGC?: boolean
 }
 
-const Loader = (SteamID64: string, appID: string | number, contextID: string | number, Config: Config): Promise<AzulInventoryResponse> => {
+const Loader = (SteamID64: string, appID: string | number, contextID: string | number, LoaderConfig: Config): Promise<AzulInventoryResponse> => {
   const Defaults = {
-    Cache: Config?.Cache || false,
-    Duration: Config?.Duration || 15,
-    SteamCommunity_Jar: Config?.SteamCommunity_Jar || undefined,
-    tradableOnly: Config?.tradableOnly || true,
-    enableGC: Config?.enableGC || false,
+    Cache: LoaderConfig?.Cache ?? false,
+    Duration: LoaderConfig?.Duration ?? 15,
+    SteamCommunity_Jar: LoaderConfig?.SteamCommunity_Jar || undefined,
+    tradableOnly: LoaderConfig?.tradableOnly ?? true,
+    enableGC: LoaderConfig?.enableGC ?? false,
   };
 
   return RawLoader(SteamID64, appID, contextID, Defaults.tradableOnly, Defaults.SteamCommunity_Jar, Defaults.Cache, Defaults.Duration, Defaults.enableGC);
