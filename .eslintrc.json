@@ -26,7 +26,8 @@
           {
             "ts": "never"
           }
-        ]
+        ],
+        "max-len":"off"
     },
     "settings": {
         "import/resolver": {
