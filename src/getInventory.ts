@@ -3,11 +3,11 @@ import _got from 'got';
 import HttpAgent from 'agentkeepalive';
 import { duration } from 'moment';
 import steamID from 'steamid';
+import EventEmitter from 'events';
 import CEconItem, {
   Tag, ItemAsset, ItemDescription, ItemDetails,
 } from './CEconItem';
 import CookieParser from './CookieParser';
-import Database from './Database';
 
 const agent = {
   http: new HttpAgent(),
@@ -72,21 +72,9 @@ function getDescriptionKey(description: ItemDescription | ItemAsset): string {
 
 // eslint-disable-next-line max-len
 // eslint-disable-next-line max-len, camelcase, @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-async function getInventory(SteamID64: string | steamID, appID: string | number, contextID: string | number, tradableOnly = true, SteamCommunity_Jar: any, useCache = true, CacheDuration = 15, useGC = false): Promise<AzulInventoryResponse> {
+async function getInventory(SteamID64: string | steamID, appID: string | number, contextID: string | number, tradableOnly = true, SteamCommunity_Jar: any, Language: string): Promise<AzulInventoryResponse> {
   // eslint-disable-next-line no-param-reassign
   if (typeof SteamID64 !== 'string') SteamID64 = SteamID64.getSteamID64();
-
-  const CacheKey = `${SteamID64}_${appID}_${contextID}_${tradableOnly}`;
-
-  let DescriptionsCache: {
-        [Key: string]: ItemDescription
-    } = {};
-
-  if (useCache) {
-    Database.InitCache();
-    const Cache = Database.GetCache(CacheKey, CacheDuration);
-    if (Cache) return Cache;
-  }
 
   const headers = {
     Referer: `https://steamcommunity.com/profiles/${SteamID64}/inventory`,
@@ -96,16 +84,33 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
   // eslint-disable-next-line max-len, camelcase, no-underscore-dangle
   const cookieJar = SteamCommunity_Jar ? CookieParser(SteamCommunity_Jar._jar.store.idx) : undefined;
 
-  // eslint-disable-next-line max-len, camelcase
-  async function Get(inventory: ItemDetails[], start_assetid: string | undefined): Promise<AzulInventoryResponse> {
+  let DescriptionsCache: {
+    [Key: string]: ItemDescription
+} = {};
+
+  const inventory: ItemDetails[] = [];
+
+  const GetDescription = (Key: string): ItemDescription | undefined => DescriptionsCache[Key] || undefined;
+
+  let GcPages = 0;
+  const Event = new EventEmitter();
+
+  const RemoveListeners = async () => {
+    Event.removeAllListeners('FetchDone');
+    Event.removeAllListeners('data');
+    Event.removeAllListeners('done');
+    Event.removeAllListeners('error');
+  };
+
+  async function Fetch(StartAssetID: string | undefined, Retries: number): Promise<void> {
     const searchParams = {
-      l: 'english',
+      l: Language,
       count: 5000,
-      start_assetid,
+      start_assetid: StartAssetID,
     };
 
     // eslint-disable-next-line camelcase
-    const got_o = {
+    const GotOptions = {
       url: `https://steamcommunity.com/inventory/${SteamID64}/${appID}/${contextID}`,
       headers,
       searchParams,
@@ -113,21 +118,24 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
       throwHttpErrors: false,
     };
 
-    // const TestKey = `${SteamID64}/${inventory.length}`;
-    // console.time(`${TestKey} Request`);
-
-    const { statusCode, body }: {
+    // eslint-disable-next-line prefer-const
+    let { statusCode, body }: {
             statusCode: number,
             body: string
-        } = await got(got_o);
-
-    // console.timeEnd(`${TestKey} Request`);
+        } = await got(GotOptions);
 
     // eslint-disable-next-line eqeqeq
-    if (statusCode === 403 && body == 'null') throw new Error('This profile is private.');
-    if (statusCode === 429) throw new Error('rate limited');
+    if (statusCode === 403 && body == 'null') {
+      Event.emit('error', new Error('This profile is private.'));
+      return;
+    }
 
-    const data: SteamBodyResponse = JSON.parse(body);
+    if (statusCode === 429) {
+      Event.emit('error', new Error('rate limited'));
+      return;
+    }
+
+    let data: SteamBodyResponse = JSON.parse(body);
 
     if (statusCode === 500 && body && data.error) {
       let newError: ErrorWithEResult = new Error(data.error);
@@ -139,90 +147,121 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
         newError.eresult = match[2];
       }
 
-      throw newError;
+      Event.emit('error', newError);
+      return;
     }
+
+    // @ts-expect-error test
+    body = null;
 
     if (!!data?.success && data?.total_inventory_count === 0) {
       const o = {
         success: !!data.success,
-        inventory,
+        inventory: [],
         count: data.total_inventory_count ?? 0,
       };
 
-      return o;
+      Event.emit('done', o);
+      return;
     }
 
     if (!data || !data.success || !data?.assets || !data?.descriptions) {
-      if (data) throw new Error(data?.error || data?.Error || 'Malformed response');
-      throw new Error('Malformed response');
-    }
-
-    // console.time(`${TestKey} Parse`);
-
-    // Parse Item Descriptions
-    for (let i = 0; i < data.descriptions.length; i += 1) {
-      const Key = getDescriptionKey(data.descriptions[i]);
-      if (!Object.prototype.hasOwnProperty.call(DescriptionsCache, Key)) {
-        DescriptionsCache[Key] = data.descriptions[i];
+      if (Retries < 3) {
+        setTimeout(() => Fetch(StartAssetID, (Retries + 1)), 1000);
+        return;
       }
+
+      if (data) {
+        Event.emit('error', new Error(data?.error || data?.Error || 'Malformed response'));
+        return;
+      }
+
+      Event.emit('error', new Error('Malformed response'));
+      return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    data.descriptions = null;
+    Event.emit('data', data.descriptions, data.assets);
 
-    // console.timeEnd(`${TestKey} Parse`);
-    // console.time(`${TestKey} Set`);
+    if (data.more_items) {
+      const { LastAssetID } = { LastAssetID: data.last_assetid };
 
-    // const CEconItemProcess = [];
+      // @ts-expect-error we are not using this var anymore.
+      data = null;
 
-    for (let i = 0; i < data.assets.length; i += 1) {
-      if (!data.assets[i].currencyid) {
-        const Key = getDescriptionKey(data.assets[i]);
-
-        if (!tradableOnly || (Object.prototype.hasOwnProperty.call(DescriptionsCache, Key) && DescriptionsCache[Key]?.tradable)) {
-          inventory.push(CEconItem(data.assets[i], DescriptionsCache[Key], contextID.toString()));
+      if (global.gc) {
+        GcPages += 1;
+        if (GcPages > 3) {
+          global.gc();
+          GcPages = 0;
         }
       }
-    }
 
-    // inventory.push(...await Promise.all(CEconItemProcess));
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    data.assets = null;
-
-    // console.timeEnd(`${TestKey} Set`);
-
-    // if(test) console.timeEnd(`${TestKey} Parse`);
-
-    // if(useGC && global?.gc) global?.gc();
-    if (data.more_items) return Get(inventory, data.last_assetid);
-
-    const o = {
-      success: true,
-      inventory,
-      count: inventory.length,
-    };
-
-    return o;
+      Fetch(LastAssetID, Retries);
+    } else Event.emit('FetchDone');
   }
 
-  // console.time(`${SteamID64}`);
+  Fetch(undefined, 0);
 
-  const InventoryResult = await Get([], undefined);
+  return new Promise((resolve, reject) => {
+    let TotalPages = 0;
+    let PagesDone = 0;
 
-  // console.timeEnd(`${SteamID64}`);
-  // console.log(`Inventory Size: ${InventoryResult.count}`);
+    Event.on('data', async (Descriptions: ItemDescription[], Assets: ItemAsset[]) => {
+      TotalPages += 1;
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
-  DescriptionsCache = null;
+      for (let i = 0; i < Descriptions.length; i += 1) {
+        const Description = Descriptions[i];
+        const Key = getDescriptionKey(Description);
+        if (!Object.prototype.hasOwnProperty.call(DescriptionsCache, Key)) DescriptionsCache[Key] = Description;
+      }
 
-  if (useGC && global?.gc) global?.gc();
+      for (let i = 0; i < Assets.length; i += 1) {
+        const Asset: ItemAsset = Assets[i];
 
-  if (useCache) Database.SaveCache(CacheKey, InventoryResult);
-  return InventoryResult;
+        if (!Asset.currencyid) {
+          const Key = getDescriptionKey(Asset);
+          const Description = GetDescription(Key);
+
+          if (!tradableOnly || (Description && Description.tradable)) {
+            // @ts-expect-error Description will never be undefined.
+            const Item = CEconItem(Asset, Description, contextID.toString());
+            inventory.push(Item);
+          }
+        }
+      }
+
+      PagesDone += 1;
+    });
+
+    Event.once('FetchDone', async () => {
+      while (TotalPages !== PagesDone) {
+        // waiting for every parser
+      }
+
+      const o = {
+        success: true,
+        inventory,
+        count: inventory.length,
+      };
+
+      Event.emit('done', o);
+    });
+
+    Event.once('done', async (Result) => {
+      resolve(Result);
+
+      RemoveListeners();
+
+      // @ts-expect-error cleaning unused cache
+      DescriptionsCache = null;
+      if (global.gc) global.gc();
+    });
+
+    Event.once('error', (error) => {
+      RemoveListeners();
+      reject(error);
+    });
+  });
 }
 
 export default getInventory;

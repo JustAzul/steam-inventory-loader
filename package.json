@@ -1,7 +1,7 @@
 {
   "name": "azul-steam-inventory-loader",
-  "version": "3.0.6",
-  "description": "Steam Inventory Loader By Azul, with built-in Caching support, and memory friendly",
+  "version": "3.1.0",
+  "description": "Steam Inventory Loader By Azul, faster than node-steamcommunity on average, bult-in error retry, and memory friendly when using --expose-gc",
   "main": "azul.js",
   "types": "index.d.ts",
   "keywords": [
@@ -12,8 +12,7 @@
   "scripts": {
     "build": "tsc",
     "prebuild": "rimraf ./dist",
-    "prepublish": "npm run build",
-    "test": "npm run build && node ./test/AzulRaw && node ./test/SteamCommunity"
+    "prepublish": "npm run build"
   },
   "author": "https://justazul.xyz",
   "repository": {
@@ -23,15 +22,12 @@
   "license": "ISC",
   "dependencies": {
     "agentkeepalive": "^4.1.4",
-    "better-sqlite3": "^7.3.1",
     "got": "^11.8.2",
     "moment": "^2.29.1",
-    "npm": "^7.12.1",
     "steamid": "^1.1.3",
     "tough-cookie": "^4.0.0"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^5.4.1",
     "@types/got": "^9.6.11",
     "@types/steamid": "^1.1.0",
     "@types/tough-cookie": "^4.0.0",

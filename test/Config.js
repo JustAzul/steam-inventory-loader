@@ -4,7 +4,7 @@ const ids = {
 }
 
 module.exports = {
-    SteamID: ids.big,
+    SteamID: ids.small,
     AppID: "753",
     contextid: "6"
 }
