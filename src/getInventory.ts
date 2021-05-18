@@ -135,7 +135,18 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
       return;
     }
 
-    let data: SteamBodyResponse = JSON.parse(body);
+    let data: SteamBodyResponse;
+
+    try {
+      data = JSON.parse(body);
+    } catch {
+      if (Retries < 3) {
+        setTimeout(() => Fetch(StartAssetID, (Retries + 1)), duration(1, 'second').asMilliseconds());
+        return;
+      }
+      Event.emit('error', new Error('Malformed response'));
+      return;
+    }
 
     if (statusCode === 500 && body && data.error) {
       let newError: ErrorWithEResult = new Error(data.error);
@@ -167,7 +178,7 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
 
     if (!data || !data.success || !data?.assets || !data?.descriptions) {
       if (Retries < 3) {
-        setTimeout(() => Fetch(StartAssetID, (Retries + 1)), 1000);
+        setTimeout(() => Fetch(StartAssetID, (Retries + 1)), duration(1, 'second').asMilliseconds());
         return;
       }
 
