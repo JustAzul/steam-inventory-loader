@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-console */
 import _got from 'got';
 import HttpAgent from 'agentkeepalive';
@@ -82,7 +83,7 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
   };
 
   // eslint-disable-next-line max-len, camelcase, no-underscore-dangle
-  const cookieJar = SteamCommunity_Jar ? CookieParser(SteamCommunity_Jar._jar.store.idx) : undefined;
+  const cookieJar = SteamCommunity_Jar ? (await CookieParser(SteamCommunity_Jar._jar.store.idx)) : undefined;
 
   let DescriptionsCache: {
     [Key: string]: ItemDescription
@@ -95,7 +96,7 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
   let GcPages = 0;
   const Event = new EventEmitter();
 
-  const RemoveListeners = async () => {
+  const RemoveListeners = () => {
     Event.removeAllListeners('FetchDone');
     Event.removeAllListeners('data');
     Event.removeAllListeners('done');
@@ -220,33 +221,71 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
     Event.on('data', async (Descriptions: ItemDescription[], Assets: ItemAsset[]) => {
       TotalPages += 1;
 
-      for (let i = 0; i < Descriptions.length; i += 1) {
-        const Description = Descriptions[i];
-        const Key = getDescriptionKey(Description);
-        if (!Object.prototype.hasOwnProperty.call(DescriptionsCache, Key)) DescriptionsCache[Key] = Description;
+      {
+        const Iterate = ():Promise<void> => new Promise((Resolve) => {
+          const Execute = (i = 0) => {
+            if (i === Descriptions.length) {
+              Resolve();
+              return;
+            }
+            const Description = Descriptions[i];
+            const Key = getDescriptionKey(Description);
+            if (!Object.prototype.hasOwnProperty.call(DescriptionsCache, Key)) DescriptionsCache[Key] = Description;
+
+            setImmediate(Execute.bind(null, i + 1));
+          };
+
+          Execute();
+        });
+
+        await Iterate();
       }
 
-      for (let i = 0; i < Assets.length; i += 1) {
-        const Asset: ItemAsset = Assets[i];
+      {
+        const Iterate = ():Promise<void> => new Promise((Resolve) => {
+          const Execute = async (i = 0) => {
+            if (i === Assets.length) {
+              Resolve();
+              return;
+            }
 
-        if (!Asset.currencyid) {
-          const Key = getDescriptionKey(Asset);
-          const Description = GetDescription(Key);
+            const Asset: ItemAsset = Assets[i];
 
-          if (!tradableOnly || (Description && Description.tradable)) {
-            // @ts-expect-error Description will never be undefined.
-            const Item = CEconItem(Asset, Description, contextID.toString());
-            inventory.push(Item);
-          }
-        }
+            if (!Asset.currencyid) {
+              const Key = getDescriptionKey(Asset);
+              const Description = GetDescription(Key);
+
+              if (!tradableOnly || (Description && Description.tradable)) {
+              // @ts-expect-error Description will never be undefined.
+                const Item = await CEconItem(Asset, Description, contextID.toString());
+                inventory.push(Item);
+              }
+            }
+
+            setImmediate(Execute.bind(null, i + 1));
+          };
+
+          Execute();
+        });
+
+        await Iterate();
       }
 
       PagesDone += 1;
     });
 
     Event.once('FetchDone', async () => {
-      while (TotalPages !== PagesDone) {
-        // waiting for every parser
+      {
+        const Check = ():Promise<void> => new Promise((SetJobDone) => {
+          const Execute = () => {
+            if (TotalPages === PagesDone) SetJobDone();
+            else setTimeout(Execute, 100);
+          };
+
+          Execute();
+        });
+
+        await Check();
       }
 
       const o = {

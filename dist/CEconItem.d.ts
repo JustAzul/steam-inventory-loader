@@ -91,6 +91,6 @@ export interface ItemDetails {
     type: string;
     owner?: any;
 }
-declare function ItemParser(item: ItemAsset, description: ItemDescription, contextID: string): ItemDetails;
+declare function ItemParser(item: ItemAsset, description: ItemDescription, contextID: string): Promise<ItemDetails>;
 export default ItemParser;
 //# sourceMappingURL=CEconItem.d.ts.map

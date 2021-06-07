@@ -146,21 +146,41 @@ owner?: any,
 
 }
 
-function ParseTags(tags: rawTag[]): Tag[] {
-  return tags.map((tag) => {
-    const o: Tag = {
-      internal_name: tag.internal_name,
-      name: tag?.localized_tag_name || tag.name || '',
-      category: tag?.category,
-      color: tag.color || '',
-      category_name: tag?.localized_category_name || tag.category_name,
-    };
+async function ParseTags(tags: rawTag[]): Promise<Tag[]> {
+  const ParsedTags:Tag[] = [];
 
-    return o;
-  });
+  {
+    const Iterate = ():Promise<void> => new Promise((resolve) => {
+      const Execute = (i = 0) => {
+        if (i === tags.length) {
+          resolve();
+          return;
+        }
+
+        const tag = tags[i];
+
+        const o: Tag = {
+          internal_name: tag.internal_name,
+          name: tag?.localized_tag_name || tag.name || '',
+          category: tag?.category,
+          color: tag.color || '',
+          category_name: tag?.localized_category_name || tag.category_name,
+        };
+
+        ParsedTags.push(o);
+        setImmediate(Execute.bind(null, i + 1));
+      };
+
+      Execute();
+    });
+
+    await Iterate();
+  }
+
+  return ParsedTags;
 }
 
-function ItemParser(item: ItemAsset, description: ItemDescription, contextID: string): ItemDetails {
+async function ItemParser(item: ItemAsset, description: ItemDescription, contextID: string): Promise<ItemDetails> {
   // eslint-disable-next-line camelcase
   const is_currency = !!(item.is_currency || item.currency) || typeof item.currencyid !== 'undefined';
   // eslint-disable-next-line camelcase
@@ -212,7 +232,7 @@ function ItemParser(item: ItemAsset, description: ItemDescription, contextID: st
 
   };
 
-  if (description?.tags) Details.tags = ParseTags(description.tags);
+  if (description?.tags) Details.tags = await ParseTags(description.tags);
 
   // Restore market_fee_app, if applicable
   // eslint-disable-next-line eqeqeq
