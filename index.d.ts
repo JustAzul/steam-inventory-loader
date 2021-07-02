@@ -10,7 +10,6 @@ declare namespace AzulInventoryLoader {
     export function getTag(tags: Tag[], category: string): Tag | undefined;
     export function getImageURL(CEconItem: ItemDescription | ItemDetails): string;
     export function getLargeImageURL(CEconItem: ItemDescription | ItemDetails): string;
-    export function CleanCache(MaxDuration: number): void;
     export function isCardType(tags: Tag[]): boolean | 'Normal' | 'Foil' | undefined
 
 }
