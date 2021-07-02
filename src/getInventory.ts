@@ -4,6 +4,7 @@
 import { duration } from 'moment';
 import steamID from 'steamid';
 import EventEmitter from 'events';
+import { CookieJar } from 'tough-cookie';
 import CEconItem, {
   Tag, ItemAsset, ItemDescription, ItemDetails,
 } from './CEconItem';
@@ -69,7 +70,7 @@ function getDescriptionKey(description: ItemDescription | ItemAsset): string {
 }
 
 // eslint-disable-next-line max-len, camelcase, @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-async function getInventory(SteamID64: string | steamID, appID: string | number, contextID: string | number, tradableOnly = true, SteamCommunity_Jar: any, Language: string): Promise<AzulInventoryResponse> {
+async function getInventory(SteamID64: string | steamID, appID: string | number, contextID: string | number, tradableOnly = true, SteamCommunity_Jar: CookieJar, Language: string): Promise<AzulInventoryResponse> {
   // eslint-disable-next-line no-param-reassign
   if (typeof SteamID64 !== 'string') SteamID64 = SteamID64.getSteamID64();
 
