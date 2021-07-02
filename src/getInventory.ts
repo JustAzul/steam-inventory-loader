@@ -25,6 +25,10 @@ interface SteamBodyResponse {
     rwgrsn: number
 }
 
+interface DescriptionCacheType {
+  [Key: string]: ItemDescription
+}
+
 interface ErrorWithEResult extends Error {
     eresult?: number | string
 }
@@ -64,7 +68,6 @@ function getDescriptionKey(description: ItemDescription | ItemAsset): string {
   return `${description.classid}_${(description.instanceid || '0')}_${description.appid}`;
 }
 
-// eslint-disable-next-line max-len
 // eslint-disable-next-line max-len, camelcase, @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
 async function getInventory(SteamID64: string | steamID, appID: string | number, contextID: string | number, tradableOnly = true, SteamCommunity_Jar: any, Language: string): Promise<AzulInventoryResponse> {
   // eslint-disable-next-line no-param-reassign
@@ -75,16 +78,14 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
     Host: 'steamcommunity.com',
   };
 
-  let DescriptionsCache: {
-    [Key: string]: ItemDescription
-} = {};
+  let DescriptionsCache: DescriptionCacheType = {};
 
   const inventory: ItemDetails[] = [];
 
-  const GetDescription = (Key: string): ItemDescription | undefined => DescriptionsCache[Key] || undefined;
-
   let GcPages = 0;
   const Event = new EventEmitter();
+
+  const GetDescription = (Key: string): ItemDescription | undefined => DescriptionsCache[Key] || undefined;
 
   const RemoveListeners = () => {
     Event.removeAllListeners('FetchDone');
@@ -100,7 +101,6 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
       start_assetid: StartAssetID,
     };
 
-    // eslint-disable-next-line camelcase
     const GotOptions = {
       url: `https://steamcommunity.com/inventory/${SteamID64}/${appID}/${contextID}`,
       headers,
@@ -123,35 +123,45 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
       return;
     }
 
+    const FetchRetry = () => setTimeout(() => Fetch(StartAssetID, (Retries + 1)), duration(1, 'second').asMilliseconds());
+
     let data: SteamBodyResponse;
 
     try {
       data = JSON.parse(body);
     } catch {
       if (Retries < 3) {
-        setTimeout(() => Fetch(StartAssetID, (Retries + 1)), duration(1, 'second').asMilliseconds());
+        FetchRetry();
         return;
       }
+
       Event.emit('error', new Error('Malformed response'));
       return;
     }
 
-    if (statusCode === 500 && body && data.error) {
-      let newError: ErrorWithEResult = new Error(data.error);
-      const match = data.error.match(/^(.+) \((\d+)\)$/);
+    if (statusCode !== 200) {
+      if (body && data.error) {
+        let newError: ErrorWithEResult = new Error(data.error);
+        const match = data.error.match(/^(.+) \((\d+)\)$/);
 
-      if (match) {
-        newError = new Error(match[1]);
-        // eslint-disable-next-line prefer-destructuring
-        newError.eresult = match[2];
+        if (match) {
+          newError = new Error(match[1]);
+          // eslint-disable-next-line prefer-destructuring
+          newError.eresult = match[2];
+        }
+
+        Event.emit('error', newError);
+        return;
       }
 
-      Event.emit('error', newError);
+      if (Retries < 3) {
+        FetchRetry();
+        return;
+      }
+
+      Event.emit('error', new Error('Bad statusCode'));
       return;
     }
-
-    // @ts-expect-error test
-    body = null;
 
     if (!!data?.success && data?.total_inventory_count === 0) {
       const o = {
@@ -164,9 +174,9 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
       return;
     }
 
-    if (!data || !data.success || !data?.assets || !data?.descriptions) {
+    if (!data || !data?.success || !data?.assets || !data?.descriptions) {
       if (Retries < 3) {
-        setTimeout(() => Fetch(StartAssetID, (Retries + 1)), duration(1, 'second').asMilliseconds());
+        FetchRetry();
         return;
       }
 
@@ -185,7 +195,7 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
       const { LastAssetID } = { LastAssetID: data.last_assetid };
 
       // @ts-expect-error we are not using this var anymore.
-      data = null;
+      process.nextTick(() => { data = null; });
 
       if (global.gc) {
         GcPages += 1;
@@ -195,7 +205,7 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
         }
       }
 
-      Fetch(LastAssetID, Retries);
+      Fetch(LastAssetID, 0);
     } else Event.emit('FetchDone');
   }
 
@@ -215,6 +225,7 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
               Resolve();
               return;
             }
+
             const Description = Descriptions[i];
             const Key = getDescriptionKey(Description);
             if (!Object.prototype.hasOwnProperty.call(DescriptionsCache, Key)) DescriptionsCache[Key] = Description;
@@ -289,9 +300,11 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
 
       RemoveListeners();
 
+      process.nextTick(() => {
       // @ts-expect-error cleaning unused cache
-      DescriptionsCache = null;
-      if (global.gc) global.gc();
+        DescriptionsCache = null;
+        if (global.gc) global.gc();
+      });
     });
 
     Event.once('error', (error) => {
