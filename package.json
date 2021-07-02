@@ -7,14 +7,15 @@
   "keywords": [
     "azul",
     "justazul",
-    "justazul.xyz"
+    "justazul.xyz",
+    "justazul.com"
   ],
   "scripts": {
     "build": "tsc",
     "prebuild": "rimraf ./dist",
     "prepublish": "npm run build"
   },
-  "author": "https://justazul.xyz",
+  "author": "https://justazul.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/JustAzul/steam-inventory-loader.git"
