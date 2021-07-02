@@ -1,9 +1,10 @@
 import got from 'got';
 import { duration } from 'moment';
-import { HttpsAgent } from 'agentkeepalive';
+import HttpsAgent from 'agentkeepalive';
 
 const agent = {
-  https: new HttpsAgent(),
+  http: new HttpsAgent(),
+  https: new HttpsAgent.HttpsAgent(),
 };
 
 const Options = {
