@@ -8,7 +8,6 @@ import EventEmitter from 'events';
 import CEconItem, {
   Tag, ItemAsset, ItemDescription, ItemDetails,
 } from './CEconItem';
-import CookieParser from './CookieParser';
 
 const agent = {
   http: new HttpAgent(),
@@ -82,9 +81,6 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
     Host: 'steamcommunity.com',
   };
 
-  // eslint-disable-next-line max-len, camelcase, no-underscore-dangle
-  const cookieJar = SteamCommunity_Jar ? (await CookieParser(SteamCommunity_Jar._jar.store.idx)) : undefined;
-
   let DescriptionsCache: {
     [Key: string]: ItemDescription
 } = {};
@@ -115,7 +111,7 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
       url: `https://steamcommunity.com/inventory/${SteamID64}/${appID}/${contextID}`,
       headers,
       searchParams,
-      cookieJar,
+      cookieJar: SteamCommunity_Jar,
       throwHttpErrors: false,
     };
 
