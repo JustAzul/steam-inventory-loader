@@ -1,7 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-console */
-import _got from 'got';
-import HttpAgent from 'agentkeepalive';
+
 import { duration } from 'moment';
 import steamID from 'steamid';
 import EventEmitter from 'events';
@@ -9,12 +8,7 @@ import CEconItem, {
   Tag, ItemAsset, ItemDescription, ItemDetails,
 } from './CEconItem';
 
-const agent = {
-  http: new HttpAgent(),
-  https: new HttpAgent.HttpsAgent(),
-};
-
-const got = _got.extend({ agent, timeout: duration(50, 'seconds').asMilliseconds() });
+import got from './got';
 
 interface SteamBodyResponse {
     error?: string,
@@ -116,10 +110,7 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
     };
 
     // eslint-disable-next-line prefer-const
-    let { statusCode, body }: {
-            statusCode: number,
-            body: string
-        } = await got(GotOptions);
+    let { statusCode, body } = await got(GotOptions);
 
     // eslint-disable-next-line eqeqeq
     if (statusCode === 403 && body == 'null') {
