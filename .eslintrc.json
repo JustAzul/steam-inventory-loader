@@ -27,7 +27,8 @@
             "ts": "never"
           }
         ],
-        "max-len":"off"
+        "max-len":"off",
+        "linebreak-style": "off"
     },
     "settings": {
         "import/resolver": {
