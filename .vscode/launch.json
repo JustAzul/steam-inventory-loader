@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Test Azul Loader",
-            "program": "${workspaceFolder}\\test\\AzulRaw.js",
+            "program": "${workspaceFolder}//test//AzulRaw.js",
             "skipFiles": [
                 "<node_internals>/**"
             ],
@@ -18,7 +18,7 @@
             "type": "node",
             "request": "launch",
             "name": "Test Default Loader",
-            "program": "${workspaceFolder}\\test\\SteamCommunity.js",
+            "program": "${workspaceFolder}//test//SteamCommunity.js",
             "skipFiles": [
                 "<node_internals>/**"
             ],
