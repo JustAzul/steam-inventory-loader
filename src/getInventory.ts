@@ -141,7 +141,7 @@ async function getInventory(SteamID64: string | steamID, appID: string | number,
     }
 
     if (statusCode !== 200) {
-      if (body && data.error) {
+      if (body && !!data?.error) {
         let newError: ErrorWithEResult = new Error(data.error);
         const match = data.error.match(/^(.+) \((\d+)\)$/);
 
