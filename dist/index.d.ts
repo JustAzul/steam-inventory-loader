@@ -3,6 +3,8 @@ export interface Config {
     SteamCommunity_Jar?: any;
     tradableOnly?: boolean;
     Language?: string;
+    useProxy?: boolean;
+    proxyAddress?: string;
 }
 declare const _default: {
     Loader: (SteamID64: string, appID: string | number, contextID: string | number, LoaderConfig: Config) => Promise<AzulInventoryResponse>;
