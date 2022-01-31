@@ -20,6 +20,10 @@
     "type": "git",
     "url": "https://github.com/JustAzul/steam-inventory-loader.git"
   },
+  "bugs":{
+    "url": "https://github.com/JustAzul/steam-inventory-loader/issues"
+  },
+  "homepage": "https://github.com/JustAzul/steam-inventory-loader",
   "license": "ISC",
   "dependencies": {
     "agentkeepalive": "^4.2.0",
