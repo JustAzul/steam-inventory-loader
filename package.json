@@ -27,7 +27,7 @@
   "license": "ISC",
   "dependencies": {
     "agentkeepalive": "^4.2.0",
-    "got": "^11.8.3",
+    "got": "^11.8.5",
     "hpagent": "^0.1.2",
     "moment": "^2.29.1",
     "steamid": "^1.1.3",
