@@ -1,15 +1,19 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-console */
 
-import { duration } from 'moment';
-import steamID from 'steamid';
-import EventEmitter from 'events';
-import { CookieJar } from 'tough-cookie';
-import got from 'got';
 import CEconItem, {
-  Tag, ItemAsset, ItemDescription, ItemDetails,
+  ItemAsset,
+  ItemDescription,
+  ItemDetails,
+  Tag,
 } from './CEconItem';
+
+import { CookieJar } from 'tough-cookie';
+import EventEmitter from 'events';
+import { duration } from 'moment';
 import getAgent from './getAgent';
+import got from 'got';
+import steamID from 'steamid';
 
 interface SteamBodyResponse {
     error?: string,

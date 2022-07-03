@@ -1,5 +1,9 @@
 import RawLoader, {
-  getTag, getImageURL, getLargeImageURL, AzulInventoryResponse, isCardType,
+  AzulInventoryResponse,
+  getImageURL,
+  getLargeImageURL,
+  getTag,
+  isCardType,
 } from './getInventory';
 
 export interface Config {
