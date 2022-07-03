@@ -19,6 +19,8 @@ jobs:
           registry-url: https://registry.npmjs.org/
       
       - run: npm ci
+
+      - run: npm run build
       
       - name: Clean useless production files
         run: rm -rf ./src ./tests ./.github .gitignore ./.vscode tsconfig.json .wakatime-project .eslint*
