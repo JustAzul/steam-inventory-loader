@@ -4,8 +4,10 @@
         "node": true
     },
     "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
         "airbnb-base",
-        "plugin:@typescript-eslint/recommended"
+        "airbnb-typescript/base"
     ],
     "globals": {
         "Atomics": "readonly",
