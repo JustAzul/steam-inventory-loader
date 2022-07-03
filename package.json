@@ -12,8 +12,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "prebuild": "rimraf ./dist",
-    "prepublish": "npm run build"
+    "prebuild": "rimraf ./dist"
   },
   "author": "https://justazul.com",
   "repository": {
