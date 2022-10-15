@@ -25,6 +25,7 @@ class AzulSteamInventoryLoader {
         const key = keys[i];
 
         if (key === 'Language') setup.language = optionalConfig[key];
+        if (key === 'maxRetries') setup.maxRetries = optionalConfig[key];
         if (key === 'proxyAddress') setup.proxyAddress = optionalConfig[key];
         if (key === 'SteamCommunity_Jar')
           setup.steamCommunityJar = optionalConfig[key];

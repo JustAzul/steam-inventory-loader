@@ -24,6 +24,8 @@ export default class InventoryLoader {
 
   public readonly contextID: InventoryLoaderConstructor['contextID'];
 
+  public readonly maxRetries: number = 3;
+
   public readonly language: InventoryLoaderConstructor['language'] = 'english';
 
   public readonly proxyAddress?: InventoryLoaderConstructor['proxyAddress'];
@@ -53,6 +55,11 @@ export default class InventoryLoader {
 
   private pagesReceived = 0;
 
+  private static readonly retryInterval: number = duration(
+    1,
+    'second',
+  ).asMilliseconds();
+
   constructor({
     appID,
     contextID,
@@ -66,11 +73,12 @@ export default class InventoryLoader {
       this.steamID64 = steamID64.getSteamID64();
     else this.steamID64 = steamID64;
 
+    this.steamCommunityJar = params.steamCommunityJar;
     if (params?.language) this.language = params.language;
+    if (params?.maxRetries) this.maxRetries = params.maxRetries;
     if (params?.proxyAddress) this.proxyAddress = params.proxyAddress;
     if (params?.steamCommunityJar)
-      this.steamCommunityJar = params.steamCommunityJar;
-    if (params?.tradableOnly) this.tradableOnly = params.tradableOnly;
+      if (params?.tradableOnly) this.tradableOnly = params.tradableOnly;
     if (params?.useProxy) this.useProxy = params.useProxy;
   }
 
@@ -95,7 +103,7 @@ export default class InventoryLoader {
       setTimeout(() => {
         this.retryCount += 1;
         resolve(this.fetch());
-      }, duration(1, 'second').asMilliseconds());
+      }, InventoryLoader.retryInterval);
     });
   }
 
@@ -139,7 +147,7 @@ export default class InventoryLoader {
       }
 
       if (!data || !data?.success || !data?.assets || !data?.descriptions) {
-        if (this.retryCount < 3) {
+        if (this.retryCount < this.maxRetries) {
           await this.fetchRetry();
           return;
         }
@@ -198,7 +206,7 @@ export default class InventoryLoader {
           return;
         }
 
-        if (this.retryCount < 3) {
+        if (this.retryCount < this.maxRetries) {
           await this.fetchRetry();
           return;
         }
@@ -232,13 +240,13 @@ export default class InventoryLoader {
 
         if (!this.tradableOnly || (description && description?.tradable)) {
           if (description) {
-            const item = utils.parseItem({
-              contextID: this.contextID.toString(),
-              description,
-              item: itemAsset,
-            });
-
-            this.inventory.push(item);
+            this.inventory.push(
+              utils.parseItem({
+                contextID: this.contextID.toString(),
+                description,
+                item: itemAsset,
+              }),
+            );
           }
         }
       }
