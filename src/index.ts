@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { AzulInventoryResponse } from './types/azul-inventory-response.type';
 import InventoryLoader from './inventory-loader';
 import { InventoryLoaderConstructor } from './types/inventory-loader-constructor.type';

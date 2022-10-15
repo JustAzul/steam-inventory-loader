@@ -43,6 +43,7 @@ export default class Utils {
     // eslint-disable-next-line camelcase
     icon_url,
   }: ItemDescription | ItemDetails): string {
+    // eslint-disable-next-line camelcase
     return `https://steamcommunity-a.akamaihd.net/economy/image/${icon_url}/`;
   }
 
@@ -110,14 +111,13 @@ export default class Utils {
       // eslint-disable-next-line camelcase
       is_currency && !!item?.currencyid ? item.currencyid : item.assetid;
 
-    // const description = itemDescription?.[`${item.classid}_${item.instanceid}`] || {}
-
     if (description) {
       // Is this a listing of descriptions?
       const ListingKey = `${item.classid}_${item.instanceid}`;
-      // eslint-disable-next-line no-param-reassign
       if (Object.prototype.hasOwnProperty.call(description, ListingKey))
-        // eslint-disable-next-line no-param-reassign
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore need some rework on this later
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, no-param-reassign
         description = description[ListingKey];
     }
 
@@ -125,7 +125,6 @@ export default class Utils {
       is_currency,
       id,
       appid: item.appid,
-      // pos: item.pos,
       classid: item.classid,
       assetid: item.assetid,
       instanceid: item.instanceid || '0',
@@ -179,8 +178,9 @@ export default class Utils {
       itemDetails.market_hash_name
     ) {
       // eslint-disable-next-line no-underscore-dangle
-      const _match = itemDetails.market_hash_name.match(/^(\d+)-/);
-      if (_match) itemDetails.market_fee_app = parseInt(_match[1], 10);
+      const matchResult = /^(\d+)-/.exec(itemDetails.market_hash_name);
+      if (matchResult)
+        itemDetails.market_fee_app = parseInt(matchResult[1], 10);
     }
 
     // If we have item_expiration, also set cache_expiration to the same value

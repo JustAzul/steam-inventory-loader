@@ -1,9 +1,8 @@
+/* eslint-disable camelcase */
 export type Tag = {
-  // eslint-disable-next-line camelcase
-  internal_name: string;
-  name: string;
+  category_name: string;
   category: string;
   color: string;
-  // eslint-disable-next-line camelcase
-  category_name: string;
+  internal_name: string;
+  name: string;
 };

@@ -1,63 +1,38 @@
+/* eslint-disable camelcase */
 import { InnerItemDescription } from './inner-item-description.type';
 import { ItemActions } from './item-actions.type';
 import { Tag } from './tag.type';
 
 export type ItemDetails = {
-  id: string;
-
-  // eslint-disable-next-line camelcase
-  is_currency: boolean;
-  instanceid: string;
+  actions: ItemActions[];
   amount: number;
-  contextid: string;
-
   appid: number;
   assetid: string;
-  classid: string;
-  // pos: number,
-
-  tradable: boolean;
-  marketable: boolean;
-  commodity: boolean;
-
-  fraudwarnings: unknown[];
-  descriptions: InnerItemDescription[];
-  // eslint-disable-next-line camelcase
-  owner_descriptions?: InnerItemDescription[];
-
-  // eslint-disable-next-line camelcase
-  market_hash_name: string;
-  // eslint-disable-next-line camelcase
-  market_tradable_restriction: number;
-  // eslint-disable-next-line camelcase
-  market_marketable_restriction: number;
-  // eslint-disable-next-line camelcase
-  market_fee_app?: number;
-
-  // eslint-disable-next-line camelcase
-  cache_expiration?: string;
-  // eslint-disable-next-line camelcase
-  item_expiration?: string;
-
-  tags?: Tag[];
-  actions: ItemActions[];
-
-  // eslint-disable-next-line camelcase
-  owner_actions?: ItemActions[];
-
-  // descs
-
-  // eslint-disable-next-line camelcase
   background_color: string;
+  cache_expiration?: string;
+  classid: string;
+  commodity: boolean;
+  contextid: string;
   currency: number;
-  // eslint-disable-next-line camelcase
-  icon_url: string;
-  // eslint-disable-next-line camelcase
+  descriptions: InnerItemDescription[];
+  fraudwarnings: unknown[];
   icon_url_large: string;
-
-  // eslint-disable-next-line camelcase
+  icon_url: string;
+  id: string;
+  instanceid: string;
+  is_currency: boolean;
+  item_expiration?: string;
+  market_fee_app?: number;
+  market_hash_name: string;
+  market_marketable_restriction: number;
   market_name: string;
+  market_tradable_restriction: number;
+  marketable: boolean;
   name: string;
-  type: string;
+  owner_actions?: ItemActions[];
+  owner_descriptions?: InnerItemDescription[];
   owner?: unknown;
+  tags?: Tag[];
+  tradable: boolean;
+  type: string;
 };

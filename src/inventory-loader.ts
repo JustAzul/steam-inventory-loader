@@ -1,6 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable no-console */
-
 import got, { OptionsOfTextResponseBody } from 'got';
 
 import { AzulInventoryResponse } from './types/azul-inventory-response.type';
@@ -25,7 +22,7 @@ export default class InventoryLoader {
 
   public readonly steamCommunityJar?: InventoryLoaderConstructor['steamCommunityJar'];
 
-  public readonly steamID64: InventoryLoaderConstructor['steamID64'];
+  public readonly steamID64: string;
 
   public readonly tradableOnly: InventoryLoaderConstructor['tradableOnly'] =
     true;
@@ -144,7 +141,7 @@ export default class InventoryLoader {
     if (statusCode !== 200) {
       if (body && !!data?.error) {
         let newError: ErrorWithEResult = new Error(data.error);
-        const match = data.error.match(/^(.+) \((\d+)\)$/);
+        const match = /^(.+) \((\d+)\)$/.exec(data.error);
 
         if (match) {
           newError = new Error(match[1]);
@@ -262,7 +259,7 @@ export default class InventoryLoader {
 
   public async loadInventory(): Promise<AzulInventoryResponse> {
     const [result] = await Promise.all([
-      (async function (self) {
+      (async function _(self) {
         return new Promise<AzulInventoryResponse>((resolve, reject) => {
           self.bindDataEvents();
 

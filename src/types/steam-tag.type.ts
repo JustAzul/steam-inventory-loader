@@ -1,13 +1,10 @@
+/* eslint-disable camelcase */
 export type SteamTag = {
-  category: string;
-  // eslint-disable-next-line camelcase
-  internal_name: string;
-  // eslint-disable-next-line camelcase
-  localized_category_name?: string;
-  // eslint-disable-next-line camelcase
-  localized_tag_name: string;
-  // eslint-disable-next-line camelcase
   category_name: string;
+  category: string;
   color?: string;
+  internal_name: string;
+  localized_category_name?: string;
+  localized_tag_name: string;
   name?: string;
 };
