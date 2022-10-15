@@ -1,3 +1,3 @@
 export type InnerItemDescription = {
-    value: string
-    }
+  value: string;
+};

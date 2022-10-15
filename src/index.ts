@@ -1,32 +1,46 @@
-import RawLoader, {
-  AzulInventoryResponse,
-  getImageURL,
-  getLargeImageURL,
-  getTag,
-  isCardType,
-} from './getInventory';
+import { AzulInventoryResponse } from './types/azul-inventory-response.type';
+import InventoryLoader from './inventory-loader';
+import { InventoryLoaderConstructor } from './types/inventory-loader-constructor.type';
+import { OptionalConfig } from './types/optional-config.type';
+import utils from './utils';
 
-export interface Config {
-    // eslint-disable-next-line camelcase, @typescript-eslint/no-explicit-any
-    SteamCommunity_Jar?: any,
-    tradableOnly?: boolean,
-    Language?: string
-    useProxy?: boolean
-    proxyAddress?: string
+class AzulSteamInventoryLoader {
+  public static async loader(
+    SteamID64: string,
+    appID: string | number,
+    contextID: string | number,
+    optionalConfig?: OptionalConfig,
+  ): Promise<AzulInventoryResponse> {
+    const setup: InventoryLoaderConstructor = {
+      appID,
+      contextID,
+      steamID64: SteamID64,
+    };
+
+    if (optionalConfig) {
+      const keys = Object.keys(optionalConfig) as Array<keyof OptionalConfig>;
+
+      for (let i = 0; i < keys.length; i += 1) {
+        const key = keys[i];
+
+        if (key === 'Language') setup.language = optionalConfig[key];
+        if (key === 'proxyAddress') setup.proxyAddress = optionalConfig[key];
+        if (key === 'SteamCommunity_Jar')
+          setup.steamCommunityJar = optionalConfig[key];
+        if (key === 'tradableOnly') setup.tradableOnly = optionalConfig[key];
+        if (key === 'useProxy') setup.useProxy = optionalConfig[key];
+      }
+    }
+
+    const loaderInterface = new InventoryLoader(setup);
+    return loaderInterface.loadInventory();
+  }
 }
 
-const Loader = (SteamID64: string, appID: string | number, contextID: string | number, LoaderConfig: Config): Promise<AzulInventoryResponse> => {
-  const Defaults = {
-    SteamCommunity_Jar: LoaderConfig?.SteamCommunity_Jar || undefined,
-    tradableOnly: LoaderConfig?.tradableOnly ?? true,
-    Language: LoaderConfig?.Language ?? 'english',
-    useProxy: LoaderConfig?.useProxy ?? false,
-    proxyAddress: LoaderConfig?.proxyAddress ?? 'false',
-  };
-
-  return RawLoader(SteamID64, appID, contextID, Defaults.tradableOnly, Defaults.SteamCommunity_Jar, Defaults.Language, Defaults.useProxy, Defaults.proxyAddress);
-};
-
 export default {
-  Loader, getTag, getImageURL, getLargeImageURL, isCardType,
+  getImageURL: utils.getImageURL,
+  getLargeImageURL: utils.getLargeImageURL,
+  getTag: utils.getTag,
+  isCardType: utils.isCardType,
+  Loader: AzulSteamInventoryLoader.loader,
 };
