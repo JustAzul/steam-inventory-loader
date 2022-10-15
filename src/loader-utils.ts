@@ -1,5 +1,7 @@
+import { Cookie } from './types/cookie.type';
 import { HttpsAgent } from 'agentkeepalive';
 import { HttpsProxyAgent } from 'hpagent';
+import { InventoryLoaderConstructor } from './types/inventory-loader-constructor.type';
 import { ItemAsset } from './types/item-asset.type';
 import { ItemDescription } from './types/item-description.type';
 import { ItemDetails } from './types/item-details.type';
@@ -19,6 +21,24 @@ export default class LoaderUtils {
     }
 
     return this.defaultAgent;
+  }
+
+  public static parseCookies(
+    jarInput?: InventoryLoaderConstructor['steamCommunityJar'],
+  ): string {
+    if (!jarInput) return '';
+
+    if ('_jar' in jarInput) {
+      // eslint-disable-next-line no-underscore-dangle
+      return this.parseCookies(jarInput._jar);
+    }
+
+    const result = (jarInput.serializeSync().cookies as Cookie[])
+      .filter(({ domain }) => domain === 'steamcommunity.com')
+      .map(({ key, value }) => `${key}=${value}`)
+      .join('; ');
+
+    return result;
   }
 
   public static findDescriptionKey({

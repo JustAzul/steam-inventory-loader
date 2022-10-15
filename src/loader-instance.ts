@@ -1,8 +1,9 @@
 import Axios, {
   AxiosError,
+  AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse,
-  AxiosStatic,
+  RawAxiosRequestHeaders,
 } from 'axios';
 
 import { AzulInventoryResponse } from './types/azul-inventory-response.type';
@@ -15,12 +16,11 @@ import { ItemDetails } from './types/item-details.type';
 import LoaderUtils from './loader-utils';
 import { SteamBodyResponse } from './types/steam-body-response.type';
 import { duration } from 'moment';
-import { wrapper } from 'axios-cookiejar-support';
 
 export default class LoaderInstance {
   public readonly appID: InventoryLoaderConstructor['appID'];
 
-  public readonly axios: AxiosStatic = wrapper(Axios);
+  public readonly axios: AxiosInstance = Axios.create();
 
   public readonly contextID: InventoryLoaderConstructor['contextID'];
 
@@ -55,6 +55,8 @@ export default class LoaderInstance {
 
   private pagesReceived = 0;
 
+  private cookies = '';
+
   private static readonly retryInterval: number = duration(
     1,
     'second',
@@ -73,12 +75,15 @@ export default class LoaderInstance {
       this.steamID64 = steamID64.getSteamID64();
     else this.steamID64 = steamID64;
 
-    this.steamCommunityJar = params.steamCommunityJar;
     if (params?.language) this.language = params.language;
     if (params?.maxRetries) this.maxRetries = params.maxRetries;
     if (params?.proxyAddress) this.proxyAddress = params.proxyAddress;
-    if (params?.steamCommunityJar)
-      if (params?.tradableOnly) this.tradableOnly = params.tradableOnly;
+
+    if (params?.steamCommunityJar) {
+      this.cookies = LoaderUtils.parseCookies(params?.steamCommunityJar);
+    }
+
+    if (params?.tradableOnly) this.tradableOnly = params.tradableOnly;
     if (params?.useProxy) this.useProxy = params.useProxy;
   }
 
@@ -91,10 +96,11 @@ export default class LoaderInstance {
     });
   }
 
-  private getHeaders() {
+  private getDefaultHeaders(): RawAxiosRequestHeaders {
     return {
-      Referer: `https://steamcommunity.com/profiles/${this.steamID64}/inventory`,
+      Cookie: this.cookies,
       Host: 'steamcommunity.com',
+      Referer: `https://steamcommunity.com/profiles/${this.steamID64}/inventory`,
     };
   }
 
@@ -115,11 +121,12 @@ export default class LoaderInstance {
     };
 
     const options: AxiosRequestConfig<never> = {
-      headers: this.getHeaders(),
+      headers: {
+        ...this.getDefaultHeaders(),
+      },
       httpsAgent: LoaderUtils.getAgent(
         this.useProxy ? this.proxyAddress : undefined,
       ),
-      jar: this.steamCommunityJar,
       params,
       responseType: 'json',
       timeout: duration(25, 'seconds').asMilliseconds(),
@@ -175,7 +182,7 @@ export default class LoaderInstance {
       this.isFetchDone = true;
       this.checkIfIsDone();
     } catch (e) {
-      if (!this.axios.isAxiosError(e)) {
+      if (!Axios.isAxiosError(e)) {
         this.events.emit('error', e);
         return;
       }
