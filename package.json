@@ -1,6 +1,6 @@
 {
   "name": "azul-steam-inventory-loader",
-  "version": "3.3.0",
+  "version": "3.3.1",
   "description": "Steam Inventory Loader By Azul, faster than node-steamcommunity on average, built-in error retry, and memory friendly when using",
   "main": "azul.js",
   "keywords": [
