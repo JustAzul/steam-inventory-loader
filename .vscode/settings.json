@@ -12,6 +12,7 @@
         "fraudwarnings",
         "instanceid",
         "linebreak",
-        "steamcommunity"
+        "steamcommunity",
+        "steamid"
     ]
 }
