@@ -12,12 +12,12 @@ import { InventoryLoaderConstructor } from './types/inventory-loader-constructor
 import { ItemAsset } from './types/item-asset.type';
 import { ItemDescription } from './types/item-description.type';
 import { ItemDetails } from './types/item-details.type';
+import LoaderUtils from './loader-utils';
 import { SteamBodyResponse } from './types/steam-body-response.type';
 import { duration } from 'moment';
-import utils from './utils';
 import { wrapper } from 'axios-cookiejar-support';
 
-export default class InventoryLoader {
+export default class LoaderInstance {
   public readonly appID: InventoryLoaderConstructor['appID'];
 
   public readonly axios: AxiosStatic = wrapper(Axios);
@@ -103,7 +103,7 @@ export default class InventoryLoader {
       setTimeout(() => {
         this.retryCount += 1;
         resolve(this.fetch());
-      }, InventoryLoader.retryInterval);
+      }, LoaderInstance.retryInterval);
     });
   }
 
@@ -116,7 +116,9 @@ export default class InventoryLoader {
 
     const options: AxiosRequestConfig<never> = {
       headers: this.getHeaders(),
-      httpsAgent: utils.getAgent(this.useProxy ? this.proxyAddress : undefined),
+      httpsAgent: LoaderUtils.getAgent(
+        this.useProxy ? this.proxyAddress : undefined,
+      ),
       jar: this.steamCommunityJar,
       params,
       responseType: 'json',
@@ -222,7 +224,7 @@ export default class InventoryLoader {
   private updateDescriptionCache(itemDescriptions: ItemDescription[]) {
     for (let i = 0; i < itemDescriptions.length; i += 1) {
       const itemDescription = itemDescriptions[i];
-      const descriptionKey = utils.findDescriptionKey(itemDescription);
+      const descriptionKey = LoaderUtils.findDescriptionKey(itemDescription);
 
       if (!this.cache.has(descriptionKey)) {
         this.cache.set(descriptionKey, itemDescription);
@@ -235,13 +237,13 @@ export default class InventoryLoader {
       const itemAsset = itemAssets[i];
 
       if (!itemAsset.currencyid) {
-        const descriptionKey = utils.findDescriptionKey(itemAsset);
+        const descriptionKey = LoaderUtils.findDescriptionKey(itemAsset);
         const description = this.cache.get(descriptionKey);
 
         if (!this.tradableOnly || (description && description?.tradable)) {
           if (description) {
             this.inventory.push(
-              utils.parseItem({
+              LoaderUtils.parseItem({
                 contextID: this.contextID.toString(),
                 description,
                 item: itemAsset,

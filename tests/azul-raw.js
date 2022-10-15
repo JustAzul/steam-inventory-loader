@@ -1,7 +1,7 @@
 /* eslint-disable global-require */
 /* eslint-disable @typescript-eslint/no-var-requires */
 const { formatNumber } = require('azul-tools');
-const Azul = require('..');
+const { Loader } = require('..');
 const cfg = require('./config');
 
 process.nextTick(async () => {
@@ -11,7 +11,7 @@ process.nextTick(async () => {
   console.log(`Testing Azul Loader (${id})`);
 
   console.time(TimeKey);
-  const Inventory = await Azul.Loader(id, cfg.appID, cfg.contextID);
+  const Inventory = await Loader(id, cfg.appID, cfg.contextID);
   console.timeEnd(TimeKey);
 
   console.log(`Inventory Size: ${formatNumber(Inventory.count)} items`);

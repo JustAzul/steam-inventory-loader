@@ -1,12 +1,11 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 import { AzulInventoryResponse } from './types/azul-inventory-response.type';
-import InventoryLoader from './inventory-loader';
 import { InventoryLoaderConstructor } from './types/inventory-loader-constructor.type';
+import LoaderInstance from './loader-instance';
 import { OptionalConfig } from './types/optional-config.type';
-import utils from './utils';
+import Utils from './utils';
 
-class AzulSteamInventoryLoader {
-  public static async loader(
+export default class AzulSteamInventoryLoader extends Utils {
+  public static Loader(
     SteamID64: string,
     appID: string | number,
     contextID: string | number,
@@ -34,15 +33,7 @@ class AzulSteamInventoryLoader {
       }
     }
 
-    const loaderInterface = new InventoryLoader(setup);
+    const loaderInterface = new LoaderInstance(setup);
     return loaderInterface.loadInventory();
   }
 }
-
-export default {
-  getImageURL: utils.getImageURL,
-  getLargeImageURL: utils.getLargeImageURL,
-  getTag: utils.getTag,
-  isCardType: utils.isCardType,
-  Loader: AzulSteamInventoryLoader.loader,
-};
