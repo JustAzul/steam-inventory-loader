@@ -1,4 +1,9 @@
-import got, { OptionsOfTextResponseBody } from 'got';
+import Axios, {
+  AxiosError,
+  AxiosRequestConfig,
+  AxiosResponse,
+  AxiosStatic,
+} from 'axios';
 
 import { AzulInventoryResponse } from './types/azul-inventory-response.type';
 import { ErrorWithEResult } from './types/error-with-eresult.type';
@@ -10,9 +15,12 @@ import { ItemDetails } from './types/item-details.type';
 import { SteamBodyResponse } from './types/steam-body-response.type';
 import { duration } from 'moment';
 import utils from './utils';
+import { wrapper } from 'axios-cookiejar-support';
 
 export default class InventoryLoader {
   public readonly appID: InventoryLoaderConstructor['appID'];
+
+  public readonly axios: AxiosStatic = wrapper(Axios);
 
   public readonly contextID: InventoryLoaderConstructor['contextID'];
 
@@ -92,113 +100,115 @@ export default class InventoryLoader {
   }
 
   private async fetch(): Promise<void> {
-    const searchParams = {
+    const params = {
       l: this.language,
       count: 5000,
       start_assetid: this.startAssetID,
     };
 
-    const gotOptions: OptionsOfTextResponseBody = {
-      url: `https://steamcommunity.com/inventory/${this.steamID64}/${this.appID}/${this.contextID}`,
+    const options: AxiosRequestConfig<never> = {
       headers: this.getHeaders(),
-      searchParams,
-      cookieJar: this.steamCommunityJar,
-      throwHttpErrors: false,
+      httpsAgent: utils.getAgent(this.useProxy ? this.proxyAddress : undefined),
+      jar: this.steamCommunityJar,
+      params,
+      responseType: 'json',
       timeout: duration(25, 'seconds').asMilliseconds(),
-      agent: {
-        https: utils.getAgent(this.useProxy ? this.proxyAddress : undefined),
-      },
     };
 
-    // eslint-disable-next-line prefer-const
-    let { statusCode, body } = await got(gotOptions);
-
-    // eslint-disable-next-line eqeqeq
-    if (statusCode === 403 && body == 'null') {
-      this.events.emit('error', new Error('This profile is private.'));
-      return;
-    }
-
-    if (statusCode === 429) {
-      this.events.emit('error', new Error('rate limited'));
-      return;
-    }
-
-    let data: SteamBodyResponse;
-
     try {
-      data = JSON.parse(body);
-    } catch {
-      if (this.retryCount < 3) {
-        this.fetchRetry();
+      const {
+        data,
+      }: AxiosResponse<SteamBodyResponse, never> & { data: SteamBodyResponse } =
+        await this.axios.get<
+          SteamBodyResponse,
+          AxiosResponse<SteamBodyResponse, never>,
+          never
+        >(
+          `https://steamcommunity.com/inventory/${this.steamID64}/${this.appID}/${this.contextID}`,
+          options,
+        );
+
+      if (!!data.success && data.total_inventory_count === 0) {
+        this.events.emit('done', {
+          success: !!data.success,
+          inventory: [],
+          count: data.total_inventory_count ?? 0,
+        });
+
         return;
       }
 
-      this.events.emit('error', new Error('Malformed response'));
-      return;
-    }
-
-    if (statusCode !== 200) {
-      if (body && !!data?.error) {
-        let newError: ErrorWithEResult = new Error(data.error);
-        const match = /^(.+) \((\d+)\)$/.exec(data.error);
-
-        if (match) {
-          newError = new Error(match[1]);
-          // eslint-disable-next-line prefer-destructuring
-          newError.eresult = match[2];
+      if (!data || !data?.success || !data?.assets || !data?.descriptions) {
+        if (this.retryCount < 3) {
+          await this.fetchRetry();
+          return;
         }
 
-        this.events.emit('error', newError);
+        if (data) {
+          const message = data?.error || data?.Error;
+          this.events.emit('error', new Error(message || 'Malformed response'));
+          return;
+        }
+
+        this.events.emit('error', new Error('Malformed response'));
         return;
       }
 
-      if (this.retryCount < 3) {
+      this.events.emit('data', data.descriptions, data.assets);
+
+      if (data.more_items) {
+        this.startAssetID = data.last_assetid;
         await this.fetchRetry();
         return;
       }
 
-      this.events.emit('error', new Error('Bad statusCode'));
-      return;
-    }
-
-    if (!!data?.success && data?.total_inventory_count === 0) {
-      this.events.emit('done', {
-        success: !!data.success,
-        inventory: [],
-        count: data.total_inventory_count ?? 0,
-      });
-      return;
-    }
-
-    if (!data || !data?.success || !data?.assets || !data?.descriptions) {
-      if (this.retryCount < 3) {
-        await this.fetchRetry();
+      this.isFetchDone = true;
+      this.checkIfIsDone();
+    } catch (e) {
+      if (!this.axios.isAxiosError(e)) {
+        this.events.emit('error', e);
         return;
       }
 
-      if (data) {
-        this.events.emit(
-          'error',
-          new Error(data?.error || data?.Error || 'Malformed response'),
-        );
+      const err = e as AxiosError<SteamBodyResponse, never>;
+
+      if (err.response?.status === 403) {
+        this.events.emit('error', new Error('This profile is private.'));
         return;
       }
 
-      this.events.emit('error', new Error('Malformed response'));
-      return;
+      if (err.response?.status === 429) {
+        this.events.emit('error', new Error('rate limited'));
+        return;
+      }
+
+      if (err.response?.status !== 200) {
+        if (err.response?.data && !!err.response?.data?.error) {
+          let newError: ErrorWithEResult = new Error(err.response?.data?.error);
+          const match = /^(.+) \((\d+)\)$/.exec(err.response?.data?.error);
+
+          if (match) {
+            const [, resErr, eResult] = match;
+
+            newError = new Error(resErr);
+            newError.eresult = eResult;
+          }
+
+          this.events.emit('error', newError);
+          return;
+        }
+
+        if (this.retryCount < 3) {
+          await this.fetchRetry();
+          return;
+        }
+
+        this.events.emit('error', new Error('Bad statusCode'));
+        return;
+      }
+
+      this.events.emit('error', err);
     }
-
-    this.events.emit('data', data.descriptions, data.assets);
-
-    if (data.more_items) {
-      this.startAssetID = data.last_assetid;
-      await this.fetchRetry();
-      return;
-    }
-
-    this.isFetchDone = true;
-    this.checkIfIsDone();
   }
 
   private updateDescriptionCache(itemDescriptions: ItemDescription[]) {
@@ -206,12 +216,9 @@ export default class InventoryLoader {
       const itemDescription = itemDescriptions[i];
       const descriptionKey = utils.findDescriptionKey(itemDescription);
 
-      if (this.cache.has(descriptionKey)) {
-        // eslint-disable-next-line no-continue
-        continue;
+      if (!this.cache.has(descriptionKey)) {
+        this.cache.set(descriptionKey, itemDescription);
       }
-
-      this.cache.set(descriptionKey, itemDescription);
     }
   }
 
@@ -224,14 +231,15 @@ export default class InventoryLoader {
         const description = this.cache.get(descriptionKey);
 
         if (!this.tradableOnly || (description && description?.tradable)) {
-          const item = utils.parseItem({
-            contextID: this.contextID.toString(),
-            // @ts-expect-error Description will never be undefined.
-            description,
-            item: itemAsset,
-          });
+          if (description) {
+            const item = utils.parseItem({
+              contextID: this.contextID.toString(),
+              description,
+              item: itemAsset,
+            });
 
-          this.inventory.push(item);
+            this.inventory.push(item);
+          }
         }
       }
     }
