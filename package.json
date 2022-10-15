@@ -13,7 +13,8 @@
   "scripts": {
     "build": "tsc",
     "prebuild": "rimraf ./dist",
-    "prettier": "prettier --config .prettierrc 'src/**/*.ts' --write"
+    "prettier": "prettier --config .prettierrc 'src/**/*.ts' --write",
+    "test": "npm run build && node ./tests/azul-raw.js --expose-gc"
   },
   "author": "https://justazul.com",
   "repository": {
