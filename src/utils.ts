@@ -32,10 +32,10 @@ export default class Utils {
   public static isCardType(tags?: Tag[]): false | CardType {
     if (!tags) return false;
 
-    const itemClass = this.getTag(tags, 'item_class');
+    const itemClass = Utils.getTag(tags, 'item_class');
 
     if (itemClass && itemClass.internal_name === 'item_class_2') {
-      const cardBorder = this.getTag(tags, 'cardborder');
+      const cardBorder = Utils.getTag(tags, 'cardborder');
 
       if (cardBorder) {
         if (cardBorder.internal_name === 'cardborder_0') return 'Normal';
