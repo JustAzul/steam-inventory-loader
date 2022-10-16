@@ -17,6 +17,7 @@
         "linebreak",
         "rwgrsn",
         "steamcommunity",
-        "steamid"
+        "steamid",
+        "undici"
     ]
 }
