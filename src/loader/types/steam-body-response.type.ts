@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
-import type { ItemAsset } from './item-asset.type';
-import type { ItemDescription } from './item-description.type';
+import type { ItemAsset } from '../../inventory/types/item-asset.type';
+import type { ItemDescription } from '../../inventory/types/item-description.type';
 
 export type SteamBodyResponse = {
   assets: ItemAsset[];

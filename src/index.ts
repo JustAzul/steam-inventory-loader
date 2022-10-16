@@ -1,8 +1,10 @@
-import type { AzulInventoryResponse } from './loader/types/azul-inventory-response.type';
 import InventoryLoader from './loader';
 import type { InventoryLoaderConstructor } from './loader/types/inventory-loader-constructor.type';
+import type { LoaderResponse } from './loader/types/loader-response';
 import type { OptionalConfig } from './types/optional-config.type';
 import Utils from './utils';
+
+type AzulInventoryResponse = LoaderResponse;
 
 export default class AzulSteamInventoryLoader extends Utils {
   public static Loader(

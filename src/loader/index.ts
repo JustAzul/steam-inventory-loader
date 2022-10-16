@@ -12,13 +12,13 @@ import {
 } from '../constants';
 
 import Axios from 'axios';
-import type { AzulInventoryResponse } from './types/azul-inventory-response.type';
 import type { ErrorWithEResult } from './types/error-with-eresult.type';
 import EventEmitter from 'events';
+import Inventory from '../inventory';
 import type { InventoryLoaderConstructor } from './types/inventory-loader-constructor.type';
-import type { ItemAsset } from './types/item-asset.type';
-import type { ItemDescription } from './types/item-description.type';
-import type { ItemDetails } from './types/item-details.type';
+import type { ItemAsset } from '../inventory/types/item-asset.type';
+import type { ItemDescription } from '../inventory/types/item-description.type';
+import type { LoaderResponse } from './types/loader-response';
 import LoaderUtils from './utils';
 import { RequestParams } from './types/request-params.type';
 import type { SteamBodyResponse } from './types/steam-body-response.type';
@@ -32,11 +32,9 @@ export default class InventoryLoader {
 
   private pagesReceived = 0;
 
-  private readonly cache: Map<string, ItemDescription> = new Map();
-
   private readonly events: EventEmitter = new EventEmitter();
 
-  private readonly inventory: ItemDetails[] = [];
+  private readonly inventory: Inventory;
 
   private retryCount = 0;
 
@@ -62,8 +60,6 @@ export default class InventoryLoader {
 
   public readonly steamID64: string;
 
-  public readonly tradableOnly: boolean = true;
-
   public readonly useProxy: boolean = false;
 
   constructor({
@@ -74,6 +70,11 @@ export default class InventoryLoader {
   }: InventoryLoaderConstructor) {
     this.appID = appID;
     this.contextID = contextID;
+
+    this.inventory = new Inventory({
+      contextID: String(this.contextID),
+      tradableOnly: params?.tradableOnly ?? true,
+    });
 
     if (typeof steamID64 !== 'string')
       this.steamID64 = steamID64.getSteamID64();
@@ -87,17 +88,12 @@ export default class InventoryLoader {
       this.cookies = LoaderUtils.parseCookies(params?.steamCommunityJar);
     }
 
-    if (params?.tradableOnly) this.tradableOnly = params.tradableOnly;
     if (params?.useProxy) this.useProxy = params.useProxy;
   }
 
   private clear(): void {
     this.events.removeAllListeners();
-
-    process.nextTick(() => {
-      this.cache.clear();
-      if (global?.gc) global.gc();
-    });
+    this.inventory.clearCache();
   }
 
   private getDefaultHeaders(): RawAxiosRequestHeaders {
@@ -233,48 +229,14 @@ export default class InventoryLoader {
     }
   }
 
-  private updateDescriptionCache(itemDescriptions: ItemDescription[]) {
-    for (let i = 0; i < itemDescriptions.length; i += 1) {
-      const itemDescription = itemDescriptions[i];
-      const descriptionKey = LoaderUtils.findDescriptionKey(itemDescription);
-
-      if (!this.cache.has(descriptionKey)) {
-        this.cache.set(descriptionKey, itemDescription);
-      }
-    }
-  }
-
-  private parseItems(itemAssets: ItemAsset[]) {
-    for (let i = 0; i < itemAssets.length; i += 1) {
-      const itemAsset = itemAssets[i];
-
-      if (!itemAsset.currencyid) {
-        const descriptionKey = LoaderUtils.findDescriptionKey(itemAsset);
-        const description = this.cache.get(descriptionKey);
-
-        if (!this.tradableOnly || (description && description?.tradable)) {
-          if (description) {
-            this.inventory.push(
-              LoaderUtils.parseItem({
-                contextID: this.contextID.toString(),
-                description,
-                item: itemAsset,
-              }),
-            );
-          }
-        }
-      }
-    }
-  }
-
   private bindDataEvents() {
     this.events.on(
       'data',
       (itemDescriptions: ItemDescription[], itemAssets: ItemAsset[]) => {
         this.pagesReceived += 1;
 
-        this.updateDescriptionCache(itemDescriptions);
-        this.parseItems(itemAssets);
+        this.inventory.updateDescriptions(itemDescriptions);
+        this.inventory.insertItems(itemAssets);
 
         this.pagesDone += 1;
         this.checkIfIsDone();
@@ -287,18 +249,20 @@ export default class InventoryLoader {
       this.events.emit('done');
   }
 
-  private buildResponse(): AzulInventoryResponse {
+  private buildResponse(): LoaderResponse {
+    const inventory = this.inventory.getInventory();
+
     return {
-      count: this.inventory.length,
-      inventory: this.inventory,
+      count: inventory.length,
+      inventory,
       success: true,
     };
   }
 
-  public async loadInventory(): Promise<AzulInventoryResponse> {
+  public async loadInventory(): Promise<LoaderResponse> {
     const [result] = await Promise.all([
       (async function _(self) {
-        return new Promise<AzulInventoryResponse>((resolve, reject) => {
+        return new Promise<LoaderResponse>((resolve, reject) => {
           self.bindDataEvents();
 
           self.events.once('done', () => {
