@@ -1,12 +1,12 @@
-import { Cookie } from './types/cookie.type';
+import type { Cookie } from '../types/cookie.type';
 import { HttpsAgent } from 'agentkeepalive';
 import { HttpsProxyAgent } from 'hpagent';
-import { InventoryLoaderConstructor } from './types/inventory-loader-constructor.type';
-import { ItemAsset } from './types/item-asset.type';
-import { ItemDescription } from './types/item-description.type';
-import { ItemDetails } from './types/item-details.type';
-import { SteamTag } from './types/steam-tag.type';
-import { Tag } from './types/tag.type';
+import type { InventoryLoaderConstructor } from './types/inventory-loader-constructor.type';
+import type { ItemAsset } from './types/item-asset.type';
+import type { ItemDescription } from './types/item-description.type';
+import type { ItemDetails } from './types/item-details.type';
+import type { SteamTag } from './types/steam-tag.type';
+import type { Tag } from './types/tag.type';
 
 export default class LoaderUtils {
   private static readonly defaultAgent = new HttpsAgent();
@@ -14,29 +14,30 @@ export default class LoaderUtils {
   public static getAgent(proxyAddress?: string): HttpsProxyAgent | HttpsAgent {
     if (proxyAddress) {
       const ProxyAgent = new HttpsProxyAgent({
+        keepAlive: true,
         proxy: proxyAddress,
       });
 
       return ProxyAgent;
     }
 
-    return this.defaultAgent;
+    return LoaderUtils.defaultAgent;
   }
 
   public static parseCookies(
-    jarInput?: InventoryLoaderConstructor['steamCommunityJar'],
+    jarLikeInput?: InventoryLoaderConstructor['steamCommunityJar'],
   ): string {
-    if (!jarInput) return '';
+    if (!jarLikeInput) return '';
 
-    if ('_jar' in jarInput) {
+    if ('_jar' in jarLikeInput) {
       // eslint-disable-next-line no-underscore-dangle
-      return this.parseCookies(jarInput._jar);
+      return LoaderUtils.parseCookies(jarLikeInput._jar);
     }
 
-    const result = (jarInput.serializeSync().cookies as Cookie[])
+    const result = (jarLikeInput.serializeSync().cookies as Cookie[])
       .filter(({ domain }) => domain === 'steamcommunity.com')
-      .map(({ key, value }) => `${key}=${value}`)
-      .join('; ');
+      .map(({ key, value }) => `${key}=${value};`)
+      .join(' ');
 
     return result;
   }
@@ -64,7 +65,7 @@ export default class LoaderUtils {
 
     for (let i = 0; i < tags.length; i += 1) {
       const tag = tags[i];
-      ParsedTags.push(this.parseTag(tag));
+      ParsedTags.push(LoaderUtils.parseTag(tag));
     }
 
     return ParsedTags;
@@ -143,7 +144,9 @@ export default class LoaderUtils {
           : description.owner,
     };
 
-    if (description?.tags) itemDetails.tags = this.parseTags(description.tags);
+    if (description?.tags) {
+      itemDetails.tags = LoaderUtils.parseTags(description.tags);
+    }
 
     // Restore market_fee_app, if applicable
     // eslint-disable-next-line eqeqeq

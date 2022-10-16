@@ -1,7 +1,7 @@
-import { AzulInventoryResponse } from './types/azul-inventory-response.type';
-import { InventoryLoaderConstructor } from './types/inventory-loader-constructor.type';
-import LoaderInstance from './loader-instance';
-import { OptionalConfig } from './types/optional-config.type';
+import type { AzulInventoryResponse } from './loader/types/azul-inventory-response.type';
+import InventoryLoader from './loader';
+import type { InventoryLoaderConstructor } from './loader/types/inventory-loader-constructor.type';
+import type { OptionalConfig } from './types/optional-config.type';
 import Utils from './utils';
 
 export default class AzulSteamInventoryLoader extends Utils {
@@ -33,7 +33,7 @@ export default class AzulSteamInventoryLoader extends Utils {
       }
     }
 
-    const loaderInterface = new LoaderInstance(setup);
+    const loaderInterface = new InventoryLoader(setup);
     return loaderInterface.loadInventory();
   }
 }

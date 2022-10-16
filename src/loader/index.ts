@@ -1,43 +1,36 @@
-import Axios, {
+import type {
   AxiosError,
   AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse,
   RawAxiosRequestHeaders,
 } from 'axios';
+import {
+  DEFAULT_REQUEST_MAX_RETRIES,
+  DEFAULT_REQUEST_RETRY_DELAY,
+  DEFAULT_REQUEST_TIMEOUT,
+} from '../constants';
 
-import { AzulInventoryResponse } from './types/azul-inventory-response.type';
-import { ErrorWithEResult } from './types/error-with-eresult.type';
+import Axios from 'axios';
+import type { AzulInventoryResponse } from './types/azul-inventory-response.type';
+import type { ErrorWithEResult } from './types/error-with-eresult.type';
 import EventEmitter from 'events';
-import { InventoryLoaderConstructor } from './types/inventory-loader-constructor.type';
-import { ItemAsset } from './types/item-asset.type';
-import { ItemDescription } from './types/item-description.type';
-import { ItemDetails } from './types/item-details.type';
-import LoaderUtils from './loader-utils';
-import { SteamBodyResponse } from './types/steam-body-response.type';
-import { duration } from 'moment';
+import type { InventoryLoaderConstructor } from './types/inventory-loader-constructor.type';
+import type { ItemAsset } from './types/item-asset.type';
+import type { ItemDescription } from './types/item-description.type';
+import type { ItemDetails } from './types/item-details.type';
+import LoaderUtils from './utils';
+import { RequestParams } from './types/request-params.type';
+import type { SteamBodyResponse } from './types/steam-body-response.type';
 
-export default class LoaderInstance {
-  public readonly appID: InventoryLoaderConstructor['appID'];
+export default class InventoryLoader {
+  private cookies?: string;
 
-  public readonly axios: AxiosInstance = Axios.create();
+  private isFetchDone = false;
 
-  public readonly contextID: InventoryLoaderConstructor['contextID'];
+  private pagesDone = 0;
 
-  public readonly maxRetries: number = 3;
-
-  public readonly language: InventoryLoaderConstructor['language'] = 'english';
-
-  public readonly proxyAddress?: InventoryLoaderConstructor['proxyAddress'];
-
-  public readonly steamCommunityJar?: InventoryLoaderConstructor['steamCommunityJar'];
-
-  public readonly steamID64: string;
-
-  public readonly tradableOnly: InventoryLoaderConstructor['tradableOnly'] =
-    true;
-
-  public readonly useProxy: InventoryLoaderConstructor['useProxy'] = false;
+  private pagesReceived = 0;
 
   private readonly cache: Map<string, ItemDescription> = new Map();
 
@@ -49,18 +42,29 @@ export default class LoaderInstance {
 
   private startAssetID?: string;
 
-  private isFetchDone = false;
+  public readonly appID: InventoryLoaderConstructor['appID'];
 
-  private pagesDone = 0;
+  public readonly axios: AxiosInstance = Axios.create({
+    httpsAgent: LoaderUtils.getAgent(),
+    responseType: 'json',
+    timeout: DEFAULT_REQUEST_TIMEOUT,
+  });
 
-  private pagesReceived = 0;
+  public readonly contextID: InventoryLoaderConstructor['contextID'];
 
-  private cookies = '';
+  public readonly language: string = 'english';
 
-  private static readonly retryInterval: number = duration(
-    1,
-    'second',
-  ).asMilliseconds();
+  public readonly maxRetries: number = DEFAULT_REQUEST_MAX_RETRIES;
+
+  public readonly proxyAddress?: InventoryLoaderConstructor['proxyAddress'];
+
+  public readonly steamCommunityJar?: InventoryLoaderConstructor['steamCommunityJar'];
+
+  public readonly steamID64: string;
+
+  public readonly tradableOnly: boolean = true;
+
+  public readonly useProxy: boolean = false;
 
   constructor({
     appID,
@@ -97,11 +101,19 @@ export default class LoaderInstance {
   }
 
   private getDefaultHeaders(): RawAxiosRequestHeaders {
-    return {
-      Cookie: this.cookies,
+    const defaults: RawAxiosRequestHeaders = {
       Host: 'steamcommunity.com',
       Referer: `https://steamcommunity.com/profiles/${this.steamID64}/inventory`,
     };
+
+    if (this.cookies) {
+      return {
+        ...defaults,
+        Cookie: this.cookies,
+      };
+    }
+
+    return defaults;
   }
 
   private fetchRetry(): Promise<void> {
@@ -109,28 +121,25 @@ export default class LoaderInstance {
       setTimeout(() => {
         this.retryCount += 1;
         resolve(this.fetch());
-      }, LoaderInstance.retryInterval);
+      }, DEFAULT_REQUEST_RETRY_DELAY);
     });
   }
 
   private async fetch(): Promise<void> {
-    const params = {
+    const params: RequestParams = {
       l: this.language,
       count: 5000,
       start_assetid: this.startAssetID,
     };
 
     const options: AxiosRequestConfig<never> = {
-      headers: {
-        ...this.getDefaultHeaders(),
-      },
-      httpsAgent: LoaderUtils.getAgent(
-        this.useProxy ? this.proxyAddress : undefined,
-      ),
+      headers: this.getDefaultHeaders(),
       params,
-      responseType: 'json',
-      timeout: duration(25, 'seconds').asMilliseconds(),
     };
+
+    if (this.useProxy && this.proxyAddress) {
+      options.httpsAgent = LoaderUtils.getAgent(this.proxyAddress);
+    }
 
     try {
       const {
@@ -146,12 +155,7 @@ export default class LoaderInstance {
         );
 
       if (!!data.success && data.total_inventory_count === 0) {
-        this.events.emit('done', {
-          success: !!data.success,
-          inventory: [],
-          count: data.total_inventory_count ?? 0,
-        });
-
+        this.events.emit('done');
         return;
       }
 
@@ -164,6 +168,7 @@ export default class LoaderInstance {
         if (data) {
           const message = data?.error || data?.Error;
           this.events.emit('error', new Error(message || 'Malformed response'));
+
           return;
         }
 
@@ -282,6 +287,14 @@ export default class LoaderInstance {
       this.events.emit('done');
   }
 
+  private buildResponse(): AzulInventoryResponse {
+    return {
+      count: this.inventory.length,
+      inventory: this.inventory,
+      success: true,
+    };
+  }
+
   public async loadInventory(): Promise<AzulInventoryResponse> {
     const [result] = await Promise.all([
       (async function _(self) {
@@ -289,14 +302,8 @@ export default class LoaderInstance {
           self.bindDataEvents();
 
           self.events.once('done', () => {
-            const inventoryResult: AzulInventoryResponse = {
-              count: self.inventory.length,
-              inventory: self.inventory,
-              success: true,
-            };
-
             self.clear();
-            resolve(inventoryResult);
+            resolve(self.buildResponse());
           });
 
           self.events.once('error', (error: Error) => {

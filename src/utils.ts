@@ -1,7 +1,8 @@
-import { CardType } from './types/card-type.type';
-import { ItemDescription } from './types/item-description.type';
-import { ItemDetails } from './types/item-details.type';
-import { Tag } from './types/tag.type';
+import type { CardType } from './types/card-type.type';
+import { DEFAULT_STEAM_IMAGE_URL } from './constants';
+import type { ItemDescription } from './loader/types/item-description.type';
+import type { ItemDetails } from './loader/types/item-details.type';
+import type { Tag } from './loader/types/tag.type';
 
 export default class Utils {
   public static getTag(tags: Tag[], categoryToFind: string): Tag | null {
@@ -15,10 +16,10 @@ export default class Utils {
     // eslint-disable-next-line camelcase
     icon_url,
   }: ItemDescription | ItemDetails): string {
-    return `https://steamcommunity-a.akamaihd.net/economy/image/${
+    return `${DEFAULT_STEAM_IMAGE_URL}/${
       // eslint-disable-next-line camelcase
       icon_url_large || icon_url
-    }/`;
+    }`;
   }
 
   public static getImageURL({
@@ -26,7 +27,7 @@ export default class Utils {
     icon_url,
   }: ItemDescription | ItemDetails): string {
     // eslint-disable-next-line camelcase
-    return `https://steamcommunity-a.akamaihd.net/economy/image/${icon_url}/`;
+    return `${DEFAULT_STEAM_IMAGE_URL}/${icon_url}`;
   }
 
   public static isCardType(tags?: Tag[]): false | CardType {

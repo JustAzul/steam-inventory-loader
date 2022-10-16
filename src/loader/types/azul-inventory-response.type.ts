@@ -1,4 +1,4 @@
-import { ItemDetails } from './item-details.type';
+import type { ItemDetails } from './item-details.type';
 
 export type AzulInventoryResponse = {
   count: number;

@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
-import { InnerItemDescription } from './inner-item-description.type';
-import { ItemActions } from './item-actions.type';
-import { Tag } from './tag.type';
+import type { InnerItemDescription } from './inner-item-description.type';
+import type { ItemActions } from './item-actions.type';
+import type { Tag } from './tag.type';
 
 export type ItemDetails = {
   actions: ItemActions[];
