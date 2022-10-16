@@ -4,9 +4,9 @@ import { ItemDetails } from './types/item-details.type';
 import { Tag } from './types/tag.type';
 
 export default class Utils {
-  public static getTag(tags: Tag[], category: string): Tag | null {
+  public static getTag(tags: Tag[], categoryToFind: string): Tag | null {
     if (!tags) return null;
-    return tags.find((tag) => tag.category === category) || null;
+    return tags.find(({ category }) => category === categoryToFind) ?? null;
   }
 
   public static getLargeImageURL({
@@ -29,18 +29,18 @@ export default class Utils {
     return `https://steamcommunity-a.akamaihd.net/economy/image/${icon_url}/`;
   }
 
-  public static isCardType(tags: Tag[]): undefined | false | CardType {
+  public static isCardType(tags?: Tag[]): false | CardType {
     if (!tags) return false;
 
-    try {
-      if (this.getTag(tags, 'item_class')?.internal_name === 'item_class_2') {
-        if (this.getTag(tags, 'cardholder')?.internal_name === 'cardborder_0')
-          return 'Normal';
-        if (this.getTag(tags, 'cardborder')?.internal_name === 'cardborder_1')
-          return 'Foil';
+    const itemClass = this.getTag(tags, 'item_class');
+
+    if (itemClass && itemClass.internal_name === 'item_class_2') {
+      const cardBorder = this.getTag(tags, 'cardborder');
+
+      if (cardBorder) {
+        if (cardBorder.internal_name === 'cardborder_0') return 'Normal';
+        if (cardBorder.internal_name === 'cardborder_1') return 'Foil';
       }
-    } catch {
-      return false;
     }
 
     return false;
