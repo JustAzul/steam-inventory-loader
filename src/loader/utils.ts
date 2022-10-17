@@ -1,24 +1,7 @@
 import type { Cookie } from './types/cookie.type';
-import { HttpsAgent } from 'agentkeepalive';
-import { HttpsProxyAgent } from 'hpagent';
 import type { InventoryLoaderConstructor } from './types/inventory-loader-constructor.type';
 
 export default class LoaderUtils {
-  private static readonly defaultAgent = new HttpsAgent();
-
-  public static getAgent(proxyAddress?: string): HttpsProxyAgent | HttpsAgent {
-    if (proxyAddress) {
-      const ProxyAgent = new HttpsProxyAgent({
-        keepAlive: true,
-        proxy: proxyAddress,
-      });
-
-      return ProxyAgent;
-    }
-
-    return LoaderUtils.defaultAgent;
-  }
-
   public static parseCookies(
     jarLikeInput?: InventoryLoaderConstructor['steamCommunityJar'],
   ): string {
