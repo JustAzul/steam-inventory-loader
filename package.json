@@ -26,12 +26,11 @@
   "homepage": "https://github.com/JustAzul/steam-inventory-loader",
   "license": "ISC",
   "dependencies": {
-    "tough-cookie": "^4.1.2",
-    "undici": "^5.11.0"
+    "tough-cookie": "^4.1.2"
   },
   "engines": {
-		"node": ">=12.0.0"
-	},
+    "node": ">=12.0.0"
+  },
   "devDependencies": {
     "@types/node": "^18.11.0",
     "@types/steamid": "^1.1.0",
