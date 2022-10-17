@@ -3,6 +3,7 @@ import {
   DEFAULT_REQUEST_RETRY_DELAY,
 } from '../constants';
 
+import { AxiosError } from 'axios';
 import type { ErrorWithEResult } from './types/error-with-eresult.type';
 import EventEmitter from 'events';
 import HttpClient from './http-client';
@@ -14,7 +15,7 @@ import type { ItemDescription } from '../inventory/types/item-description.type';
 import type { LoaderResponse } from './types/loader-response';
 import LoaderUtils from './utils';
 import type { RequestParams } from './types/request-params.type';
-import { errors as UndiciErrors } from 'undici';
+import { SteamBodyResponse } from './types/steam-body-response.type';
 
 export default class InventoryLoader {
   private isFetchDone = false;
@@ -24,6 +25,8 @@ export default class InventoryLoader {
   private pagesReceived = 0;
 
   private readonly events: EventEmitter = new EventEmitter();
+
+  private readonly httpClient: HttpClient = new HttpClient();
 
   private readonly inventory: Inventory;
 
@@ -42,8 +45,6 @@ export default class InventoryLoader {
   public readonly steamCommunityJar?: InventoryLoaderConstructor['steamCommunityJar'];
 
   public readonly steamID64: string;
-
-  private readonly httpClient: HttpClient = new HttpClient();
 
   constructor({
     appID,
@@ -79,10 +80,10 @@ export default class InventoryLoader {
     this.httpClient.setDefaultHeaders(this.getDefaultHeaders());
   }
 
-  private async clear(): Promise<void> {
+  private clear(): void {
     this.events.removeAllListeners();
     this.inventory.clearCache();
-    await this.httpClient.destroy();
+    this.httpClient.destroy();
   }
 
   private getDefaultHeaders(): IncomingHttpHeaders {
@@ -149,57 +150,49 @@ export default class InventoryLoader {
       this.isFetchDone = true;
       this.checkIfIsDone();
     } catch (e) {
-      if (HttpClient.IsSocketError(e)) {
-        await this.retryRequest(false);
+      if (!HttpClient.isRequestError(e)) {
+        this.events.emit('error', e);
         return;
       }
 
-      if (HttpClient.IsErrorWithStatusCode(e)) {
-        const { statusCode, body } = e as UndiciErrors.ResponseStatusCodeError;
+      const err = e as AxiosError<SteamBodyResponse, never>;
 
-        if (statusCode === 403) {
-          this.events.emit('error', new Error('This profile is private.'));
-          return;
-        }
+      if (err.response?.status === 403) {
+        this.events.emit('error', new Error('This profile is private.'));
+        return;
+      }
 
-        if (statusCode === 429) {
-          this.events.emit('error', new Error('rate limited'));
-          return;
-        }
+      if (err.response?.status === 429) {
+        this.events.emit('error', new Error('rate limited'));
+        return;
+      }
 
-        if (body !== null && typeof body === 'object') {
-          const data = body as Record<string, unknown>;
+      if (err.response?.status !== 200) {
+        if (err.response?.data && !!err.response?.data?.error) {
+          let newError: ErrorWithEResult = new Error(err.response?.data?.error);
+          const match = /^(.+) \((\d+)\)$/.exec(err.response?.data?.error);
 
-          if ('error' in data) {
-            const error = String(data?.error);
+          if (match) {
+            const [, resErr, eResult] = match;
 
-            let newError: ErrorWithEResult = new Error(error);
-            const match = /^(.+) \((\d+)\)$/.exec(error);
-
-            if (match) {
-              const [, resErr, eResult] = match;
-
-              newError = new Error(resErr);
-              newError.eresult = eResult;
-            }
-
-            this.events.emit('error', newError);
-            return;
+            newError = new Error(resErr);
+            newError.eresult = eResult;
           }
-        }
 
-        if (this.retryCount >= this.maxRetries) {
-          this.events.emit('error', new Error('Bad statusCode'));
+          this.events.emit('error', newError);
           return;
         }
-      }
 
-      if (this.retryCount < this.maxRetries) {
-        await this.retryRequest();
+        if (this.retryCount < this.maxRetries) {
+          await this.yieldRequest();
+          return;
+        }
+
+        this.events.emit('error', new Error('Bad statusCode'));
         return;
       }
 
-      this.events.emit('error', e);
+      this.events.emit('error', err);
     }
   }
 
@@ -240,15 +233,15 @@ export default class InventoryLoader {
           self.bindDataEvents();
 
           self.events.once('done', () =>
-            process.nextTick(async () => {
-              await self.clear();
+            process.nextTick(() => {
+              self.clear();
               resolve(self.buildResponse());
             }),
           );
 
           self.events.once('error', (error: Error) =>
-            process.nextTick(async () => {
-              await self.clear();
+            process.nextTick(() => {
+              self.clear();
               reject(error);
             }),
           );

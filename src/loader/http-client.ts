@@ -1,23 +1,50 @@
-import { ProxyAgent, errors as UndiciErrors, request } from 'undici';
+import Axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  CreateAxiosDefaults,
+} from 'axios';
 
+import { DEFAULT_REQUEST_TIMEOUT } from '../constants';
+import { HttpsAgent } from 'agentkeepalive';
+import { HttpsProxyAgent } from 'hpagent';
 import { IncomingHttpHeaders } from 'http';
-import { RequestOptions } from './types/request-options.type';
 import { RequestParams } from './types/request-params.type';
 import { SteamBodyResponse } from './types/steam-body-response.type';
 
 export default class HttpClient {
-  private static client = request;
+  private client: AxiosInstance;
 
   private cookies?: string;
 
   private defaultHeaders?: IncomingHttpHeaders;
 
-  private proxyAgent?: ProxyAgent;
+  private proxyAgent?: HttpsProxyAgent;
+
+  private static readonly defaultAgent: HttpsAgent = new HttpsAgent();
 
   constructor(proxyAddress?: string) {
     if (proxyAddress) {
-      this.proxyAgent = new ProxyAgent(proxyAddress);
+      this.proxyAgent = new HttpsProxyAgent({
+        keepAlive: true,
+        proxy: proxyAddress,
+      });
     }
+
+    this.client = Axios.create(this.getClientConstructor());
+  }
+
+  private getClientConstructor(): CreateAxiosDefaults {
+    return {
+      headers: this.getDefaultHeaders(),
+      httpsAgent: this.getAgent(),
+      responseType: 'json',
+      timeout: DEFAULT_REQUEST_TIMEOUT,
+    };
+  }
+
+  private getAgent(): HttpsProxyAgent | HttpsAgent {
+    return this?.proxyAgent || HttpClient.defaultAgent;
   }
 
   private getDefaultHeaders(): IncomingHttpHeaders | undefined {
@@ -31,9 +58,9 @@ export default class HttpClient {
     return this.defaultHeaders;
   }
 
-  public async destroy(): Promise<void> {
+  public destroy(): void {
     if (this.proxyAgent) {
-      await this.proxyAgent.destroy();
+      this.proxyAgent.destroy();
     }
   }
 
@@ -48,7 +75,15 @@ export default class HttpClient {
   }
 
   public setProxy(proxyUrl: string): this {
-    this.proxyAgent = new ProxyAgent(proxyUrl);
+    this.destroy();
+
+    this.proxyAgent = new HttpsProxyAgent({
+      keepAlive: true,
+      proxy: proxyUrl,
+    });
+
+    this.client = Axios.create(this.getClientConstructor());
+
     return this;
   }
 
@@ -56,36 +91,23 @@ export default class HttpClient {
     url: string,
     params: RequestParams,
   ): Promise<SteamBodyResponse> {
-    const options: RequestOptions = {
-      method: 'GET',
-      query: params,
-      throwOnError: true,
+    const options: AxiosRequestConfig<never> = {
+      params,
     };
 
-    const headers = this.getDefaultHeaders();
+    const {
+      data,
+    }: AxiosResponse<SteamBodyResponse, never> & { data: SteamBodyResponse } =
+      await this.client.get<
+        SteamBodyResponse,
+        AxiosResponse<SteamBodyResponse, never>,
+        never
+      >(url, options);
 
-    if (headers) {
-      options.headers = headers;
-    }
-
-    if (this.proxyAgent) {
-      options.dispatcher = this.proxyAgent;
-    }
-
-    const { body } = await HttpClient.client(url, options);
-
-    try {
-      return JSON.parse(await body.text()) as SteamBodyResponse;
-    } catch (e) {
-      throw new UndiciErrors.UndiciError('Malformed response');
-    }
+    return data;
   }
 
-  public static IsErrorWithStatusCode(err: unknown): boolean {
-    return err instanceof UndiciErrors.ResponseStatusCodeError;
-  }
-
-  public static IsSocketError(err: unknown): boolean {
-    return err instanceof UndiciErrors.SocketError;
+  public static isRequestError(err: unknown): boolean {
+    return Axios.isAxiosError(err);
   }
 }
