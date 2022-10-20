@@ -1,7 +1,7 @@
 {
   "name": "azul-steam-inventory-loader",
   "version": "3.4.0",
-  "description": "Steam Inventory Loader By Azul, faster than node-steamcommunity on average, built-in error retry, and memory friendly.",
+  "description": "a modern steam inventory loader with built-in error retry, memory-friendly, and proxy support.",
   "main": "index.js",
   "keywords": [
     "azul",
@@ -13,7 +13,7 @@
     "build": "tsc",
     "prebuild": "rimraf ./dist",
     "prettier": "prettier --config .prettierrc 'src/**/*.ts' --write",
-    "test": "npm run build && node ./tests/azul-raw.js --expose-gc"
+    "test": "npm run build && NODE_ENV=development node ./tests/azul-raw.js --expose-gc"
   },
   "author": "https://justazul.com",
   "repository": {
