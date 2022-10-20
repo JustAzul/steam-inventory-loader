@@ -95,14 +95,11 @@ export default class HttpClient {
       params,
     };
 
-    const {
-      data,
-    }: AxiosResponse<SteamBodyResponse, never> & { data: SteamBodyResponse } =
-      await this.client.get<
-        SteamBodyResponse,
-        AxiosResponse<SteamBodyResponse, never>,
-        never
-      >(url, options);
+    const { data }: { data: SteamBodyResponse } = await this.client.get<
+      SteamBodyResponse,
+      AxiosResponse<SteamBodyResponse, never>,
+      never
+    >(url, options);
 
     return data;
   }
