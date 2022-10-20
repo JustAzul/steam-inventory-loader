@@ -44,22 +44,39 @@ export default class Inventory {
     for (let i = 0; i < itemAssets.length; i += 1) {
       const itemAsset = itemAssets[i];
 
-      if (!itemAsset.currencyid) {
-        const descriptionKey = InventoryUtils.findDescriptionKey(itemAsset);
-        const description = this.descriptions.get(descriptionKey);
+      if (itemAsset?.currencyid) {
+        if (process.env.NODE_ENV === 'development')
+          // eslint-disable-next-line no-console
+          console.debug('found item with currencyid');
 
-        if (!this.tradableOnly || (description && description?.tradable)) {
-          if (description) {
-            this.insertItem(
-              InventoryUtils.parseItem({
-                contextID: this.contextID,
-                description,
-                item: itemAsset,
-              }),
-            );
-          }
-        }
+        // eslint-disable-next-line no-continue
+        continue;
       }
+
+      const descriptionKey = InventoryUtils.findDescriptionKey(itemAsset);
+      const description = this.descriptions.get(descriptionKey);
+
+      if (!description) {
+        if (process.env.NODE_ENV === 'development')
+          // eslint-disable-next-line no-console
+          console.debug('found item without description');
+
+        // eslint-disable-next-line no-continue
+        continue;
+      }
+
+      if (this.tradableOnly && Boolean(description?.tradable) === false) {
+        // eslint-disable-next-line no-continue
+        continue;
+      }
+
+      this.insertItem(
+        InventoryUtils.parseItem({
+          contextID: this.contextID,
+          description,
+          item: itemAsset,
+        }),
+      );
     }
   }
 
