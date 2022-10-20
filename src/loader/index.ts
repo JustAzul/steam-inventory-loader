@@ -117,6 +117,11 @@ export default class InventoryLoader {
         this.getRequestParams(),
       );
 
+      if (!!data.success && data.total_inventory_count === 0) {
+        this.events.emit('done');
+        return;
+      }
+
       if (!data || !data?.success || !data?.assets || !data?.descriptions) {
         if (this.retryCount < this.maxRetries) {
           await this.retryRequest();
@@ -131,11 +136,6 @@ export default class InventoryLoader {
         }
 
         this.events.emit('error', new Error('Malformed response'));
-        return;
-      }
-
-      if (!!data.success && data.total_inventory_count === 0) {
-        this.events.emit('done');
         return;
       }
 
