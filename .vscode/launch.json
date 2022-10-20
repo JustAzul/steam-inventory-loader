@@ -12,7 +12,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "env": {"NODE_ENV": "production"},
+            "env": {"NODE_ENV": "development"},
             "runtimeArgs": ["--expose-gc"]
         },{
             "type": "node",
@@ -22,7 +22,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "env": {"NODE_ENV": "production"},
+            "env": {"NODE_ENV": "development"},
             "runtimeArgs": ["--expose-gc"]
         },
     ]
