@@ -1,4 +1,8 @@
 import {
+  DEFAULT_REQUEST_ITEMS_COUNT,
+  DEFAULT_REQUEST_RESPONSE_LANGUAGE,
+} from './constants';
+import {
   DEFAULT_REQUEST_MAX_RETRIES,
   DEFAULT_REQUEST_RETRY_DELAY,
 } from '../constants';
@@ -27,7 +31,7 @@ export default class InventoryLoader {
 
   private readonly events: EventEmitter = new EventEmitter();
 
-  private httpClient: HttpClient;
+  private readonly httpClient: HttpClient;
 
   private readonly inventory: Inventory;
 
@@ -39,7 +43,7 @@ export default class InventoryLoader {
 
   public readonly contextID: InventoryLoaderConstructor['contextID'];
 
-  public readonly language: string = 'english';
+  public readonly language: string = DEFAULT_REQUEST_RESPONSE_LANGUAGE;
 
   public readonly maxRetries: number = DEFAULT_REQUEST_MAX_RETRIES;
 
@@ -105,7 +109,7 @@ export default class InventoryLoader {
   private getRequestParams(): RequestParams {
     return {
       l: this.language,
-      count: 5000,
+      count: DEFAULT_REQUEST_ITEMS_COUNT,
       start_assetid: this.startAssetID,
     };
   }
