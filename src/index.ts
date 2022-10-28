@@ -6,6 +6,13 @@ import Utils from './utils';
 
 type AzulInventoryResponse = LoaderResponse;
 
+const LoaderDictionary: Map<
+  keyof OptionalConfig,
+  keyof InventoryLoaderConstructor
+> = new Map([
+  ['Language', 'language'],
+  ['SteamCommunity_Jar', 'steamCommunityJar'],
+]);
 export default class AzulSteamInventoryLoader extends Utils {
   public static Loader(
     SteamID64: string,
@@ -25,13 +32,15 @@ export default class AzulSteamInventoryLoader extends Utils {
       for (let i = 0; i < keys.length; i += 1) {
         const key = keys[i];
 
-        if (key === 'Language') setup.language = optionalConfig[key];
-        if (key === 'maxRetries') setup.maxRetries = optionalConfig[key];
-        if (key === 'proxyAddress') setup.proxyAddress = optionalConfig[key];
-        if (key === 'SteamCommunity_Jar')
-          setup.steamCommunityJar = optionalConfig[key];
-        if (key === 'tradableOnly') setup.tradableOnly = optionalConfig[key];
-        if (key === 'useProxy') setup.useProxy = optionalConfig[key];
+        const setupKey =
+          LoaderDictionary.get(key) ||
+          (key as keyof InventoryLoaderConstructor);
+
+        const setupValue = optionalConfig[key];
+
+        if (setupValue) {
+          (setup[setupKey] as typeof setupValue) = setupValue;
+        }
       }
     }
 

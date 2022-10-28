@@ -7,6 +7,7 @@ import { AxiosError } from 'axios';
 import type { ErrorWithEResult } from './types/error-with-eresult.type';
 import EventEmitter from 'events';
 import HttpClient from './http-client';
+import type { HttpClientConstructor } from './types/http-client-constructor.type';
 import type { IncomingHttpHeaders } from 'http';
 import Inventory from '../inventory';
 import type { InventoryLoaderConstructor } from './types/inventory-loader-constructor.type';
@@ -26,7 +27,7 @@ export default class InventoryLoader {
 
   private readonly events: EventEmitter = new EventEmitter();
 
-  private readonly httpClient: HttpClient = new HttpClient();
+  private httpClient: HttpClient;
 
   private readonly inventory: Inventory;
 
@@ -67,14 +68,22 @@ export default class InventoryLoader {
     if (params?.language) this.language = params.language;
     if (params?.maxRetries) this.maxRetries = params.maxRetries;
 
+    const clientOptions: HttpClientConstructor = {};
+
+    if (params.requestDelay) {
+      clientOptions.requestDelay = params.requestDelay;
+    }
+
+    if (params?.useProxy && params?.proxyAddress) {
+      clientOptions.proxyAddress = params?.proxyAddress;
+    }
+
+    this.httpClient = new HttpClient(clientOptions);
+
     if (params?.steamCommunityJar) {
       this.httpClient.setDefaultCookies(
         LoaderUtils.parseCookies(params?.steamCommunityJar),
       );
-    }
-
-    if (params?.useProxy && params?.proxyAddress) {
-      this.httpClient.setProxy(params?.proxyAddress);
     }
 
     this.httpClient.setDefaultHeaders(this.getDefaultHeaders());

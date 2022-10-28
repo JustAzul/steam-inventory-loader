@@ -5,6 +5,7 @@ export type OptionalConfig = {
   Language?: string;
   maxRetries?: number;
   proxyAddress?: string;
+  requestDelay?: number;
   SteamCommunity_Jar?: CookieJar;
   tradableOnly?: boolean;
   useProxy?: boolean;
