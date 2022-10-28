@@ -14,6 +14,8 @@ const LoaderDictionary: Map<
   ['SteamCommunity_Jar', 'steamCommunityJar'],
 ]);
 export default class AzulSteamInventoryLoader extends Utils {
+  public static readonly InventoryLoader = InventoryLoader;
+
   public static Loader(
     SteamID64: string,
     appID: string | number,
@@ -44,7 +46,7 @@ export default class AzulSteamInventoryLoader extends Utils {
       }
     }
 
-    const loaderInterface = new InventoryLoader(setup);
+    const loaderInterface = new AzulSteamInventoryLoader.InventoryLoader(setup);
     return loaderInterface.loadInventory();
   }
 }
