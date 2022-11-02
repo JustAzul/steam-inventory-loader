@@ -4,8 +4,8 @@ import type { InventoryLoaderConstructor } from './types/inventory-loader-constr
 export default class LoaderUtils {
   public static parseCookies(
     jarLikeInput?: InventoryLoaderConstructor['steamCommunityJar'],
-  ): string {
-    if (!jarLikeInput) return '';
+  ): string[] {
+    if (!jarLikeInput) return [];
 
     if ('_jar' in jarLikeInput) {
       // eslint-disable-next-line no-underscore-dangle
@@ -14,8 +14,7 @@ export default class LoaderUtils {
 
     const result = (jarLikeInput.serializeSync().cookies as Cookie[])
       .filter(({ domain }) => domain === 'steamcommunity.com')
-      .map(({ key, value }) => `${key}=${value};`)
-      .join(' ');
+      .map(({ key, value }) => `${key}=${value};`);
 
     return result;
   }

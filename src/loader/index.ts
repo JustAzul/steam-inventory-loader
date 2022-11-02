@@ -76,7 +76,10 @@ export default class InventoryLoader {
 
     const clientOptions: HttpClientConstructor = {};
 
-    if (params.requestDelay) {
+    if (
+      Object.prototype.hasOwnProperty.call(params, 'requestDelay') &&
+      typeof params.requestDelay === 'number'
+    ) {
       clientOptions.requestDelay = params.requestDelay;
     }
 
