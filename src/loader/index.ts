@@ -62,6 +62,10 @@ export default class InventoryLoader {
     this.appID = appID;
     this.contextID = contextID;
 
+    const defaultCookies = [
+      `strInventoryLastContext=${this.appID}_${this.contextID};`,
+    ];
+
     this.inventory = new Inventory({
       contextID: String(this.contextID),
       tradableOnly: params?.tradableOnly ?? true,
@@ -94,11 +98,12 @@ export default class InventoryLoader {
     this.httpClient = new HttpClient(clientOptions);
 
     if (params?.steamCommunityJar) {
-      this.httpClient.setDefaultCookies(
-        LoaderUtils.parseCookies(params?.steamCommunityJar),
+      defaultCookies.push(
+        ...LoaderUtils.parseCookies(params?.steamCommunityJar),
       );
     }
 
+    this.httpClient.setDefaultCookies(defaultCookies.join(' '));
     this.httpClient.setDefaultHeaders(this.getDefaultHeaders());
   }
 
