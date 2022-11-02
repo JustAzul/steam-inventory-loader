@@ -4,6 +4,7 @@ import type steamID from 'steamid';
 export type InventoryLoaderConstructor = {
   appID: string | number;
   contextID: string | number;
+  itemsPerPage?: number;
   language?: string;
   maxRetries?: number;
   proxyAddress?: string;

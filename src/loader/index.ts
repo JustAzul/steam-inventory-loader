@@ -35,6 +35,8 @@ export default class InventoryLoader {
 
   private readonly inventory: Inventory;
 
+  private readonly itemsPerPage: number = DEFAULT_REQUEST_ITEMS_COUNT;
+
   private retryCount = 0;
 
   private startAssetID?: string;
@@ -78,6 +80,10 @@ export default class InventoryLoader {
       clientOptions.requestDelay = params.requestDelay;
     }
 
+    if (params.itemsPerPage) {
+      this.itemsPerPage = params.itemsPerPage;
+    }
+
     if (params?.useProxy && params?.proxyAddress) {
       clientOptions.proxyAddress = params?.proxyAddress;
     }
@@ -109,7 +115,7 @@ export default class InventoryLoader {
   private getRequestParams(): RequestParams {
     return {
       l: this.language,
-      count: DEFAULT_REQUEST_ITEMS_COUNT,
+      count: this.itemsPerPage,
       start_assetid: this.startAssetID,
     };
   }
