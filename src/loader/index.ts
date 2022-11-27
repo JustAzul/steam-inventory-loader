@@ -37,6 +37,8 @@ export default class InventoryLoader {
 
   private readonly itemsPerPage: number = DEFAULT_REQUEST_ITEMS_COUNT;
 
+  private readonly UseSteamApis: boolean = false;
+
   private retryCount = 0;
 
   private startAssetID?: string;
@@ -48,6 +50,8 @@ export default class InventoryLoader {
   public readonly language: string = DEFAULT_REQUEST_RESPONSE_LANGUAGE;
 
   public readonly maxRetries: number = DEFAULT_REQUEST_MAX_RETRIES;
+
+  public readonly SteamApisApiKey?: string;
 
   public readonly steamCommunityJar?: InventoryLoaderConstructor['steamCommunityJar'];
 
@@ -61,6 +65,9 @@ export default class InventoryLoader {
   }: InventoryLoaderConstructor) {
     this.appID = appID;
     this.contextID = contextID;
+
+    this.SteamApisApiKey = params?.steamApisKey;
+    this.UseSteamApis = !!this.SteamApisApiKey && this.SteamApisApiKey !== '';
 
     const defaultCookies = [
       `strInventoryLastContext=${this.appID}_${this.contextID};`,
@@ -80,7 +87,10 @@ export default class InventoryLoader {
 
     const clientOptions: HttpClientConstructor = {};
 
-    if (
+    if (this.UseSteamApis) {
+      clientOptions.requestDelay = 0;
+      this.itemsPerPage = 5000;
+    } else if (
       Object.prototype.hasOwnProperty.call(params, 'requestDelay') &&
       typeof params.requestDelay === 'number'
     ) {
@@ -138,10 +148,20 @@ export default class InventoryLoader {
   }
 
   private async yieldRequest(): Promise<void> {
+    const endpoint = !this.UseSteamApis
+      ? 'https://steamcommunity.com/inventory'
+      : 'https://api.steamapis.com/steam/inventory';
+
+    const requestParams = this.getRequestParams();
+
+    if (this.UseSteamApis) {
+      requestParams.api_key = this.SteamApisApiKey;
+    }
+
     try {
       const data = await this.httpClient.get(
-        `https://steamcommunity.com/inventory/${this.steamID64}/${this.appID}/${this.contextID}`,
-        this.getRequestParams(),
+        `${endpoint}/${this.steamID64}/${this.appID}/${this.contextID}`,
+        requestParams,
       );
 
       if (!!data.success && data.total_inventory_count === 0) {
@@ -183,6 +203,22 @@ export default class InventoryLoader {
       }
 
       const err = e as AxiosError<SteamBodyResponse, never>;
+
+      if (this.UseSteamApis && err.response?.status === 402) {
+        this.events.emit(
+          'error',
+          new Error('Insufficient balance on steamapis.com'),
+        );
+        return;
+      }
+
+      if (this.UseSteamApis && err.response?.status === 401) {
+        this.events.emit(
+          'error',
+          new Error('Insufficient permission on steamapis.com'),
+        );
+        return;
+      }
 
       if (err.response?.status === 403) {
         this.events.emit('error', new Error('This profile is private.'));

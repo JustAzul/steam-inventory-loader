@@ -25,15 +25,15 @@ export default class HttpClient {
 
   private isQueueRunning = false;
 
-  private readonly proxyAgent?: HttpsProxyAgent;
-
   private readonly eventQueue: EventEmitter = new EventEmitter();
+
+  private readonly proxyAgent?: HttpsProxyAgent;
 
   private readonly queue: RequestQueueItem[] = [];
 
   private readonly requestDelay: number = DEFAULT_REQUEST_DELAY;
 
-  private static readonly defaultAgent: HttpsAgent = new HttpsAgent();
+  private static readonly defaultHttpsAgent: HttpsAgent = new HttpsAgent();
 
   constructor({ proxyAddress, requestDelay }: HttpClientConstructor = {}) {
     if (proxyAddress) {
@@ -43,8 +43,10 @@ export default class HttpClient {
       });
     }
 
-    if (requestDelay) {
-      this.requestDelay = requestDelay;
+    this.requestDelay = requestDelay ?? this.requestDelay;
+
+    if (!Number.isSafeInteger(this.requestDelay)) {
+      this.requestDelay = DEFAULT_REQUEST_DELAY;
     }
 
     this.client = Axios.create(this.getClientConstructor());
@@ -107,7 +109,7 @@ export default class HttpClient {
   }
 
   private getAgent(): HttpsProxyAgent | HttpsAgent {
-    return this?.proxyAgent || HttpClient.defaultAgent;
+    return this?.proxyAgent || HttpClient.defaultHttpsAgent;
   }
 
   private getDefaultHeaders(): IncomingHttpHeaders | undefined {

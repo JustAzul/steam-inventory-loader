@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 export type RequestParams = {
-  l: string;
+  api_key?: string;
   count?: number;
+  l: string;
   start_assetid?: string;
 };
