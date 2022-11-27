@@ -1,6 +1,6 @@
 {
   "name": "azul-steam-inventory-loader",
-  "version": "3.6.0",
+  "version": "3.7.0",
   "description": "a modern steam inventory loader with built-in error retry, request delay, proxy url support, and memory-friendly.",
   "main": "index.js",
   "keywords": [
