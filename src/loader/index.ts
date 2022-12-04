@@ -187,18 +187,18 @@ export default class InventoryLoader {
   }
 
   private async yieldRequest(): Promise<void> {
-    let endpoint = this.findEndpoint();
     const requestParams = this.getRequestParams();
 
-    if (this.UseSteamApis) {
+    if (this.UseSteamSupply) {
+      requestParams.appid = Number(this.appID);
+      requestParams.contextid = Number(this.contextID);
+      requestParams.count = 5000;
+      requestParams.steamid = this.steamID64;
+    } else if (this.UseSteamApis) {
       requestParams.api_key = this.SteamApisApiKey;
     }
 
-    if (this.UseSteamSupply) {
-      requestParams.steamid = this.steamID64;
-      requestParams.appid = Number(this.appID);
-      requestParams.contextid = Number(this.contextID);
-    }
+    let endpoint = this.findEndpoint();
 
     if (!endpoint.includes('steam.supply')) {
       endpoint += `/${this.steamID64}/${this.appID}/${this.contextID}`;
