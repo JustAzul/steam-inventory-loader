@@ -34,6 +34,8 @@ export default class InventoryLoader {
 
   private pagesReceived = 0;
 
+  private readonly customEndpoint?: string;
+
   private readonly events: EventEmitter = new EventEmitter();
 
   private readonly httpClient: HttpClient;
@@ -70,15 +72,31 @@ export default class InventoryLoader {
     steamID64,
     ...params
   }: InventoryLoaderConstructor) {
+    const clientOptions: HttpClientConstructor = {};
+
     this.appID = appID;
     this.contextID = contextID;
 
-    this.SteamApisApiKey = params?.steamApisKey;
-    this.UseSteamApis = !!this.SteamApisApiKey && this.SteamApisApiKey !== '';
+    if (!!params?.customEndpoint && params.customEndpoint !== '') {
+      this.SteamApisApiKey = undefined;
+      this.SteamSupplyApiKey = undefined;
 
-    this.SteamSupplyApiKey = params?.steamSupplyKey;
-    this.UseSteamSupply =
-      !!this.SteamSupplyApiKey && this.SteamSupplyApiKey !== '';
+      this.UseSteamApis = false;
+      this.UseSteamSupply = false;
+
+      this.customEndpoint = params.customEndpoint;
+    } else {
+      this.SteamApisApiKey = params?.steamApisKey;
+      this.UseSteamApis = !!this.SteamApisApiKey && this.SteamApisApiKey !== '';
+
+      this.SteamSupplyApiKey = params?.steamSupplyKey;
+      this.UseSteamSupply =
+        !!this.SteamSupplyApiKey && this.SteamSupplyApiKey !== '';
+
+      if (this.UseSteamApis || this.UseSteamSupply) {
+        clientOptions.requestDelay = 0;
+      }
+    }
 
     const defaultCookies = [
       `strInventoryLastContext=${this.appID}_${this.contextID};`,
@@ -95,12 +113,6 @@ export default class InventoryLoader {
 
     if (params?.language) this.language = params.language;
     if (params?.maxRetries) this.maxRetries = params.maxRetries;
-
-    const clientOptions: HttpClientConstructor = {};
-
-    if (this.UseSteamApis || this.UseSteamSupply) {
-      clientOptions.requestDelay = 0;
-    }
 
     if (
       Object.prototype.hasOwnProperty.call(params, 'requestDelay') &&
@@ -154,7 +166,7 @@ export default class InventoryLoader {
       return STEAM_APIS_ENDPOINT;
     }
 
-    return DEFAULT_REQUEST_ENDPOINT;
+    return this.customEndpoint || DEFAULT_REQUEST_ENDPOINT;
   }
 
   private getRequestParams(): RequestParams {

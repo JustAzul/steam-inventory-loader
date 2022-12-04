@@ -8,6 +8,7 @@ export type JarLike = {
 export type InventoryLoaderConstructor = {
   appID: string | number;
   contextID: string | number;
+  customEndpoint?: string;
   itemsPerPage?: number;
   language?: string;
   maxRetries?: number;

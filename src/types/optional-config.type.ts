@@ -2,6 +2,7 @@
 import type { CookieJar } from 'tough-cookie';
 
 export type OptionalConfig = {
+  customEndpoint?: string;
   itemsPerPage?: number;
   Language?: string;
   maxRetries?: number;
