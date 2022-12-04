@@ -1,6 +1,10 @@
 import type { CookieJar } from 'tough-cookie';
 import type steamID from 'steamid';
 
+export type JarLike = {
+  _jar: CookieJar;
+};
+
 export type InventoryLoaderConstructor = {
   appID: string | number;
   contextID: string | number;
@@ -10,7 +14,7 @@ export type InventoryLoaderConstructor = {
   proxyAddress?: string;
   requestDelay?: number;
   steamApisKey?: string;
-  steamCommunityJar?: CookieJar | { _jar: CookieJar };
+  steamCommunityJar?: CookieJar | JarLike;
   steamID64: string | steamID;
   steamSupplyKey?: string;
   tradableOnly?: boolean;
