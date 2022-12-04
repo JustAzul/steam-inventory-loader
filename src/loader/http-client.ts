@@ -12,9 +12,9 @@ import type { HttpClientConstructor } from './types/http-client-constructor.type
 import { HttpsAgent } from 'agentkeepalive';
 import { HttpsProxyAgent } from 'hpagent';
 import { IncomingHttpHeaders } from 'http';
-import { RequestParams } from './types/request-params.type';
 import type { RequestQueueItem } from './types/request-queue-item.type';
-import { SteamBodyResponse } from './types/steam-body-response.type';
+import type { SteamBodyResponse } from './types/steam-body-response.type';
+import type { SteamRequestParams } from './types/request-params.type';
 
 export default class HttpClient {
   private client: AxiosInstance;
@@ -170,7 +170,7 @@ export default class HttpClient {
 
   public async get(
     url: string,
-    params: RequestParams,
+    params: SteamRequestParams,
   ): Promise<SteamBodyResponse> {
     const options: AxiosRequestConfig<never> = {
       params,

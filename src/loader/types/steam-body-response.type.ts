@@ -2,6 +2,10 @@
 import type { ItemAsset } from '../../inventory/types/item-asset.type';
 import type { ItemDescription } from '../../inventory/types/item-description.type';
 
+export type SteamSupplyBodyResponse = {
+  fake_redirect?: number;
+};
+
 export type SteamBodyResponse = {
   assets: ItemAsset[];
   descriptions: ItemDescription[];
@@ -12,4 +16,4 @@ export type SteamBodyResponse = {
   rwgrsn: number;
   success: number;
   total_inventory_count: number;
-};
+} & Partial<SteamSupplyBodyResponse>;

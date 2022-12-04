@@ -9,6 +9,7 @@ export type OptionalConfig = {
   requestDelay?: number;
   steamApisKey?: string;
   SteamCommunity_Jar?: CookieJar;
+  steamSupplyKey?: string;
   tradableOnly?: boolean;
   useProxy?: boolean;
 };

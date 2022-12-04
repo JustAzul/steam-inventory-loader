@@ -12,6 +12,7 @@ export type InventoryLoaderConstructor = {
   steamApisKey?: string;
   steamCommunityJar?: CookieJar | { _jar: CookieJar };
   steamID64: string | steamID;
+  steamSupplyKey?: string;
   tradableOnly?: boolean;
   useProxy?: boolean;
 };

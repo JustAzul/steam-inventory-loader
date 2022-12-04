@@ -1,6 +1,9 @@
 import {
+  DEFAULT_REQUEST_ENDPOINT,
   DEFAULT_REQUEST_ITEMS_COUNT,
   DEFAULT_REQUEST_RESPONSE_LANGUAGE,
+  STEAM_APIS_ENDPOINT,
+  STEAM_SUPPLY_ENDPOINT,
 } from './constants';
 import {
   DEFAULT_REQUEST_MAX_RETRIES,
@@ -25,6 +28,8 @@ import { SteamBodyResponse } from './types/steam-body-response.type';
 export default class InventoryLoader {
   private isFetchDone = false;
 
+  private itemsPerPage: number = DEFAULT_REQUEST_ITEMS_COUNT;
+
   private pagesDone = 0;
 
   private pagesReceived = 0;
@@ -35,9 +40,13 @@ export default class InventoryLoader {
 
   private readonly inventory: Inventory;
 
-  private readonly itemsPerPage: number = DEFAULT_REQUEST_ITEMS_COUNT;
+  private readonly SteamApisApiKey?: string;
+
+  private readonly SteamSupplyApiKey?: string;
 
   private readonly UseSteamApis: boolean = false;
+
+  private readonly UseSteamSupply: boolean = false;
 
   private retryCount = 0;
 
@@ -50,8 +59,6 @@ export default class InventoryLoader {
   public readonly language: string = DEFAULT_REQUEST_RESPONSE_LANGUAGE;
 
   public readonly maxRetries: number = DEFAULT_REQUEST_MAX_RETRIES;
-
-  public readonly SteamApisApiKey?: string;
 
   public readonly steamCommunityJar?: InventoryLoaderConstructor['steamCommunityJar'];
 
@@ -68,6 +75,10 @@ export default class InventoryLoader {
 
     this.SteamApisApiKey = params?.steamApisKey;
     this.UseSteamApis = !!this.SteamApisApiKey && this.SteamApisApiKey !== '';
+
+    this.SteamSupplyApiKey = params?.steamSupplyKey;
+    this.UseSteamSupply =
+      !!this.SteamSupplyApiKey && this.SteamSupplyApiKey !== '';
 
     const defaultCookies = [
       `strInventoryLastContext=${this.appID}_${this.contextID};`,
@@ -87,17 +98,18 @@ export default class InventoryLoader {
 
     const clientOptions: HttpClientConstructor = {};
 
-    if (this.UseSteamApis) {
+    if (this.UseSteamApis || this.UseSteamSupply) {
       clientOptions.requestDelay = 0;
-      this.itemsPerPage = 2000;
-    } else if (
+    }
+
+    if (
       Object.prototype.hasOwnProperty.call(params, 'requestDelay') &&
       typeof params.requestDelay === 'number'
     ) {
       clientOptions.requestDelay = params.requestDelay;
     }
 
-    if (params.itemsPerPage) {
+    if (params?.itemsPerPage) {
       this.itemsPerPage = params.itemsPerPage;
     }
 
@@ -130,6 +142,21 @@ export default class InventoryLoader {
     };
   }
 
+  private findEndpoint(): string {
+    if (this.UseSteamSupply && !!this.SteamSupplyApiKey) {
+      return STEAM_SUPPLY_ENDPOINT.replaceAll(
+        `{{API_KEY}}`,
+        this.SteamSupplyApiKey,
+      );
+    }
+
+    if (this.UseSteamApis && !!this.SteamApisApiKey) {
+      return STEAM_APIS_ENDPOINT;
+    }
+
+    return DEFAULT_REQUEST_ENDPOINT;
+  }
+
   private getRequestParams(): RequestParams {
     return {
       l: this.language,
@@ -148,24 +175,36 @@ export default class InventoryLoader {
   }
 
   private async yieldRequest(): Promise<void> {
-    const endpoint = !this.UseSteamApis
-      ? 'https://steamcommunity.com/inventory'
-      : 'https://api.steamapis.com/steam/inventory';
-
+    let endpoint = this.findEndpoint();
     const requestParams = this.getRequestParams();
 
     if (this.UseSteamApis) {
       requestParams.api_key = this.SteamApisApiKey;
     }
 
+    if (this.UseSteamSupply) {
+      requestParams.steamid = this.steamID64;
+      requestParams.appid = Number(this.appID);
+      requestParams.contextid = Number(this.contextID);
+    }
+
+    if (!endpoint.includes('steam.supply')) {
+      endpoint += `/${this.steamID64}/${this.appID}/${this.contextID}`;
+    }
+
     try {
-      const data = await this.httpClient.get(
-        `${endpoint}/${this.steamID64}/${this.appID}/${this.contextID}`,
-        requestParams,
-      );
+      const data = await this.httpClient.get(endpoint, requestParams);
 
       if (!!data.success && data.total_inventory_count === 0) {
         this.events.emit('done');
+        return;
+      }
+
+      if (
+        !endpoint.includes(DEFAULT_REQUEST_ENDPOINT) &&
+        (data == null || data?.fake_redirect)
+      ) {
+        await this.retryRequest();
         return;
       }
 
@@ -204,24 +243,33 @@ export default class InventoryLoader {
 
       const err = e as AxiosError<SteamBodyResponse, never>;
 
-      if (this.UseSteamApis && err.response?.status === 402) {
-        this.events.emit(
-          'error',
-          new Error('Insufficient balance on steamapis.com'),
-        );
-        return;
-      }
+      if (endpoint.includes(STEAM_APIS_ENDPOINT)) {
+        if (err.response?.status === 402) {
+          this.events.emit(
+            'error',
+            new Error('Insufficient balance on steamapis.com'),
+          );
+          return;
+        }
 
-      if (this.UseSteamApis && err.response?.status === 401) {
-        this.events.emit(
-          'error',
-          new Error('Insufficient permission on steamapis.com'),
-        );
-        return;
+        if (err.response?.status === 401) {
+          this.events.emit(
+            'error',
+            new Error('Insufficient permission on steamapis.com'),
+          );
+          return;
+        }
       }
 
       if (err.response?.status === 403) {
-        this.events.emit('error', new Error('This profile is private.'));
+        if (endpoint.includes('steam.supply')) {
+          this.events.emit(
+            'error',
+            new Error(
+              'This profile is either private, or you have issues with your steam.supply api key.',
+            ),
+          );
+        } else this.events.emit('error', new Error('This profile is private.'));
         return;
       }
 
