@@ -142,19 +142,6 @@ export default class HttpClient {
     return this;
   }
 
-  // public setProxy(proxyUrl: string): this {
-  //   this.destroy();
-
-  //   this.proxyAgent = new HttpsProxyAgent({
-  //     keepAlive: true,
-  //     proxy: proxyUrl,
-  //   });
-
-  //   this.client = Axios.create(this.getClientConstructor());
-
-  //   return this;
-  // }
-
   private async clientGet(
     url: string,
     options: AxiosRequestConfig<never>,
