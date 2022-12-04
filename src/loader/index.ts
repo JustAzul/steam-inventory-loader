@@ -89,7 +89,7 @@ export default class InventoryLoader {
 
     if (this.UseSteamApis) {
       clientOptions.requestDelay = 0;
-      this.itemsPerPage = 5000;
+      this.itemsPerPage = 2000;
     } else if (
       Object.prototype.hasOwnProperty.call(params, 'requestDelay') &&
       typeof params.requestDelay === 'number'
