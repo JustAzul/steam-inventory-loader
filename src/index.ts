@@ -38,9 +38,8 @@ export default class AzulSteamInventoryLoader extends Utils {
           LoaderDictionary.get(key) ||
           (key as keyof InventoryLoaderConstructor);
 
-        const setupValue = optionalConfig[key];
-
-        if (setupValue) {
+        if (Object.prototype.hasOwnProperty.call(optionalConfig, key)) {
+          const setupValue = optionalConfig[key];
           (setup[setupKey] as typeof setupValue) = setupValue;
         }
       }
