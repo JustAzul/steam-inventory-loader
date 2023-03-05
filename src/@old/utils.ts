@@ -2,10 +2,10 @@ import type { CardType } from '../domain/types/card-type.type';
 import { DEFAULT_STEAM_IMAGE_URL } from './constants';
 import type { ItemDescription } from '../domain/types/item-description.type';
 import type { ItemDetails } from '../domain/types/item-details.type';
-import type { Tag } from '../domain/types/tag.type';
+import type { rawTag } from '../domain/types/raw-tag.type';
 
 export default class Utils {
-  public static getTag(tags: Tag[], categoryToFind: string): Tag | null {
+  public static getTag(tags: rawTag[], categoryToFind: string): rawTag | null {
     if (!tags) return null;
     return tags.find(({ category }) => category === categoryToFind) ?? null;
   }
@@ -30,7 +30,7 @@ export default class Utils {
     return `${DEFAULT_STEAM_IMAGE_URL}/${icon_url}`;
   }
 
-  public static isCardType(tags?: Tag[]): false | CardType {
+  public static isCardType(tags?: rawTag[]): false | CardType {
     if (!tags) return false;
 
     const itemClass = Utils.getTag(tags, 'item_class');

@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import type { InnerItemDescription } from './inner-item-description.type';
 import type { ItemActions } from './item-actions.type';
-import type { Tag } from './tag.type';
+import type { rawTag } from './raw-tag.type';
 
 export type ItemDetails = {
   actions: ItemActions[];
@@ -32,7 +32,7 @@ export type ItemDetails = {
   owner_actions?: ItemActions[];
   owner_descriptions?: InnerItemDescription[];
   owner?: unknown;
-  tags?: Tag[];
+  tags?: rawTag[];
   tradable: boolean;
   type: string;
 };

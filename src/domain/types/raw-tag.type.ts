@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-export type Tag = {
+export type rawTag = {
   category_name: string;
   category: string;
   color: string;

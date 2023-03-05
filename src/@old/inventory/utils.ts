@@ -2,7 +2,7 @@ import type { ItemAsset } from '../../domain/types/item-asset.type';
 import type { ItemDescription } from '../../domain/types/item-description.type';
 import type { ItemDetails } from '../../domain/types/item-details.type';
 import type { SteamTag } from '../../domain/types/steam-tag.type';
-import type { Tag } from '../../domain/types/tag.type';
+import type { rawTag } from '../../domain/types/raw-tag.type';
 
 export default class InventoryUtils {
   public static findDescriptionKey({
@@ -13,7 +13,7 @@ export default class InventoryUtils {
     return `${classid}_${instanceid || '0'}_${appid}`;
   }
 
-  private static parseTag(tag: SteamTag): Tag {
+  private static parseTag(tag: SteamTag): rawTag {
     return {
       internal_name: tag.internal_name,
       name: tag?.localized_tag_name || tag.name || '',
@@ -23,8 +23,8 @@ export default class InventoryUtils {
     };
   }
 
-  private static parseTags(tags: SteamTag[]): Tag[] {
-    const ParsedTags: Tag[] = [];
+  private static parseTags(tags: SteamTag[]): rawTag[] {
+    const ParsedTags: rawTag[] = [];
 
     for (let i = 0; i < tags.length; i += 1) {
       const tag = tags[i];
