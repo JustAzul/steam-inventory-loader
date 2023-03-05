@@ -1,8 +1,8 @@
-import type { ItemAsset } from './types/item-asset.type';
-import type { ItemDescription } from './types/item-description.type';
-import type { ItemDetails } from './types/item-details.type';
-import type { SteamTag } from './types/steam-tag.type';
-import type { Tag } from './types/tag.type';
+import type { ItemAsset } from '../../domain/types/item-asset.type';
+import type { ItemDescription } from '../../domain/types/item-description.type';
+import type { ItemDetails } from '../../domain/types/item-details.type';
+import type { SteamTag } from '../../domain/types/steam-tag.type';
+import type { Tag } from '../../domain/types/tag.type';
 
 export default class InventoryUtils {
   public static findDescriptionKey({

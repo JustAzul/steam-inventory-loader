@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
-import type { ItemAsset } from '../../inventory/types/item-asset.type';
-import type { ItemDescription } from '../../inventory/types/item-description.type';
+import type { ItemAsset } from '../../../domain/types/item-asset.type';
+import type { ItemDescription } from '../../../domain/types/item-description.type';
 
 export type SteamSupplyBodyResponse = {
   fake_redirect?: number;

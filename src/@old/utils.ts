@@ -1,8 +1,8 @@
-import type { CardType } from './types/card-type.type';
+import type { CardType } from '../domain/types/card-type.type';
 import { DEFAULT_STEAM_IMAGE_URL } from './constants';
-import type { ItemDescription } from './inventory/types/item-description.type';
-import type { ItemDetails } from './inventory/types/item-details.type';
-import type { Tag } from './inventory/types/tag.type';
+import type { ItemDescription } from '../domain/types/item-description.type';
+import type { ItemDetails } from '../domain/types/item-details.type';
+import type { Tag } from '../domain/types/tag.type';
 
 export default class Utils {
   public static getTag(tags: Tag[], categoryToFind: string): Tag | null {

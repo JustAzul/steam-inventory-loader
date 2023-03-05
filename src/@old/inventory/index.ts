@@ -1,8 +1,8 @@
 import type { InventoryConstructor } from './types/inventory-constructor.type';
 import InventoryUtils from './utils';
-import type { ItemAsset } from './types/item-asset.type';
-import type { ItemDescription } from './types/item-description.type';
-import type { ItemDetails } from './types/item-details.type';
+import type { ItemAsset } from '../../domain/types/item-asset.type';
+import type { ItemDescription } from '../../domain/types/item-description.type';
+import type { ItemDetails } from '../../domain/types/item-details.type';
 
 export default class Inventory {
   private readonly contextID: string;
