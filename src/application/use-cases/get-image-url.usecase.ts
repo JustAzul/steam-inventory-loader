@@ -12,7 +12,9 @@ export default class GetImageUrlUseCase {
     option?: GetImageUrlUseCaseOptions,
   ): string {
     if (option?.size === 'large') {
-      return `${STEAM_CDN_IMAGE_URL}/${input?.icon_url_large || input.icon_url}`;
+      return `${STEAM_CDN_IMAGE_URL}/${
+        input?.icon_url_large || input.icon_url
+      }`;
     }
 
     return `${STEAM_CDN_IMAGE_URL}/${input.icon_url}`;
