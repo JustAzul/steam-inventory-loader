@@ -18,6 +18,7 @@
         "rwgrsn",
         "steamcommunity",
         "steamid",
-        "undici"
+        "undici",
+        "usecase"
     ]
 }
