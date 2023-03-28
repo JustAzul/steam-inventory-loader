@@ -1,13 +1,13 @@
 import type { InventoryConstructor } from './types/inventory-constructor.type';
+import type { InventoryPageAsset } from '../../domain/types/inventory-page-asset.type';
+import type { InventoryPageDescription } from '../../domain/types/inventory-page-description.type';
 import InventoryUtils from './utils';
-import type { ItemAsset } from '../../domain/types/item-asset.type';
-import type { ItemDescription } from '../../domain/types/item-description.type';
 import type { ItemDetails } from '../../domain/types/item-details.type';
 
 export default class Inventory {
   private readonly contextID: string;
 
-  private readonly descriptions: Map<string, ItemDescription> = new Map();
+  private readonly descriptions: Map<string, InventoryPageDescription> = new Map();
 
   private readonly tradableOnly: boolean;
 
@@ -18,7 +18,7 @@ export default class Inventory {
     this.tradableOnly = tradableOnly;
   }
 
-  public updateDescriptions(itemDescriptions: ItemDescription[]): void {
+  public updateDescriptions(itemDescriptions: InventoryPageDescription[]): void {
     for (let i = 0; i < itemDescriptions.length; i += 1) {
       const itemDescription = itemDescriptions[i];
       const descriptionKey = InventoryUtils.findDescriptionKey(itemDescription);
@@ -40,7 +40,7 @@ export default class Inventory {
     this.items.push(item);
   }
 
-  public insertItems(itemAssets: ItemAsset[]): void {
+  public insertItems(itemAssets: InventoryPageAsset[]): void {
     for (let i = 0; i < itemAssets.length; i += 1) {
       const itemAsset = itemAssets[i];
 

@@ -1,22 +1,27 @@
 /* eslint-disable camelcase */
 import { InnerItemDescription } from '../types/inner-item-description.type';
+import { InventoryPageAsset } from '../types/inventory-page-asset.type';
+import { InventoryPageDescription } from '../types/inventory-page-description.type';
 import { ItemActions } from '../types/item-actions.type';
-import { ItemAsset } from '../types/item-asset.type';
-import { ItemDescription } from '../types/item-description.type';
 import SteamItemTag from './steam-item-tag.entity';
 
+export type SteamItemProps = {
+  asset: InventoryPageAsset;
+  description: InventoryPageDescription;
+};
+
 export default class SteamItemEntity {
-  private asset: ItemAsset;
+  private readonly asset: InventoryPageAsset;
 
-  private description: ItemDescription;
+  private readonly description: InventoryPageDescription;
 
-  public constructor(asset: ItemAsset, description: ItemDescription) {
+  public constructor({ asset, description }: SteamItemProps) {
     this.asset = asset;
 
     if (Object.prototype.hasOwnProperty.call(description, this.listingKey))
       this.description = description[
         this.listingKey as never
-      ] as ItemDescription;
+      ] as InventoryPageDescription;
     else this.description = description;
   }
 

@@ -1,5 +1,5 @@
+import { AzulInventoryResponse } from '../types/azul-inventory-response.type';
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import AzulInventoryResponse from '../../domain/entities/azul-inventory-response.entity';
 import { IInventoryLoader } from './inventory-loader.interface';
 import ILoaderUtils from './loader-utils.interface';
 import { OptionalConfig } from '../../domain/types/optional-config.type';

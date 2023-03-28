@@ -1,5 +1,5 @@
-import type { ItemAsset } from '../../domain/types/item-asset.type';
-import type { ItemDescription } from '../../domain/types/item-description.type';
+import type { InventoryPageAsset } from '../../domain/types/inventory-page-asset.type';
+import type { InventoryPageDescription } from '../../domain/types/inventory-page-description.type';
 import type { ItemDetails } from '../../domain/types/item-details.type';
 import type { SteamTag } from '../../domain/types/steam-tag.type';
 import type { rawTag } from '../../domain/types/raw-tag.type';
@@ -9,7 +9,7 @@ export default class InventoryUtils {
     appid,
     classid,
     instanceid,
-  }: ItemDescription | ItemAsset): string {
+  }: InventoryPageDescription | InventoryPageAsset): string {
     return `${classid}_${instanceid || '0'}_${appid}`;
   }
 
@@ -40,8 +40,8 @@ export default class InventoryUtils {
     item,
   }: {
     contextID: string;
-    description: ItemDescription;
-    item: ItemAsset;
+    description: InventoryPageDescription;
+    item: InventoryPageAsset;
   }): ItemDetails {
     // eslint-disable-next-line camelcase
     const is_currency =

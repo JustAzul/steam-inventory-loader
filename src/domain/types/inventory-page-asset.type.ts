@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-export type ItemAsset = {
+export type InventoryPageAsset = {
   amount: string;
   appid: number;
   assetid: string;

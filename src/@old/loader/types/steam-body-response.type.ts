@@ -1,14 +1,14 @@
 /* eslint-disable camelcase */
-import type { ItemAsset } from '../../../domain/types/item-asset.type';
-import type { ItemDescription } from '../../../domain/types/item-description.type';
+import type { InventoryPageAsset } from '../../../domain/types/inventory-page-asset.type';
+import type { InventoryPageDescription } from '../../../domain/types/inventory-page-description.type';
 
 export type SteamSupplyBodyResponse = {
   fake_redirect?: number;
 };
 
 export type SteamBodyResponse = {
-  assets: ItemAsset[];
-  descriptions: ItemDescription[];
+  assets: InventoryPageAsset[];
+  descriptions: InventoryPageDescription[];
   error?: string;
   Error?: string;
   last_assetid: string;

@@ -11,10 +11,16 @@ export default class FindCardBorderTypeUseCase {
   public static execute(
     tags: Pick<SteamItemTag, 'internal_name' | 'category'>[],
   ): CardType | null {
-    const itemClass = FindCardBorderTypeUseCase.FindTag(tags, 'item_class');
+    const itemClass = FindCardBorderTypeUseCase.InternalFindTag(
+      tags,
+      'item_class',
+    );
 
     if (itemClass && itemClass.internal_name === 'item_class_2') {
-      const cardBorder = FindCardBorderTypeUseCase.FindTag(tags, 'cardborder');
+      const cardBorder = FindCardBorderTypeUseCase.InternalFindTag(
+        tags,
+        'cardborder',
+      );
 
       if (cardBorder) {
         if (cardBorder.internal_name === CardBorderInternalName.Normal)
@@ -28,7 +34,7 @@ export default class FindCardBorderTypeUseCase {
     return null;
   }
 
-  private static FindTag(
+  private static InternalFindTag(
     tags: Pick<SteamItemTag, 'internal_name' | 'category'>[],
     categoryToFind: string,
   ): Pick<SteamItemTag, 'internal_name' | 'category'> | null {

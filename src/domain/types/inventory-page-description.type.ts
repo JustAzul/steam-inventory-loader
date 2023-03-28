@@ -3,7 +3,7 @@ import type { InnerItemDescription } from './inner-item-description.type';
 import type { ItemActions } from './item-actions.type';
 import type { SteamTag } from './steam-tag.type';
 
-export type ItemDescription = {
+export type InventoryPageDescription = {
   actions: ItemActions[];
   appid: number;
   background_color: string;

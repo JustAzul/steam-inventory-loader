@@ -18,8 +18,8 @@ import type { HttpClientConstructor } from './types/http-client-constructor.type
 import type { IncomingHttpHeaders } from 'http';
 import Inventory from '../inventory';
 import type { InventoryLoaderConstructor } from './types/inventory-loader-constructor.type';
-import type { ItemAsset } from '../../domain/types/item-asset.type';
-import type { ItemDescription } from '../../domain/types/item-description.type';
+import type { InventoryPageAsset } from '../../domain/types/inventory-page-asset.type';
+import type { InventoryPageDescription } from '../../domain/types/inventory-page-description.type';
 import type { LoaderResponse } from './types/loader-response';
 import LoaderUtils from './utils';
 import type { RequestParams } from './types/request-params.type';
@@ -322,7 +322,7 @@ export default class InventoryLoader {
   private bindDataEvents(): void {
     this.events.on(
       'data',
-      (itemDescriptions: ItemDescription[], itemAssets: ItemAsset[]) => {
+      (itemDescriptions: InventoryPageDescription[], itemAssets: InventoryPageAsset[]) => {
         this.pagesReceived += 1;
 
         this.inventory.updateDescriptions(itemDescriptions);

@@ -1,6 +1,6 @@
 import type { CardType } from '../domain/types/card-type.type';
 import { DEFAULT_STEAM_IMAGE_URL } from './constants';
-import type { ItemDescription } from '../domain/types/item-description.type';
+import type { InventoryPageDescription } from '../domain/types/inventory-page-description.type';
 import type { ItemDetails } from '../domain/types/item-details.type';
 import type { rawTag } from '../domain/types/raw-tag.type';
 
@@ -15,7 +15,7 @@ export default class Utils {
     icon_url_large,
     // eslint-disable-next-line camelcase
     icon_url,
-  }: ItemDescription | ItemDetails): string {
+  }: InventoryPageDescription | ItemDetails): string {
     return `${DEFAULT_STEAM_IMAGE_URL}/${
       // eslint-disable-next-line camelcase
       icon_url_large || icon_url
@@ -25,7 +25,7 @@ export default class Utils {
   public static getImageURL({
     // eslint-disable-next-line camelcase
     icon_url,
-  }: ItemDescription | ItemDetails): string {
+  }: InventoryPageDescription | ItemDetails): string {
     // eslint-disable-next-line camelcase
     return `${DEFAULT_STEAM_IMAGE_URL}/${icon_url}`;
   }
