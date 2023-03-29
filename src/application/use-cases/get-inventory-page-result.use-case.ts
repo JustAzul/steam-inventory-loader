@@ -9,25 +9,20 @@ import GetPageUrlUseCase, { GetPageUrlProps } from './get-page-url.use-case';
 import {
   HttpClientGetProps,
   HttpClientResponse,
-  IHttpClient,
 } from '../ports/http-client.interface';
 
-import { IQueueWithDelay } from '../ports/queue-with-delay.interface';
+import FetchUrlUseCase from './fetch-url.use-case';
+import FetchWithDelayUseCase from './fetch-with-delay.use-case';
 import { InventoryPageResult } from '../types/inventory-page-result.type';
 
 export type GetInventoryPageResultInterfaces = {
-  queue: IQueueWithDelay<
-    HttpClientGetProps,
-    HttpClientResponse<InventoryPageResult>
-  >;
-  httpClient: IHttpClient;
+  fetchUrlUseCase: FetchUrlUseCase | FetchWithDelayUseCase;
 };
 
 export type GetInventoryPageResultProps = {
   appID: string;
   contextID: string;
   count: number;
-  delayBetweenRequests?: number;
   language: string;
   lastAssetID?: string;
   steamID64: string;
@@ -66,13 +61,7 @@ export default class GetInventoryPageResultUseCase {
       getPageUrlProps.lastAssetID = this.props.lastAssetID;
     }
 
-    const hasDelay = Boolean(this.props.delayBetweenRequests);
     const getHttpResponseProps: GetHttpResponseWithExceptionProps = {};
-
-    if (hasDelay) {
-      getHttpResponseProps.delayBetweenRequestsInMilliseconds =
-        this.props.delayBetweenRequests;
-    }
 
     const getHttpResponseUseCase = new GetHttpResponseWithExceptionUseCase({
       interfaces: this.interfaces,

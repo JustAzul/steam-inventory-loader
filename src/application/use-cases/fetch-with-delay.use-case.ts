@@ -4,8 +4,8 @@ import {
   IHttpClient,
 } from '../ports/http-client.interface';
 
-import { IQueueWithDelay } from '../ports/queue-with-delay.interface';
-import { InventoryPageResult } from '../types/inventory-page-result.type';
+import AsyncQueueWithDelayEntity from '../../domain/entities/async-queue-with-delay.entity';
+import FetchUrlUseCase from './fetch-url.use-case';
 import UseCaseException from '../exceptions/use-case.exception';
 
 export type FetchWithDelayUseCaseProps = {
@@ -14,10 +14,6 @@ export type FetchWithDelayUseCaseProps = {
 
 export type FetchWithDelayUseCaseInterfaces = {
   httpClient: IHttpClient;
-  queue: IQueueWithDelay<
-    HttpClientGetProps,
-    HttpClientResponse<InventoryPageResult>
-  >;
 };
 
 export type FetchWithDelayUseCaseConstructor = {
@@ -26,34 +22,37 @@ export type FetchWithDelayUseCaseConstructor = {
 };
 
 export default class FetchWithDelayUseCase {
+  private readonly asyncQueueWithDelay: AsyncQueueWithDelayEntity;
+
+  private readonly fetchUrlUseCase: FetchUrlUseCase;
+
   private readonly interfaces: FetchWithDelayUseCaseInterfaces;
 
   private readonly props: FetchWithDelayUseCaseProps;
 
   public constructor({ interfaces, props }: FetchWithDelayUseCaseConstructor) {
-    this.interfaces = interfaces;
     this.props = props;
+    this.interfaces = interfaces;
 
-    if (this.props.delayInMilliseconds <= 0) {
+    if (this.props.delayInMilliseconds < 0) {
       throw new UseCaseException(
         FetchWithDelayUseCase.name,
-        'delayInMilliseconds must be a positive number',
+        'delay must be greater than or equal to 0',
       );
     }
 
-    this.queue.setDelayInMilliseconds(this.props.delayInMilliseconds);
+    this.fetchUrlUseCase = new FetchUrlUseCase(this.interfaces.httpClient);
+
+    this.asyncQueueWithDelay = new AsyncQueueWithDelayEntity({
+      delayInMilliseconds: this.props.delayInMilliseconds,
+      processItem: (itemProps: HttpClientGetProps) =>
+        this.fetchUrlUseCase.execute(itemProps),
+    });
   }
 
-  public async execute(
+  public execute<FetchUrlResult>(
     httpClientGetProps: HttpClientGetProps,
-  ): Promise<HttpClientResponse<InventoryPageResult>> {
-    return this.queue.insertAndProcess(httpClientGetProps);
-  }
-
-  private get queue(): IQueueWithDelay<
-    HttpClientGetProps,
-    HttpClientResponse<InventoryPageResult>
-  > {
-    return this.interfaces.queue;
+  ): Promise<HttpClientResponse<FetchUrlResult>> {
+    return this.asyncQueueWithDelay.insertAndProcess(httpClientGetProps);
   }
 }

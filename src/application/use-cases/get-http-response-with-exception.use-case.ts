@@ -5,14 +5,13 @@ import {
 import {
   HttpClientGetProps,
   HttpClientResponse,
-  IHttpClient,
 } from '../ports/http-client.interface';
 
 import BadStatusCodeException from '../exceptions/bad-status-code.exception';
 import EmptyHttpResponseException from '../exceptions/empty-http-response.exception';
+import FetchUrlUseCase from './fetch-url.use-case';
 import FetchWithDelayUseCase from './fetch-with-delay.use-case';
 import HttpException from '../exceptions/http.exception';
-import { IQueueWithDelay } from '../ports/queue-with-delay.interface';
 import { InventoryPageResult } from '../types/inventory-page-result.type';
 import PrivateProfileException from '../exceptions/private-profile.exception';
 import RateLimitedException from '../exceptions/rate-limited.exception';
@@ -21,16 +20,11 @@ import UseCaseException from '../exceptions/use-case.exception';
 import WaitForItUseCase from './wait-for-it.use-case';
 
 export type GetHttpResponseWithExceptionProps = {
-  delayBetweenRequestsInMilliseconds?: number;
   maxRetries?: number;
 };
 
 export type GetHttpResponseWithExceptionInterfaces = {
-  httpClient: IHttpClient;
-  queue: IQueueWithDelay<
-    HttpClientGetProps,
-    HttpClientResponse<InventoryPageResult>
-  >;
+  fetchUrlUseCase: FetchUrlUseCase | FetchWithDelayUseCase;
 };
 
 export type GetHttpResponseWithExceptionConstructor = {
@@ -41,13 +35,9 @@ export type GetHttpResponseWithExceptionConstructor = {
 export default class GetHttpResponseWithExceptionUseCase {
   private executeCount: number;
 
-  private readonly hasValidDelay: boolean;
-
   private readonly interfaces: GetHttpResponseWithExceptionInterfaces;
 
   private readonly props: GetHttpResponseWithExceptionProps;
-
-  private readonly requestDelayInMilliseconds: number;
 
   public constructor({
     interfaces,
@@ -57,11 +47,6 @@ export default class GetHttpResponseWithExceptionUseCase {
 
     this.interfaces = interfaces;
     this.props = props;
-
-    this.requestDelayInMilliseconds =
-      this.props.delayBetweenRequestsInMilliseconds ?? 0;
-
-    this.hasValidDelay = this.requestDelayInMilliseconds > 0;
   }
 
   public async execute(
@@ -69,12 +54,11 @@ export default class GetHttpResponseWithExceptionUseCase {
   ): Promise<HttpClientResponse<InventoryPageResult>> {
     this.executeCount += 1;
 
-    const { httpClient } = this.interfaces;
+    const { fetchUrlUseCase } = this.interfaces;
 
     try {
-      const httpClientResponse = this.hasValidDelay
-        ? await this.getWithDelay(httpClientProps)
-        : await httpClient.get<InventoryPageResult>(httpClientProps);
+      const httpClientResponse =
+        await fetchUrlUseCase.execute<InventoryPageResult>(httpClientProps);
 
       const { statusCode } = httpClientResponse;
 
@@ -152,18 +136,5 @@ export default class GetHttpResponseWithExceptionUseCase {
   private canRetry(): boolean {
     const { maxRetries = DEFAULT_REQUEST_MAX_RETRIES } = this.props;
     return this.executeCount <= maxRetries;
-  }
-
-  private async getWithDelay(
-    httpClientProps: HttpClientGetProps,
-  ): Promise<HttpClientResponse<InventoryPageResult>> {
-    const fetchWithDelayUseCase = new FetchWithDelayUseCase({
-      interfaces: this.interfaces,
-      props: {
-        delayInMilliseconds: this.requestDelayInMilliseconds,
-      },
-    });
-
-    return fetchWithDelayUseCase.execute(httpClientProps);
   }
 }
