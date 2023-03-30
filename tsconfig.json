@@ -71,11 +71,12 @@
   },
   "exclude": [
     ".wakatime-project",
-    "**/__mocks__/*", 
-    "**/__tests__/*",
-    "**/*.test.*", 
-    "dist", "index.js", 
+    "dist", 
+    "jest.config.ts",
     "node_modules", 
-    "tests"
+    // "**/__mocks__/*", 
+    // "**/__tests__/*",
+    // "**/*.test.*", 
+    // "index.js", 
   ]
 }
