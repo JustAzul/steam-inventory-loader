@@ -50,6 +50,8 @@ describe(AsyncQueueWithDelayEntity.name, () => {
     const asyncQueueWithDelayInstance = asyncQueueWithDelayEntity();
     expect(setTimeout).not.toBeCalled();
 
+    const start = Date.now();
+
     await Promise.all([
       jest.runAllTimersAsync(),
       Promise.all(
@@ -59,16 +61,28 @@ describe(AsyncQueueWithDelayEntity.name, () => {
       ),
     ]);
 
-    expect(setTimeout).toHaveBeenCalledTimes(items.length);
+    const end = Date.now();
+    const diff = end - start;
+
+    expect(diff).toEqual(randomDelayInMilliseconds * items.length);
   });
 
   it(`should wait for a delay between calls`, async () => {
     expect(defaultProps.processItem).not.toBeCalled();
 
+    const start = Date.now();
+
     const asyncQueueWithDelayInstance = asyncQueueWithDelayEntity();
     await asyncQueueWithDelayInstance.insertAndProcess('first call');
 
     jest.runAllTimers();
+
+    {
+      const end = Date.now();
+      const diff = end - start;
+
+      expect(diff).toEqual(randomDelayInMilliseconds);
+    }
 
     expect(setTimeout).toBeCalled();
     expect(setTimeout).toHaveBeenCalledTimes(1);
@@ -85,6 +99,13 @@ describe(AsyncQueueWithDelayEntity.name, () => {
       asyncQueueWithDelayInstance.insertAndProcess('second call'),
       jest.runAllTimersAsync(),
     ]);
+
+    {
+      const end = Date.now();
+      const diff = end - start;
+
+      expect(diff).toEqual(randomDelayInMilliseconds * 2);
+    }
 
     expect(defaultProps.processItem).toBeCalled();
     expect(defaultProps.processItem).toHaveBeenCalledTimes(2);
