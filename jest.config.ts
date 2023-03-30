@@ -94,7 +94,7 @@ export default {
   // modulePathIgnorePatterns: [],
 
   // Activates notifications for test results
-  notify: true,
+  // notify: true,
 
   // An enum that specifies notification mode. Requires { notify: true }
   // notifyMode: "failure-change",
@@ -144,7 +144,7 @@ export default {
   // snapshotSerializers: [],
 
   // The test environment that will be used for testing
-  testEnvironment: "node"
+  testEnvironment: 'node',
 
   // Options that will be passed to the testEnvironment
   // testEnvironmentOptions: {},
