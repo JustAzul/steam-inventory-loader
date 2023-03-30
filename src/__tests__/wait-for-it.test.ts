@@ -1,7 +1,6 @@
 import WaitForItUseCase from '../application/use-cases/wait-for-it.use-case';
 
 jest.useFakeTimers();
-jest.spyOn(global, 'setTimeout');
 
 describe(WaitForItUseCase.name, () => {
   it(`should wait for a delay between calls`, async () => {
