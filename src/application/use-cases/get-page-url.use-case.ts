@@ -1,3 +1,5 @@
+import { DEFAULT_REQUEST_URL } from '../../shared/constants';
+
 export type GetPageUrlProps = {
   appID: string;
   contextID: string;
@@ -12,7 +14,9 @@ export default class GetPageUrlUseCase {
     const { lastAssetID, language, count, appID, contextID, steamID64 } = props;
 
     const url = new URL(
-      `https://steamcommunity.com/inventory/${steamID64}/${appID}/${contextID}`,
+      DEFAULT_REQUEST_URL.replace('{steamID64}', steamID64)
+        .replace('{appID}', appID)
+        .replace('{contextID}', contextID),
     );
 
     const hasLanguage = Boolean(language) && typeof language === 'string';
