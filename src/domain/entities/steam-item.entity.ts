@@ -27,8 +27,8 @@ export default class SteamItemEntity {
 
   private get is_currency(): boolean {
     return (
-      !!this.asset.is_currency ||
-      !!this.asset.currency ||
+      Boolean(this.asset.is_currency) ||
+      Boolean(this.asset.currency) ||
       typeof this.asset.currencyid !== 'undefined'
     );
   }
@@ -70,15 +70,15 @@ export default class SteamItemEntity {
   }
 
   public get tradable(): boolean {
-    return !!this.description?.tradable;
+    return Boolean(this.description?.tradable);
   }
 
   public get marketable(): boolean {
-    return !!this.description?.marketable;
+    return Boolean(this.description?.marketable);
   }
 
   public get commodity(): boolean {
-    return !!this.description?.commodity;
+    return Boolean(this.description?.commodity);
   }
 
   public get owner_descriptions(): InnerItemDescription[] | undefined {
