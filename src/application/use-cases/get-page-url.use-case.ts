@@ -13,30 +13,44 @@ export type GetPageUrlProps = {
 
 export default class GetPageUrlUseCase {
   public static execute(props: GetPageUrlProps): string {
-    const { lastAssetID, language, count, appID, contextID, steamID64 } = props;
+    const {
+      appID,
+      contextID,
+      count,
+      customEndpoint,
+      steamID64,
+      language,
+      lastAssetID,
+    } = props;
 
-    const endpoint: string = props?.customEndpoint || DEFAULT_REQUEST_URL;
+    const hasCustomEndpoint =
+      Boolean(customEndpoint) && typeof customEndpoint === 'string';
+
+    const endpoint: string = hasCustomEndpoint
+      ? customEndpoint
+      : DEFAULT_REQUEST_URL;
+
     GetPageUrlUseCase.ValidateEndpoint(endpoint);
 
     const url = new URL(
       endpoint
-        .replace('{steamID64}', steamID64)
         .replace('{appID}', appID)
-        .replace('{contextID}', contextID),
+        .replace('{contextID}', contextID)
+        .replace('{steamID64}', steamID64),
     );
 
-    const hasLanguage = Boolean(language) && typeof language === 'string';
     const hasCount = Boolean(count) && typeof count === 'number';
+    const hasLanguage = Boolean(language) && typeof language === 'string';
 
     const hasLastAssetID =
       Boolean(lastAssetID) && typeof lastAssetID === 'string';
 
-    if (hasLanguage) {
-      url.searchParams.append('l', language);
+    if (hasCount) {
+      url.searchParams.append('count', String(count));
     }
 
-    if (hasCount) {
-      url.searchParams.append('count', count.toString());
+    if (hasLanguage) {
+      url.searchParams.append('l', language);
     }
 
     if (hasLastAssetID) {
@@ -47,9 +61,9 @@ export default class GetPageUrlUseCase {
   }
 
   private static ValidateEndpoint(endpoint: string): void {
-    const containsSteamID64 = endpoint.includes('{steamID64}');
     const containsAppID = endpoint.includes('{appID}');
     const containsContextID = endpoint.includes('{contextID}');
+    const containsSteamID64 = endpoint.includes('{steamID64}');
 
     const containsHttp = endpoint.includes('http://');
     const containsHttps = endpoint.includes('https://');
