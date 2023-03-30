@@ -221,4 +221,40 @@ describe(GetPageUrlUseCase.name, () => {
         .replace('{contextID}', defaultConfig.contextID),
     );
   });
+
+  it(`should thrown an error if customEndpoint does not provides the '{appID}' template`, () => {
+    const config: GetPageUrlProps = {
+      ...defaultConfig,
+      customEndpoint: 'https://example.com/{steamID64}/{contextID}',
+    };
+
+    expect(() => GetPageUrlUseCase.execute(config)).toThrowError();
+  });
+
+  it(`should thrown an error if customEndpoint does not provides the '{contextID}' template`, () => {
+    const config: GetPageUrlProps = {
+      ...defaultConfig,
+      customEndpoint: 'https://example.com/{steamID64}/{appID}',
+    };
+
+    expect(() => GetPageUrlUseCase.execute(config)).toThrowError();
+  });
+
+  it(`should thrown an error if customEndpoint does not provides the '{steamID64}' template`, () => {
+    const config: GetPageUrlProps = {
+      ...defaultConfig,
+      customEndpoint: 'https://example.com/{contextID}/{appID}',
+    };
+
+    expect(() => GetPageUrlUseCase.execute(config)).toThrowError();
+  });
+
+  it(`should thrown an error if customEndpoint does not provides a valid url`, () => {
+    const config: GetPageUrlProps = {
+      ...defaultConfig,
+      customEndpoint: 'example.com/{contextID}/{appID}',
+    };
+
+    expect(() => GetPageUrlUseCase.execute(config)).toThrowError();
+  });
 });
