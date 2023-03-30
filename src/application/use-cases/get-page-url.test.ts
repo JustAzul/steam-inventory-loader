@@ -1,8 +1,6 @@
-import GetPageUrlUseCase, {
-  GetPageUrlProps,
-} from '../application/use-cases/get-page-url.use-case';
+import GetPageUrlUseCase, { GetPageUrlProps } from './get-page-url.use-case';
 
-import { DEFAULT_REQUEST_URL } from '../shared/constants';
+import { DEFAULT_REQUEST_URL } from '../../shared/constants';
 
 const urlParamsDic = {
   l: 'language',
