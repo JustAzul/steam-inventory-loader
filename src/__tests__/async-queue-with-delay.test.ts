@@ -8,10 +8,10 @@ jest.useFakeTimers();
 jest.spyOn(global, 'setTimeout');
 
 describe(AsyncQueueWithDelayEntity.name, () => {
-  const delay = Number.MAX_SAFE_INTEGER;
+  const randomDelayInMilliseconds = Math.floor(Math.random() * 1000);
 
   const defaultProps: AsyncQueueWithDelayProps = {
-    delayInMilliseconds: delay,
+    delayInMilliseconds: randomDelayInMilliseconds,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any
     processItem: jest.fn().mockImplementation((item: any) => item),
   };
@@ -29,7 +29,7 @@ describe(AsyncQueueWithDelayEntity.name, () => {
 
   it(`should return error instance`, async () => {
     const props: AsyncQueueWithDelayProps = {
-      delayInMilliseconds: 1,
+      delayInMilliseconds: randomDelayInMilliseconds,
       processItem: jest.fn().mockImplementation(() => {
         throw new DomainException(AsyncQueueWithDelayEntity.name, 'test error');
       }),
@@ -72,7 +72,11 @@ describe(AsyncQueueWithDelayEntity.name, () => {
 
     expect(setTimeout).toBeCalled();
     expect(setTimeout).toHaveBeenCalledTimes(1);
-    expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), delay);
+
+    expect(setTimeout).toHaveBeenLastCalledWith(
+      expect.any(Function),
+      randomDelayInMilliseconds,
+    );
 
     expect(defaultProps.processItem).toBeCalled();
     expect(defaultProps.processItem).toHaveBeenCalledTimes(1);
@@ -87,7 +91,10 @@ describe(AsyncQueueWithDelayEntity.name, () => {
     expect(setTimeout).toBeCalled();
 
     expect(setTimeout).toHaveBeenCalledTimes(2);
-    expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), delay);
+    expect(setTimeout).toHaveBeenLastCalledWith(
+      expect.any(Function),
+      randomDelayInMilliseconds,
+    );
   });
 
   it(`should match results`, async () => {
