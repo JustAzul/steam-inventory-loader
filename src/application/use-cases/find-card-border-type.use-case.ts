@@ -9,7 +9,7 @@ enum CardBorderInternalName {
 
 export default class FindCardBorderTypeUseCase {
   public static execute(
-    tags: Pick<SteamItemTag, 'internal_name' | 'category'>[],
+    tags: Readonly<Pick<SteamItemTag, 'internal_name' | 'category'>>[],
   ): CardType | null {
     const itemClass = FindCardBorderTypeUseCase.InternalFindTag(
       tags,
@@ -35,7 +35,7 @@ export default class FindCardBorderTypeUseCase {
   }
 
   private static InternalFindTag(
-    tags: Pick<SteamItemTag, 'internal_name' | 'category'>[],
+    tags: Readonly<Pick<SteamItemTag, 'internal_name' | 'category'>[]>,
     categoryToFind: string,
   ): Pick<SteamItemTag, 'internal_name' | 'category'> | null {
     if (tags.length === 0) return null;

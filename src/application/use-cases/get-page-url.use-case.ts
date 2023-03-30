@@ -12,7 +12,7 @@ export type GetPageUrlProps = {
 };
 
 export default class GetPageUrlUseCase {
-  public static execute(props: GetPageUrlProps): string {
+  public static execute(props: Readonly<GetPageUrlProps>): string {
     const {
       appID,
       contextID,

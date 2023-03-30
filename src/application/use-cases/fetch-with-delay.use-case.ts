@@ -30,7 +30,10 @@ export default class FetchWithDelayUseCase {
 
   private readonly props: FetchWithDelayUseCaseProps;
 
-  public constructor({ interfaces, props }: FetchWithDelayUseCaseConstructor) {
+  public constructor({
+    interfaces,
+    props,
+  }: Readonly<FetchWithDelayUseCaseConstructor>) {
     this.props = props;
     this.interfaces = interfaces;
 
@@ -51,7 +54,7 @@ export default class FetchWithDelayUseCase {
   }
 
   public execute<FetchUrlResult>(
-    httpClientGetProps: HttpClientGetProps,
+    httpClientGetProps: Readonly<HttpClientGetProps>,
   ): Promise<HttpClientResponse<FetchUrlResult>> {
     return this.asyncQueueWithDelay.insertAndProcess(httpClientGetProps);
   }

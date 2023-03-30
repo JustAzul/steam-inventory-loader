@@ -38,7 +38,10 @@ export default class GetInventoryPageResultUseCase {
 
   public readonly props: GetInventoryPageResultProps;
 
-  public constructor({ props, interfaces }: GetInventoryPageResultConstructor) {
+  public constructor({
+    props,
+    interfaces,
+  }: Readonly<GetInventoryPageResultConstructor>) {
     this.interfaces = interfaces;
     this.props = props;
   }

@@ -42,7 +42,7 @@ export default class GetHttpResponseWithExceptionUseCase {
   public constructor({
     interfaces,
     props,
-  }: GetHttpResponseWithExceptionConstructor) {
+  }: Readonly<GetHttpResponseWithExceptionConstructor>) {
     this.executeCount = 0;
 
     this.interfaces = interfaces;
@@ -50,7 +50,7 @@ export default class GetHttpResponseWithExceptionUseCase {
   }
 
   public async execute(
-    httpClientProps: HttpClientGetProps,
+    httpClientProps: Readonly<HttpClientGetProps>,
   ): Promise<HttpClientResponse<InventoryPageResult>> {
     this.executeCount += 1;
 

@@ -12,7 +12,7 @@ export default class FetchUrlUseCase {
   }
 
   public execute<ResponseType>(
-    props: HttpClientGetProps,
+    props: Readonly<HttpClientGetProps>,
   ): Promise<HttpClientResponse<ResponseType>> {
     return this.httpClient.get<ResponseType>(props);
   }
