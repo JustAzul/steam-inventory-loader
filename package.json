@@ -11,8 +11,9 @@
   ],
   "scripts": {
     "build": "tsc",
+    "format": "prettier --config .prettierrc --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "prebuild": "rimraf ./dist",
-    "prettier": "prettier --config .prettierrc 'src/**/*.ts' --write",
     "test": "jest"
   },
   "author": "https://justazul.com",
@@ -52,6 +53,6 @@
     "jest": "^29.5.0",
     "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
-    "typescript": "^5.0.2"
+    "typescript": "4.4.x"
   }
 }
