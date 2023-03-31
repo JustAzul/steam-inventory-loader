@@ -5,9 +5,14 @@
   "main": "index.js",
   "keywords": [
     "azul",
+    "inventory",
     "justazul.com",
     "justazul.xyz",
-    "justazul"
+    "justazul",
+    "loader",
+    "steam inventory loader",
+    "steam inventory",
+    "steam"
   ],
   "scripts": {
     "build": "tsc",
