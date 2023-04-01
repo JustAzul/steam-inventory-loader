@@ -32,7 +32,7 @@ describe(GetPageUrlUseCase.name, () => {
       language: 'english',
     };
 
-    const useCase = GetPageUrlUseCase.execute(config);
+    const useCase = new GetPageUrlUseCase(config).execute();
 
     const url = new URL(useCase);
     expect(url).toBeTruthy();
@@ -56,7 +56,7 @@ describe(GetPageUrlUseCase.name, () => {
       count: 10,
     };
 
-    const useCase = GetPageUrlUseCase.execute(config);
+    const useCase = new GetPageUrlUseCase(config).execute();;
 
     const url = new URL(useCase);
     expect(url).toBeTruthy();
@@ -80,7 +80,7 @@ describe(GetPageUrlUseCase.name, () => {
       lastAssetID: '123456789',
     };
 
-    const useCase = GetPageUrlUseCase.execute(config);
+    const useCase = new GetPageUrlUseCase(config).execute();;
 
     const url = new URL(useCase);
     expect(url).toBeTruthy();
@@ -104,7 +104,7 @@ describe(GetPageUrlUseCase.name, () => {
       count: 10,
     };
 
-    const useCase = GetPageUrlUseCase.execute(config);
+    const useCase = new GetPageUrlUseCase(config).execute();;
 
     const url = new URL(useCase);
     expect(url).toBeTruthy();
@@ -129,7 +129,7 @@ describe(GetPageUrlUseCase.name, () => {
       lastAssetID: '123456789',
     };
 
-    const useCase = GetPageUrlUseCase.execute(config);
+    const useCase = new GetPageUrlUseCase(config).execute();;
 
     const url = new URL(useCase);
     expect(url).toBeTruthy();
@@ -154,7 +154,7 @@ describe(GetPageUrlUseCase.name, () => {
       lastAssetID: '123456789',
     };
 
-    const useCase = GetPageUrlUseCase.execute(config);
+    const useCase = new GetPageUrlUseCase(config).execute();;
 
     const url = new URL(useCase);
     expect(url).toBeTruthy();
@@ -180,7 +180,7 @@ describe(GetPageUrlUseCase.name, () => {
       lastAssetID: '123456789',
     };
 
-    const useCase = GetPageUrlUseCase.execute(config);
+    const useCase = new GetPageUrlUseCase(config).execute();;
 
     const url = new URL(useCase);
     expect(url).toBeTruthy();
@@ -199,7 +199,7 @@ describe(GetPageUrlUseCase.name, () => {
   });
 
   it(`should return a valid URL`, () => {
-    const useCase = GetPageUrlUseCase.execute(defaultConfig);
+    const useCase = new GetPageUrlUseCase(defaultConfig).execute();
 
     const url = new URL(useCase);
     expect(url).toBeTruthy();
@@ -228,7 +228,7 @@ describe(GetPageUrlUseCase.name, () => {
       customEndpoint: 'https://example.com/{steamID64}/{contextID}',
     };
 
-    expect(() => GetPageUrlUseCase.execute(config)).toThrowError();
+    expect(() => new GetPageUrlUseCase(config).execute()).toThrowError();
   });
 
   it(`should thrown an error if customEndpoint does not provides the '{contextID}' template`, () => {
@@ -237,7 +237,7 @@ describe(GetPageUrlUseCase.name, () => {
       customEndpoint: 'https://example.com/{steamID64}/{appID}',
     };
 
-    expect(() => GetPageUrlUseCase.execute(config)).toThrowError();
+    expect(() => new GetPageUrlUseCase(config).execute()).toThrowError();
   });
 
   it(`should thrown an error if customEndpoint does not provides the '{steamID64}' template`, () => {
@@ -246,7 +246,7 @@ describe(GetPageUrlUseCase.name, () => {
       customEndpoint: 'https://example.com/{contextID}/{appID}',
     };
 
-    expect(() => GetPageUrlUseCase.execute(config)).toThrowError();
+    expect(() => new GetPageUrlUseCase(config).execute()).toThrowError();
   });
 
   it(`should thrown an error if customEndpoint does not provides a valid url`, () => {
@@ -255,6 +255,6 @@ describe(GetPageUrlUseCase.name, () => {
       customEndpoint: 'example.com/{contextID}/{appID}',
     };
 
-    expect(() => GetPageUrlUseCase.execute(config)).toThrowError();
+    expect(() => new GetPageUrlUseCase(config).execute()).toThrowError();
   });
 });
