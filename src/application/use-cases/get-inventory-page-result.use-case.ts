@@ -72,7 +72,7 @@ export default class GetInventoryPageResultUseCase {
     });
 
     const httpClientProps: HttpClientGetProps = {
-      url: GetPageUrlUseCase.execute(getPageUrlProps),
+      url: new GetPageUrlUseCase(getPageUrlProps).execute(),
     };
 
     const { data }: HttpClientResponse<InventoryPageResult> =

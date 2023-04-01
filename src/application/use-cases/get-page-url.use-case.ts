@@ -12,7 +12,13 @@ export type GetPageUrlProps = {
 };
 
 export default class GetPageUrlUseCase {
-  public static execute(props: Readonly<GetPageUrlProps>): string {
+  private readonly props: GetPageUrlProps;
+
+  public constructor(props: Readonly<GetPageUrlProps>) {
+    this.props = props;
+  }
+
+  public execute(): string {
     const {
       appID,
       contextID,
@@ -21,7 +27,7 @@ export default class GetPageUrlUseCase {
       steamID64,
       language,
       lastAssetID,
-    } = props;
+    } = this.props;
 
     const hasCustomEndpoint =
       Boolean(customEndpoint) && typeof customEndpoint === 'string';
