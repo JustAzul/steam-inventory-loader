@@ -20,7 +20,7 @@ export default class LoaderUtils extends ILoaderUtils {
   ): ReturnType<(typeof IAzulSteamInventoryLoader)['getLargeImageURL']> {
     const result: ReturnType<
       (typeof IAzulSteamInventoryLoader)['getLargeImageURL']
-    > = GetImageUrlUseCase.execute({ input, size: 'large' });
+    > = new GetImageUrlUseCase({ input, size: 'large' }).execute();
 
     return result;
   }
@@ -30,10 +30,10 @@ export default class LoaderUtils extends ILoaderUtils {
   ): ReturnType<(typeof IAzulSteamInventoryLoader)['getImageURL']> {
     const result: ReturnType<
       (typeof IAzulSteamInventoryLoader)['getImageURL']
-    > = GetImageUrlUseCase.execute({
+    > = new GetImageUrlUseCase({
       input,
       size: 'normal',
-    });
+    }).execute();
 
     return result;
   }
