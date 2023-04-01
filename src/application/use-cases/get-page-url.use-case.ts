@@ -1,5 +1,4 @@
 import { DEFAULT_REQUEST_URL } from '../../shared/constants';
-import UseCaseException from '../exceptions/use-case.exception';
 import ValidateEndpointUseCase from './validate-endpoint.use-case';
 
 export type GetPageUrlProps = {
