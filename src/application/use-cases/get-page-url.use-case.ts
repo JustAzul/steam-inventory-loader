@@ -1,5 +1,6 @@
 import { DEFAULT_REQUEST_URL } from '../../shared/constants';
 import UseCaseException from '../exceptions/use-case.exception';
+import ValidateEndpointUseCase from './validate-endpoint.use-case';
 
 export type GetPageUrlProps = {
   appID: string;
@@ -30,7 +31,8 @@ export default class GetPageUrlUseCase {
       ? customEndpoint
       : DEFAULT_REQUEST_URL;
 
-    GetPageUrlUseCase.ValidateEndpoint(endpoint);
+    const validateEndpointUseCase = new ValidateEndpointUseCase({ endpoint });
+    validateEndpointUseCase.execute();
 
     const url = new URL(
       endpoint
@@ -58,42 +60,5 @@ export default class GetPageUrlUseCase {
     }
 
     return url.toString();
-  }
-
-  private static ValidateEndpoint(endpoint: string): void {
-    const containsAppID = endpoint.includes('{appID}');
-    const containsContextID = endpoint.includes('{contextID}');
-    const containsSteamID64 = endpoint.includes('{steamID64}');
-
-    const containsHttp = endpoint.includes('http://');
-    const containsHttps = endpoint.includes('https://');
-
-    if (containsHttp === false && containsHttps === false) {
-      throw new UseCaseException(
-        GetPageUrlUseCase.name,
-        `The custom endpoint must contain the 'http://' or 'https://' protocol.`,
-      );
-    }
-
-    if (containsSteamID64 === false) {
-      throw new UseCaseException(
-        GetPageUrlUseCase.name,
-        `The custom endpoint must contain the '{steamID64}' placeholder.`,
-      );
-    }
-
-    if (containsAppID === false) {
-      throw new UseCaseException(
-        GetPageUrlUseCase.name,
-        `The custom endpoint must contain the '{appID}' placeholder.`,
-      );
-    }
-
-    if (containsContextID === false) {
-      throw new UseCaseException(
-        GetPageUrlUseCase.name,
-        `The custom endpoint must contain the '{contextID}' placeholder.`,
-      );
-    }
   }
 }
