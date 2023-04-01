@@ -9,7 +9,7 @@ export default class LoaderUtils extends ILoaderUtils {
     tags: Parameters<(typeof IAzulSteamInventoryLoader)['getTag']>[0],
     categoryToFind: Parameters<(typeof IAzulSteamInventoryLoader)['getTag']>[1],
   ): ReturnType<(typeof IAzulSteamInventoryLoader)['getTag']> {
-    const result = FindTagUseCase.execute({ tags, categoryToFind });
+    const result = new FindTagUseCase({ tags, categoryToFind }).execute();
     return result as ReturnType<(typeof IAzulSteamInventoryLoader)['getTag']>;
   }
 
