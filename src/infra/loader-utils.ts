@@ -46,7 +46,7 @@ export default class LoaderUtils extends ILoaderUtils {
   ): ReturnType<(typeof IAzulSteamInventoryLoader)['isCardType']> {
     if (!tags || !tags.length) return false;
 
-    const result = FindCardBorderTypeUseCase.execute(tags);
+    const result = new FindCardBorderTypeUseCase({ tags }).execute();
 
     if (result === null) return false;
     return result;

@@ -7,10 +7,20 @@ enum CardBorderInternalName {
   Foil = 'cardborder_1',
 }
 
+export type FindCardBorderTypeProps = {
+  tags: Readonly<Pick<SteamItemTag, 'internal_name' | 'category'>>[];
+};
+
 export default class FindCardBorderTypeUseCase {
-  public static execute(
-    tags: Readonly<Pick<SteamItemTag, 'internal_name' | 'category'>>[],
-  ): CardType | null {
+  private readonly props: FindCardBorderTypeProps;
+
+  public constructor(props: Readonly<FindCardBorderTypeProps>) {
+    this.props = props;
+  }
+
+  public execute(): CardType | null {
+    const { tags } = this.props;
+
     const itemClass = FindCardBorderTypeUseCase.InternalFindTag(
       tags,
       'item_class',
