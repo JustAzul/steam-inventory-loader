@@ -9,10 +9,8 @@ export default class LoaderUtils extends ILoaderUtils {
     tags: Parameters<(typeof IAzulSteamInventoryLoader)['getTag']>[0],
     categoryToFind: Parameters<(typeof IAzulSteamInventoryLoader)['getTag']>[1],
   ): ReturnType<(typeof IAzulSteamInventoryLoader)['getTag']> {
-    const result: ReturnType<(typeof IAzulSteamInventoryLoader)['getTag']> =
-      FindTagUseCase.execute(tags, categoryToFind);
-
-    return result;
+    const result = FindTagUseCase.execute({ tags, categoryToFind });
+    return result as ReturnType<(typeof IAzulSteamInventoryLoader)['getTag']>;
   }
 
   public static getLargeImageURL(
@@ -22,9 +20,7 @@ export default class LoaderUtils extends ILoaderUtils {
   ): ReturnType<(typeof IAzulSteamInventoryLoader)['getLargeImageURL']> {
     const result: ReturnType<
       (typeof IAzulSteamInventoryLoader)['getLargeImageURL']
-    > = GetImageUrlUseCase.execute(input, {
-      size: 'large',
-    });
+    > = GetImageUrlUseCase.execute({ input, size: 'large' });
 
     return result;
   }
@@ -34,7 +30,8 @@ export default class LoaderUtils extends ILoaderUtils {
   ): ReturnType<(typeof IAzulSteamInventoryLoader)['getImageURL']> {
     const result: ReturnType<
       (typeof IAzulSteamInventoryLoader)['getImageURL']
-    > = GetImageUrlUseCase.execute(input, {
+    > = GetImageUrlUseCase.execute({
+      input,
       size: 'normal',
     });
 
