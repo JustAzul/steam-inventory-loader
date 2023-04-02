@@ -1,6 +1,6 @@
 import Fastify from 'fastify';
 import FindOpenPort from 'find-open-port';
-import HttpClient from './http-client';
+import HttpClient from '../http-client';
 
 describe(HttpClient.name, () => {
   const defaultServerResponse = { message: 'Hello World!' };

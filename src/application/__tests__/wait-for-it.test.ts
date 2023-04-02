@@ -1,4 +1,4 @@
-import WaitForItUseCase from './wait-for-it.use-case';
+import WaitForItUseCase from '../use-cases/wait-for-it.use-case';
 
 jest.useFakeTimers();
 

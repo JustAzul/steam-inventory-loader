@@ -1,4 +1,4 @@
-import GetPageUrlUseCase, { GetPageUrlProps } from './get-page-url.use-case';
+import GetPageUrlUseCase, { GetPageUrlProps } from '../use-cases/get-page-url.use-case';
 
 import { DEFAULT_REQUEST_URL } from '../../shared/constants';
 
@@ -56,7 +56,7 @@ describe(GetPageUrlUseCase.name, () => {
       count: 10,
     };
 
-    const useCase = new GetPageUrlUseCase(config).execute();;
+    const useCase = new GetPageUrlUseCase(config).execute();
 
     const url = new URL(useCase);
     expect(url).toBeTruthy();
@@ -80,7 +80,7 @@ describe(GetPageUrlUseCase.name, () => {
       lastAssetID: '123456789',
     };
 
-    const useCase = new GetPageUrlUseCase(config).execute();;
+    const useCase = new GetPageUrlUseCase(config).execute();
 
     const url = new URL(useCase);
     expect(url).toBeTruthy();
@@ -104,7 +104,7 @@ describe(GetPageUrlUseCase.name, () => {
       count: 10,
     };
 
-    const useCase = new GetPageUrlUseCase(config).execute();;
+    const useCase = new GetPageUrlUseCase(config).execute();
 
     const url = new URL(useCase);
     expect(url).toBeTruthy();
@@ -129,7 +129,7 @@ describe(GetPageUrlUseCase.name, () => {
       lastAssetID: '123456789',
     };
 
-    const useCase = new GetPageUrlUseCase(config).execute();;
+    const useCase = new GetPageUrlUseCase(config).execute();
 
     const url = new URL(useCase);
     expect(url).toBeTruthy();
@@ -154,7 +154,7 @@ describe(GetPageUrlUseCase.name, () => {
       lastAssetID: '123456789',
     };
 
-    const useCase = new GetPageUrlUseCase(config).execute();;
+    const useCase = new GetPageUrlUseCase(config).execute();
 
     const url = new URL(useCase);
     expect(url).toBeTruthy();
@@ -180,7 +180,7 @@ describe(GetPageUrlUseCase.name, () => {
       lastAssetID: '123456789',
     };
 
-    const useCase = new GetPageUrlUseCase(config).execute();;
+    const useCase = new GetPageUrlUseCase(config).execute();
 
     const url = new URL(useCase);
     expect(url).toBeTruthy();
