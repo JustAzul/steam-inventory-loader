@@ -1,4 +1,4 @@
-import { IncomingHttpHeaders, OutgoingHttpHeader } from 'http';
+import { IncomingHttpHeaders } from 'http';
 
 export type HttpClientResponse<T extends unknown> = {
   data: T | null;
@@ -7,10 +7,11 @@ export type HttpClientResponse<T extends unknown> = {
 };
 
 export type HttpClientGetProps = {
-  headers?: OutgoingHttpHeader;
+  headers?: IncomingHttpHeaders;
   url: string;
 };
 
 export interface IHttpClient {
   get<T>(props: HttpClientGetProps): Promise<HttpClientResponse<T>>;
+  // isHttpError(err: unknown): boolean;
 }
