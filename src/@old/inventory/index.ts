@@ -7,7 +7,8 @@ import type { ItemDetails } from '../../domain/types/item-details.type';
 export default class Inventory {
   private readonly contextID: string;
 
-  private readonly descriptions: Map<string, InventoryPageDescription> = new Map();
+  private readonly descriptions: Map<string, InventoryPageDescription> =
+    new Map();
 
   private readonly tradableOnly: boolean;
 
@@ -18,7 +19,9 @@ export default class Inventory {
     this.tradableOnly = tradableOnly;
   }
 
-  public updateDescriptions(itemDescriptions: InventoryPageDescription[]): void {
+  public updateDescriptions(
+    itemDescriptions: InventoryPageDescription[],
+  ): void {
     for (let i = 0; i < itemDescriptions.length; i += 1) {
       const itemDescription = itemDescriptions[i];
       const descriptionKey = InventoryUtils.findDescriptionKey(itemDescription);

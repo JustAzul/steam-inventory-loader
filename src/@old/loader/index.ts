@@ -322,7 +322,10 @@ export default class InventoryLoader {
   private bindDataEvents(): void {
     this.events.on(
       'data',
-      (itemDescriptions: InventoryPageDescription[], itemAssets: InventoryPageAsset[]) => {
+      (
+        itemDescriptions: InventoryPageDescription[],
+        itemAssets: InventoryPageAsset[],
+      ) => {
         this.pagesReceived += 1;
 
         this.inventory.updateDescriptions(itemDescriptions);
