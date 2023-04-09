@@ -1,8 +1,8 @@
 import AsyncQueueWithDelayEntity, {
   AsyncQueueWithDelayProps,
-} from '../entities/async-queue-with-delay.entity';
+} from '../async-queue-with-delay.entity';
 
-import DomainException from '../exceptions/domain.exception';
+import DomainException from '../../exceptions/domain.exception';
 
 jest.useFakeTimers();
 jest.spyOn(global, 'setTimeout');
