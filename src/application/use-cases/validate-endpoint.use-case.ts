@@ -1,8 +1,18 @@
 import UseCaseException from '../exceptions/use-case.exception';
 
-export type ValidateEndpointProps = {
+// Represents the properties required to validate an endpoint
+interface ValidateEndpointProps {
   endpoint: string;
-};
+}
+
+// Placeholder constants
+const PLACEHOLDER_APP_ID = '{appID}';
+const PLACEHOLDER_CONTEXT_ID = '{contextID}';
+const PLACEHOLDER_STEAM_ID_64 = '{steamID64}';
+
+// Protocol constants
+const PROTOCOL_HTTP = 'http://';
+const PROTOCOL_HTTPS = 'https://';
 
 export default class ValidateEndpointUseCase {
   private readonly props: ValidateEndpointProps;
@@ -14,39 +24,44 @@ export default class ValidateEndpointUseCase {
   public execute(): void {
     const { endpoint } = this.props;
 
-    const containsAppID = endpoint.includes('{appID}');
-    const containsContextID = endpoint.includes('{contextID}');
-    const containsSteamID64 = endpoint.includes('{steamID64}');
+    // Check if the endpoint contains placeholders and protocols
+    const hasAppIDPlaceholder = endpoint.includes(PLACEHOLDER_APP_ID);
+    const hasContextIDPlaceholder = endpoint.includes(PLACEHOLDER_CONTEXT_ID);
+    const hasSteamID64Placeholder = endpoint.includes(PLACEHOLDER_STEAM_ID_64);
+    const hasHttpProtocol = endpoint.includes(PROTOCOL_HTTP);
+    const hasHttpsProtocol = endpoint.includes(PROTOCOL_HTTPS);
 
-    const containsHttp = endpoint.includes('http://');
-    const containsHttps = endpoint.includes('https://');
-
-    if (containsHttp === false && containsHttps === false) {
+    // Throw an exception if the endpoint is invalid
+    if (!hasHttpProtocol && !hasHttpsProtocol) {
       throw new UseCaseException(
         ValidateEndpointUseCase.name,
-        `The custom endpoint must contain the 'http://' or 'https://' protocol.`,
+        `The endpoint must contain either the '${PROTOCOL_HTTP}' or '${PROTOCOL_HTTPS}' protocol.`,
       );
+      return;
     }
 
-    if (containsSteamID64 === false) {
+    if (!hasSteamID64Placeholder) {
       throw new UseCaseException(
         ValidateEndpointUseCase.name,
-        `The custom endpoint must contain the '{steamID64}' placeholder.`,
+        `The endpoint must contain the '${PLACEHOLDER_STEAM_ID_64}' placeholder.`,
       );
+      return;
     }
 
-    if (containsAppID === false) {
+    if (!hasAppIDPlaceholder) {
       throw new UseCaseException(
         ValidateEndpointUseCase.name,
-        `The custom endpoint must contain the '{appID}' placeholder.`,
+        `The endpoint must contain the '${PLACEHOLDER_APP_ID}' placeholder.`,
       );
+      return;
     }
 
-    if (containsContextID === false) {
+    if (!hasContextIDPlaceholder) {
       throw new UseCaseException(
         ValidateEndpointUseCase.name,
-        `The custom endpoint must contain the '{contextID}' placeholder.`,
+        `The endpoint must contain the '${PLACEHOLDER_CONTEXT_ID}' placeholder.`,
       );
+      return;
     }
   }
 }
