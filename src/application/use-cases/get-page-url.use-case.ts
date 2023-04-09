@@ -1,4 +1,10 @@
-import { DEFAULT_REQUEST_URL } from '../../shared/constants';
+import {
+  DEFAULT_REQUEST_URL,
+  PLACEHOLDER_APP_ID,
+  PLACEHOLDER_CONTEXT_ID,
+  PLACEHOLDER_STEAM_ID_64,
+} from '../../shared/constants';
+
 import ValidateEndpointUseCase from './validate-endpoint.use-case';
 
 export type GetPageUrlProps = {
@@ -41,9 +47,9 @@ export default class GetPageUrlUseCase {
 
     const url = new URL(
       endpoint
-        .replace('{appID}', appID)
-        .replace('{contextID}', contextID)
-        .replace('{steamID64}', steamID64),
+        .replace(PLACEHOLDER_APP_ID, appID)
+        .replace(PLACEHOLDER_CONTEXT_ID, contextID)
+        .replace(PLACEHOLDER_STEAM_ID_64, steamID64),
     );
 
     const hasCount = Boolean(count) && typeof count === 'number';

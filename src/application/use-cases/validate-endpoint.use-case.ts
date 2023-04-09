@@ -1,14 +1,15 @@
+import {
+  PLACEHOLDER_APP_ID,
+  PLACEHOLDER_CONTEXT_ID,
+  PLACEHOLDER_STEAM_ID_64,
+} from '../../shared/constants';
+
 import UseCaseException from '../exceptions/use-case.exception';
 
 // Represents the properties required to validate an endpoint
 interface ValidateEndpointProps {
   endpoint: string;
 }
-
-// Placeholder constants
-const PLACEHOLDER_APP_ID = '{appID}';
-const PLACEHOLDER_CONTEXT_ID = '{contextID}';
-const PLACEHOLDER_STEAM_ID_64 = '{steamID64}';
 
 // Protocol constants
 const PROTOCOL_HTTP = 'http://';

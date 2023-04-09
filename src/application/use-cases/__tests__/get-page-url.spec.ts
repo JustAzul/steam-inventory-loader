@@ -1,6 +1,5 @@
+import { DEFAULT_REQUEST_URL, PLACEHOLDER_APP_ID, PLACEHOLDER_CONTEXT_ID, PLACEHOLDER_STEAM_ID_64 } from '../../../shared/constants';
 import GetPageUrlUseCase, { GetPageUrlProps } from './../get-page-url.use-case';
-
-import { DEFAULT_REQUEST_URL } from '../../../shared/constants';
 
 const urlParamsDic = {
   l: 'language',
@@ -216,34 +215,34 @@ describe(GetPageUrlUseCase.name, () => {
     ).toBeNull();
 
     expect(useCase).toContain(
-      DEFAULT_REQUEST_URL.replace('{steamID64}', defaultConfig.steamID64)
-        .replace('{appID}', defaultConfig.appID)
-        .replace('{contextID}', defaultConfig.contextID),
+      DEFAULT_REQUEST_URL.replace(PLACEHOLDER_STEAM_ID_64, defaultConfig.steamID64)
+        .replace(PLACEHOLDER_APP_ID, defaultConfig.appID)
+        .replace(PLACEHOLDER_CONTEXT_ID, defaultConfig.contextID),
     );
   });
 
-  it(`should thrown an error if customEndpoint does not provides the '{appID}' template`, () => {
+  it(`should thrown an error if customEndpoint does not provides the '${PLACEHOLDER_APP_ID}' template`, () => {
     const config: GetPageUrlProps = {
       ...defaultConfig,
-      customEndpoint: 'https://example.com/{steamID64}/{contextID}',
+      customEndpoint: `https://example.com/${PLACEHOLDER_STEAM_ID_64}/${PLACEHOLDER_CONTEXT_ID}`,
     };
 
     expect(() => new GetPageUrlUseCase(config).execute()).toThrowError();
   });
 
-  it(`should thrown an error if customEndpoint does not provides the '{contextID}' template`, () => {
+  it(`should thrown an error if customEndpoint does not provides the '${PLACEHOLDER_CONTEXT_ID}' template`, () => {
     const config: GetPageUrlProps = {
       ...defaultConfig,
-      customEndpoint: 'https://example.com/{steamID64}/{appID}',
+      customEndpoint: `https://example.com/${PLACEHOLDER_STEAM_ID_64}/${PLACEHOLDER_APP_ID}`,
     };
 
     expect(() => new GetPageUrlUseCase(config).execute()).toThrowError();
   });
 
-  it(`should thrown an error if customEndpoint does not provides the '{steamID64}' template`, () => {
+  it(`should thrown an error if customEndpoint does not provides the '${PLACEHOLDER_STEAM_ID_64}' template`, () => {
     const config: GetPageUrlProps = {
       ...defaultConfig,
-      customEndpoint: 'https://example.com/{contextID}/{appID}',
+      customEndpoint: `https://example.com/${PLACEHOLDER_CONTEXT_ID}/${PLACEHOLDER_APP_ID}`,
     };
 
     expect(() => new GetPageUrlUseCase(config).execute()).toThrowError();
@@ -252,7 +251,7 @@ describe(GetPageUrlUseCase.name, () => {
   it(`should thrown an error if customEndpoint does not provides a valid url`, () => {
     const config: GetPageUrlProps = {
       ...defaultConfig,
-      customEndpoint: 'example.com/{contextID}/{appID}',
+      customEndpoint: `example.com/${PLACEHOLDER_CONTEXT_ID}/${PLACEHOLDER_APP_ID}`,
     };
 
     expect(() => new GetPageUrlUseCase(config).execute()).toThrowError();
