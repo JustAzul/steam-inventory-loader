@@ -30,9 +30,9 @@ export default class GetPageUrlUseCase {
       contextID,
       count,
       customEndpoint,
-      steamID64,
       language,
       lastAssetID,
+      steamID64,
     } = this.props;
 
     const hasCustomEndpoint =
