@@ -34,8 +34,16 @@ export default class AsyncQueueWithDelayEntity {
     this.isQueueBeingProcessed = false;
     this.items = [];
 
+    // eslint-disable-next-line no-underscore-dangle
+    this._initProcessing();
+  }
+
+  // eslint-disable-next-line no-underscore-dangle
+  private _initProcessing(): void {
     if (this.isQueueWithItems()) {
-      this.processQueue().finally(() => null);
+      this.processQueue().catch((error) => {
+        console.error('Error while processing the queue:', error);
+      });
     }
   }
 
