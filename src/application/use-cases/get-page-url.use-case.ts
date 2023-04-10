@@ -52,22 +52,20 @@ export default class GetPageUrlUseCase {
         .replace(PLACEHOLDER_STEAM_ID_64, steamID64),
     );
 
-    const hasCount = Boolean(count) && typeof count === 'number';
-    const hasLanguage = Boolean(language) && typeof language === 'string';
-
-    const hasLastAssetID =
-      Boolean(lastAssetID) && typeof lastAssetID === 'string';
+    const hasCount = Boolean(count);
+    const hasLanguage = Boolean(language);
+    const hasLastAssetID = Boolean(lastAssetID);
 
     if (hasCount) {
       url.searchParams.append('count', String(count));
     }
 
     if (hasLanguage) {
-      url.searchParams.append('l', language);
+      url.searchParams.append('l', String(language));
     }
 
     if (hasLastAssetID) {
-      url.searchParams.append('start_assetid', lastAssetID);
+      url.searchParams.append('start_assetid', String(lastAssetID));
     }
 
     return url.toString();
