@@ -9,7 +9,7 @@ export type AsyncQueueWithDelayProps = {
   processItem: (item: any) => Promise<any>;
 };
 
-export default class AsyncQueueWithDelayEntity {
+export default class AsyncQueueWithDelay {
   private indexCounter: number;
 
   private isQueueBeingProcessed: boolean;
@@ -25,7 +25,7 @@ export default class AsyncQueueWithDelayEntity {
 
     if (this.props.delayInMilliseconds < 0) {
       throw new DomainException(
-        AsyncQueueWithDelayEntity.name,
+        AsyncQueueWithDelay.name,
         'delay in milliseconds must be greater than or equal to zero',
       );
     }
@@ -54,7 +54,7 @@ export default class AsyncQueueWithDelayEntity {
 
     const queueItem: QueueItem<ItemType> = {
       item,
-      eventID: AsyncQueueWithDelayEntity.FindEventUID(itemUID),
+      eventID: AsyncQueueWithDelay.FindEventUID(itemUID),
     };
 
     this.items.push(queueItem);

@@ -4,7 +4,7 @@ import {
   IHttpClient,
 } from '../ports/http-client.interface';
 
-import AsyncQueueWithDelayEntity from '../../domain/entities/async-queue-with-delay.entity';
+import AsyncQueueWithDelay from '../../domain/entities/async-queue-with-delay.entity';
 import FetchUrlUseCase from './fetch-url.use-case';
 import UseCaseException from '../exceptions/use-case.exception';
 
@@ -22,7 +22,7 @@ export type FetchWithDelayUseCaseConstructor = {
 };
 
 export default class FetchWithDelayUseCase {
-  private readonly asyncQueueWithDelay: AsyncQueueWithDelayEntity;
+  private readonly asyncQueueWithDelay: AsyncQueueWithDelay;
 
   private readonly fetchUrlUseCase: FetchUrlUseCase;
 
@@ -46,7 +46,7 @@ export default class FetchWithDelayUseCase {
 
     this.fetchUrlUseCase = new FetchUrlUseCase(this.interfaces.httpClient);
 
-    this.asyncQueueWithDelay = new AsyncQueueWithDelayEntity({
+    this.asyncQueueWithDelay = new AsyncQueueWithDelay({
       delayInMilliseconds: this.props.delayInMilliseconds,
       processItem: (itemProps: HttpClientGetProps) =>
         this.fetchUrlUseCase.execute(itemProps),
