@@ -13,5 +13,4 @@ export type HttpClientGetProps = {
 
 export interface IHttpClient {
   get<T>(props: HttpClientGetProps): Promise<HttpClientResponse<T>>;
-  // isHttpError(err: unknown): boolean;
 }
