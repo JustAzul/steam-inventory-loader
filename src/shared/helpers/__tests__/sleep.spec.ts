@@ -1,8 +1,8 @@
-import WaitForItUseCase from '../wait-for-it.use-case';
+import sleep from '../sleep.helper';
 
 jest.useFakeTimers();
 
-describe(WaitForItUseCase.name, () => {
+describe(sleep.name, () => {
   it(`should wait for a delay between calls`, async () => {
     // random delay
     const delayInMilliseconds = Math.floor(Math.random() * 1000);
@@ -10,7 +10,7 @@ describe(WaitForItUseCase.name, () => {
     const start = Date.now();
 
     await Promise.all([
-      WaitForItUseCase.execute(delayInMilliseconds),
+      sleep(delayInMilliseconds),
       jest.runAllTimersAsync(),
     ]);
 

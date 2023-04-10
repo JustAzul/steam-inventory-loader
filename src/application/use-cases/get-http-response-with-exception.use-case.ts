@@ -17,7 +17,7 @@ import PrivateProfileException from '../exceptions/private-profile.exception';
 import RateLimitedException from '../exceptions/rate-limited.exception';
 import SteamErrorResultException from '../exceptions/steam-error-result.exception';
 import UseCaseException from '../exceptions/use-case.exception';
-import WaitForItUseCase from './wait-for-it.use-case';
+import sleep from '../../shared/helpers/sleep.helper';
 
 export type GetHttpResponseWithExceptionProps = {
   maxRetries?: number;
@@ -87,7 +87,7 @@ export default class GetHttpResponseWithExceptionUseCase {
         }
 
         if (this.canRetry()) {
-          await WaitForItUseCase.execute(DEFAULT_REQUEST_RETRY_DELAY);
+          await sleep(DEFAULT_REQUEST_RETRY_DELAY);
           return this.execute(httpClientProps);
         }
 

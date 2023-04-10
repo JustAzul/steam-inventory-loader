@@ -2,6 +2,7 @@ import DomainException from '../exceptions/domain.exception';
 import EventEmitter from 'events';
 import { EventEmitterResponse } from '../types/event-emitter-response.type';
 import { QueueItem } from '../types/queue-item.type';
+import sleep from '../../shared/helpers/sleep.helper';
 
 export type AsyncQueueWithDelayProps = {
   delayInMilliseconds: number;
@@ -109,7 +110,7 @@ export default class AsyncQueueWithDelayEntity {
       }
 
       // eslint-disable-next-line no-await-in-loop
-      await AsyncQueueWithDelayEntity.Wait(this.props.delayInMilliseconds);
+      await sleep(this.props.delayInMilliseconds);
     }
 
     this.isQueueBeingProcessed = false;
@@ -122,12 +123,6 @@ export default class AsyncQueueWithDelayEntity {
 
   private isQueueWithItems(): boolean {
     return this.items.length > 0;
-  }
-
-  private static Wait(timeToWait: number): Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(), timeToWait);
-    });
   }
 
   private static FindEventUID(uID: number): symbol {
