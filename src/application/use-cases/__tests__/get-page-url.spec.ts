@@ -7,15 +7,17 @@ const urlParamsDic = {
   start_assetid: 'lastAssetID',
 };
 
-function findParamNameFromConfigKey(
+type UrlParamsDicKeys = keyof typeof urlParamsDic;
+
+function FindParamNameFromConfigKey(
   configKey: keyof Pick<
     Required<GetPageUrlProps>,
     'count' | 'language' | 'lastAssetID'
   >,
-): keyof typeof urlParamsDic {
+): UrlParamsDicKeys {
   return Object.keys(urlParamsDic).find(
-    (key) => urlParamsDic[key as keyof typeof urlParamsDic] === configKey,
-  ) as keyof typeof urlParamsDic;
+    (key) => urlParamsDic[key as UrlParamsDicKeys] === configKey,
+  ) as UrlParamsDicKeys;
 }
 
 describe(GetPageUrlUseCase.name, () => {
@@ -36,16 +38,16 @@ describe(GetPageUrlUseCase.name, () => {
     const url = new URL(useCase);
     expect(url).toBeTruthy();
 
-    expect(url.searchParams.get(findParamNameFromConfigKey('language'))).toBe(
+    expect(url.searchParams.get(FindParamNameFromConfigKey('language'))).toBe(
       config.language,
     );
 
     expect(
-      url.searchParams.get(findParamNameFromConfigKey('count')),
+      url.searchParams.get(FindParamNameFromConfigKey('count')),
     ).toBeNull();
 
     expect(
-      url.searchParams.get(findParamNameFromConfigKey('lastAssetID')),
+      url.searchParams.get(FindParamNameFromConfigKey('lastAssetID')),
     ).toBeNull();
   });
 
@@ -61,15 +63,15 @@ describe(GetPageUrlUseCase.name, () => {
     expect(url).toBeTruthy();
 
     expect(
-      url.searchParams.get(findParamNameFromConfigKey('language')),
+      url.searchParams.get(FindParamNameFromConfigKey('language')),
     ).toBeNull();
 
-    expect(url.searchParams.get(findParamNameFromConfigKey('count'))).toBe(
+    expect(url.searchParams.get(FindParamNameFromConfigKey('count'))).toBe(
       String(config.count),
     );
 
     expect(
-      url.searchParams.get(findParamNameFromConfigKey('lastAssetID')),
+      url.searchParams.get(FindParamNameFromConfigKey('lastAssetID')),
     ).toBeNull();
   });
 
@@ -85,14 +87,14 @@ describe(GetPageUrlUseCase.name, () => {
     expect(url).toBeTruthy();
 
     expect(
-      url.searchParams.get(findParamNameFromConfigKey('language')),
+      url.searchParams.get(FindParamNameFromConfigKey('language')),
     ).toBeNull();
     expect(
-      url.searchParams.get(findParamNameFromConfigKey('count')),
+      url.searchParams.get(FindParamNameFromConfigKey('count')),
     ).toBeNull();
 
     expect(
-      url.searchParams.get(findParamNameFromConfigKey('lastAssetID')),
+      url.searchParams.get(FindParamNameFromConfigKey('lastAssetID')),
     ).toBe(config.lastAssetID);
   });
 
@@ -108,16 +110,16 @@ describe(GetPageUrlUseCase.name, () => {
     const url = new URL(useCase);
     expect(url).toBeTruthy();
 
-    expect(url.searchParams.get(findParamNameFromConfigKey('language'))).toBe(
+    expect(url.searchParams.get(FindParamNameFromConfigKey('language'))).toBe(
       config.language,
     );
 
-    expect(url.searchParams.get(findParamNameFromConfigKey('count'))).toBe(
+    expect(url.searchParams.get(FindParamNameFromConfigKey('count'))).toBe(
       String(config.count),
     );
 
     expect(
-      url.searchParams.get(findParamNameFromConfigKey('lastAssetID')),
+      url.searchParams.get(FindParamNameFromConfigKey('lastAssetID')),
     ).toBeNull();
   });
 
@@ -133,16 +135,16 @@ describe(GetPageUrlUseCase.name, () => {
     const url = new URL(useCase);
     expect(url).toBeTruthy();
 
-    expect(url.searchParams.get(findParamNameFromConfigKey('language'))).toBe(
+    expect(url.searchParams.get(FindParamNameFromConfigKey('language'))).toBe(
       config.language,
     );
 
     expect(
-      url.searchParams.get(findParamNameFromConfigKey('count')),
+      url.searchParams.get(FindParamNameFromConfigKey('count')),
     ).toBeNull();
 
     expect(
-      url.searchParams.get(findParamNameFromConfigKey('lastAssetID')),
+      url.searchParams.get(FindParamNameFromConfigKey('lastAssetID')),
     ).toBe(config.lastAssetID);
   });
 
@@ -159,15 +161,15 @@ describe(GetPageUrlUseCase.name, () => {
     expect(url).toBeTruthy();
 
     expect(
-      url.searchParams.get(findParamNameFromConfigKey('language')),
+      url.searchParams.get(FindParamNameFromConfigKey('language')),
     ).toBeNull();
 
-    expect(url.searchParams.get(findParamNameFromConfigKey('count'))).toBe(
+    expect(url.searchParams.get(FindParamNameFromConfigKey('count'))).toBe(
       String(config.count),
     );
 
     expect(
-      url.searchParams.get(findParamNameFromConfigKey('lastAssetID')),
+      url.searchParams.get(FindParamNameFromConfigKey('lastAssetID')),
     ).toBe(config.lastAssetID);
   });
 
@@ -184,16 +186,16 @@ describe(GetPageUrlUseCase.name, () => {
     const url = new URL(useCase);
     expect(url).toBeTruthy();
 
-    expect(url.searchParams.get(findParamNameFromConfigKey('language'))).toBe(
+    expect(url.searchParams.get(FindParamNameFromConfigKey('language'))).toBe(
       config.language,
     );
 
-    expect(url.searchParams.get(findParamNameFromConfigKey('count'))).toBe(
+    expect(url.searchParams.get(FindParamNameFromConfigKey('count'))).toBe(
       String(config.count),
     );
 
     expect(
-      url.searchParams.get(findParamNameFromConfigKey('lastAssetID')),
+      url.searchParams.get(FindParamNameFromConfigKey('lastAssetID')),
     ).toBe(config.lastAssetID);
   });
 
@@ -204,14 +206,14 @@ describe(GetPageUrlUseCase.name, () => {
     expect(url).toBeTruthy();
 
     expect(
-      url.searchParams.get(findParamNameFromConfigKey('language')),
+      url.searchParams.get(FindParamNameFromConfigKey('language')),
     ).toBeNull();
     expect(
-      url.searchParams.get(findParamNameFromConfigKey('count')),
+      url.searchParams.get(FindParamNameFromConfigKey('count')),
     ).toBeNull();
 
     expect(
-      url.searchParams.get(findParamNameFromConfigKey('lastAssetID')),
+      url.searchParams.get(FindParamNameFromConfigKey('lastAssetID')),
     ).toBeNull();
 
     expect(useCase).toContain(
