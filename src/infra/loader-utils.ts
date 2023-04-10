@@ -4,48 +4,50 @@ import GetImageUrlUseCase from '../application/use-cases/get-image-url.use-case'
 import IAzulSteamInventoryLoader from '../application/ports/azul-steam-inventory-loader.interface';
 import ILoaderUtils from '../application/ports/loader-utils.interface';
 
-export default class LoaderUtils extends ILoaderUtils {
+type AzulSteamInventoryLoader = typeof IAzulSteamInventoryLoader;
+
+export default class LoaderUtils implements ILoaderUtils {
   public static getTags(
-    tags: Parameters<(typeof IAzulSteamInventoryLoader)['getTag']>[0],
-    categoryToFind: Parameters<(typeof IAzulSteamInventoryLoader)['getTag']>[1],
-  ): ReturnType<(typeof IAzulSteamInventoryLoader)['getTag']> {
+    tags: Parameters<AzulSteamInventoryLoader['getTag']>[0],
+    categoryToFind: Parameters<AzulSteamInventoryLoader['getTag']>[1],
+  ): ReturnType<AzulSteamInventoryLoader['getTag']> {
     const result = new FindTagUseCase({ tags, categoryToFind }).execute();
-    return result as ReturnType<(typeof IAzulSteamInventoryLoader)['getTag']>;
+    return result as ReturnType<AzulSteamInventoryLoader['getTag']>;
   }
 
   public static getLargeImageURL(
-    input: Parameters<
-      (typeof IAzulSteamInventoryLoader)['getLargeImageURL']
-    >[0],
-  ): ReturnType<(typeof IAzulSteamInventoryLoader)['getLargeImageURL']> {
-    const result: ReturnType<
-      (typeof IAzulSteamInventoryLoader)['getLargeImageURL']
-    > = new GetImageUrlUseCase({ input, size: 'large' }).execute();
+    input: Parameters<AzulSteamInventoryLoader['getLargeImageURL']>[0],
+  ): ReturnType<AzulSteamInventoryLoader['getLargeImageURL']> {
+    const result: ReturnType<AzulSteamInventoryLoader['getLargeImageURL']> =
+      new GetImageUrlUseCase({ input, size: 'large' }).execute();
 
     return result;
   }
 
   public static getImageURL(
-    input: Parameters<(typeof IAzulSteamInventoryLoader)['getImageURL']>[0],
-  ): ReturnType<(typeof IAzulSteamInventoryLoader)['getImageURL']> {
-    const result: ReturnType<
-      (typeof IAzulSteamInventoryLoader)['getImageURL']
-    > = new GetImageUrlUseCase({
-      input,
-      size: 'normal',
-    }).execute();
+    input: Parameters<AzulSteamInventoryLoader['getImageURL']>[0],
+  ): ReturnType<AzulSteamInventoryLoader['getImageURL']> {
+    const result: ReturnType<AzulSteamInventoryLoader['getImageURL']> =
+      new GetImageUrlUseCase({
+        input,
+        size: 'normal',
+      }).execute();
 
     return result;
   }
 
   public static isCardType(
-    tags?: Parameters<(typeof IAzulSteamInventoryLoader)['isCardType']>[0],
-  ): ReturnType<(typeof IAzulSteamInventoryLoader)['isCardType']> {
+    tags?: Parameters<AzulSteamInventoryLoader['isCardType']>[0],
+  ): ReturnType<AzulSteamInventoryLoader['isCardType']> {
     if (!tags || !tags.length) return false;
 
     const result = new FindCardBorderTypeUseCase({ tags }).execute();
+    const hasFoundResult = result !== null;
 
-    if (result === null) return false;
-    return result;
+    if (hasFoundResult) {
+      return result;
+    }
+
+    return false;
   }
 }
