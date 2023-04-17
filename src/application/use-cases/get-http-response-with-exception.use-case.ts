@@ -8,14 +8,11 @@ import {
 } from '../ports/http-client.interface';
 
 import BadStatusCodeException from '../exceptions/bad-status-code.exception';
-import EmptyHttpResponseException from '../exceptions/empty-http-response.exception';
 import FetchUrlUseCase from './fetch-url.use-case';
 import FetchWithDelayUseCase from './fetch-with-delay.use-case';
 import HttpException from '../exceptions/http.exception';
 import { InventoryPageResult } from '../types/inventory-page-result.type';
-import PrivateProfileException from '../exceptions/private-profile.exception';
-import RateLimitedException from '../exceptions/rate-limited.exception';
-import SteamErrorResultException from '../exceptions/steam-error-result.exception';
+import ThrownResponseExceptionUseCase from './thrown-response-exceptions.use-case';
 import UseCaseException from '../exceptions/use-case.exception';
 import sleep from '../../shared/helpers/sleep.helper';
 
@@ -56,60 +53,13 @@ export default class GetHttpResponseWithExceptionUseCase {
 
     const { fetchUrlUseCase } = this.interfaces;
 
+    let httpClientResponse: HttpClientResponse<InventoryPageResult>;
+
     try {
-      const httpClientResponse =
-        await fetchUrlUseCase.execute<InventoryPageResult>(httpClientProps);
-
-      const { statusCode } = httpClientResponse;
-
-      const dataHasError = Boolean(httpClientResponse?.data?.error);
-      const hasReceivedData = Boolean(httpClientResponse?.data);
-
-      if (statusCode === 403) {
-        throw new PrivateProfileException(httpClientResponse);
-      }
-
-      if (statusCode === 429) {
-        throw new RateLimitedException(httpClientResponse);
-      }
-
-      if (statusCode !== 200) {
-        if (dataHasError) {
-          const error = String(httpClientResponse?.data?.error);
-
-          const match = /^(.+) \((\d+)\)$/.exec(error);
-          const hasMatch = Boolean(match);
-
-          if (hasMatch) {
-            const [, resErr, eResult] = match as RegExpExecArray;
-            throw new SteamErrorResultException(eResult, resErr);
-          }
-        }
-
-        if (this.canRetry()) {
-          await sleep(DEFAULT_REQUEST_RETRY_DELAY);
-          return this.execute(httpClientProps);
-        }
-
-        throw new BadStatusCodeException(httpClientResponse);
-      }
-
-      if (hasReceivedData) {
-        return httpClientResponse;
-      }
-
-      throw new EmptyHttpResponseException(httpClientResponse);
+      httpClientResponse = await fetchUrlUseCase.execute<InventoryPageResult>(
+        httpClientProps,
+      );
     } catch (e) {
-      if (
-        e instanceof BadStatusCodeException ||
-        e instanceof EmptyHttpResponseException ||
-        e instanceof PrivateProfileException ||
-        e instanceof RateLimitedException ||
-        e instanceof SteamErrorResultException
-      ) {
-        throw e;
-      }
-
       if (e instanceof HttpException) {
         throw new UseCaseException(
           GetHttpResponseWithExceptionUseCase.name,
@@ -130,6 +80,22 @@ export default class GetHttpResponseWithExceptionUseCase {
         GetHttpResponseWithExceptionUseCase.name,
         `Unknown Error: ${String(e)}`,
       );
+    }
+
+    try {
+      const thrownResponseException = new ThrownResponseExceptionUseCase({
+        httpClientResponse,
+      });
+
+      const response = thrownResponseException.execute();
+      return response;
+    } catch (e) {
+      if (this.canRetry() && e instanceof BadStatusCodeException) {
+        await sleep(DEFAULT_REQUEST_RETRY_DELAY);
+        return this.execute(httpClientProps);
+      }
+
+      throw e;
     }
   }
 
