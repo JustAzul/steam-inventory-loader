@@ -4,6 +4,7 @@ import { HttpClientResponse } from '../ports/http-client.interface';
 import { InventoryPageResult } from '../types/inventory-page-result.type';
 import PrivateProfileException from '../exceptions/private-profile.exception';
 import RateLimitedException from '../exceptions/rate-limited.exception';
+import { StatusCode } from 'status-code-enum';
 import SteamErrorResultException from '../exceptions/steam-error-result.exception';
 
 export type ThrownResponseExceptionProps = {
@@ -24,15 +25,15 @@ export default class ThrownResponseExceptionUseCase {
     const dataHasError = Boolean(httpClientResponse?.data?.error);
     const hasReceivedData = Boolean(httpClientResponse?.data);
 
-    if (statusCode === 403) {
+    if (statusCode === StatusCode.ClientErrorForbidden) {
       throw new PrivateProfileException(httpClientResponse);
     }
 
-    if (statusCode === 429) {
+    if (statusCode === StatusCode.ClientErrorTooManyRequests) {
       throw new RateLimitedException(httpClientResponse);
     }
 
-    if (statusCode !== 200) {
+    if (statusCode !== StatusCode.SuccessOK) {
       if (dataHasError) {
         const error = String(httpClientResponse?.data?.error);
 
