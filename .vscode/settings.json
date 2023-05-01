@@ -11,6 +11,8 @@
         "currencyid",
         "descs",
         "eresult",
+        "fastify",
+        "Fastify",
         "fraudwarnings",
         "hpagent",
         "instanceid",
