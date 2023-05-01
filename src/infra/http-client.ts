@@ -11,9 +11,11 @@ import {
 } from '../application/ports/http-client.interface';
 
 import { DEFAULT_REQUEST_TIMEOUT } from '../shared/constants';
+import HttpException from '../application/exceptions/http.exception';
 import { HttpsAgent } from 'agentkeepalive';
 import { HttpsProxyAgent } from 'hpagent';
 import { IncomingHttpHeaders } from 'http';
+import InfraException from './exceptions/infra.exception';
 
 export default class HttpClient implements IHttpClient {
   private client: AxiosInstance;
@@ -43,6 +45,7 @@ export default class HttpClient implements IHttpClient {
       httpsAgent: this.getAgent(),
       responseType: 'json',
       timeout: DEFAULT_REQUEST_TIMEOUT,
+      validateStatus: (statusCode) => statusCode >= 200 && statusCode < 300,
     };
   }
 
@@ -86,21 +89,39 @@ export default class HttpClient implements IHttpClient {
       headers,
     };
 
-    const {
-      data,
-      headers: receivedHeaders,
-      status,
-    } = await this.client.get<T, AxiosResponse<T, never>, never>(url, options);
+    try {
+      const {
+        data,
+        headers: incomingHeaders,
+        status,
+      } = await this.client.get<T, AxiosResponse<T, never>, never>(
+        url,
+        options,
+      );
 
-    return {
-      data,
-      // @ts-expect-error - AxiosResponse type is wrong?
-      headers: receivedHeaders,
-      statusCode: status,
-    };
-  }
+      return {
+        data,
+        headers: incomingHeaders as IncomingHttpHeaders,
+        statusCode: status,
+      };
+    } catch (e) {
+      if (Axios.isAxiosError(e)) {
+        throw new HttpException({
+          message: e.message,
+          request: props,
+          response: {
+            data: e.response?.data,
+            headers: (e.response?.headers as IncomingHttpHeaders) || null,
+            statusCode: e.response?.status,
+          },
+        });
+      }
 
-  public static isHttpError(err: unknown): boolean {
-    return Axios.isAxiosError(err);
+      if (e instanceof Error) {
+        throw new InfraException(HttpClient.name, e.message);
+      }
+
+      throw new InfraException(HttpClient.name, `Unknown error: ${String(e)}`);
+    }
   }
 }

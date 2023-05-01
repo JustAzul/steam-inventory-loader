@@ -7,13 +7,14 @@ import {
   HttpClientResponse,
 } from '../ports/http-client.interface';
 
-import BadStatusCodeException from '../exceptions/bad-status-code.exception';
 import FetchUrlUseCase from './fetch-url.use-case';
 import FetchWithDelayUseCase from './fetch-with-delay.use-case';
 import HttpException from '../exceptions/http.exception';
 import { InventoryPageResult } from '../types/inventory-page-result.type';
-import ThrownResponseExceptionUseCase from './thrown-response-exceptions.use-case';
+import ProcessHttpExceptionsUseCase from './process-http-exceptions.use-case';
+import SteamErrorResultException from '../exceptions/steam-error-result.exception';
 import UseCaseException from '../exceptions/use-case.exception';
+import ValidateHttpResponseUseCase from './validate-http-response.use-case';
 import sleep from '../../shared/helpers/sleep.helper';
 
 export type GetHttpResponseWithExceptionProps = {
@@ -61,10 +62,16 @@ export default class GetHttpResponseWithExceptionUseCase {
       );
     } catch (e) {
       if (e instanceof HttpException) {
-        throw new UseCaseException(
-          GetHttpResponseWithExceptionUseCase.name,
-          `HTTP Error: ${e.message}`,
+        const processHTTPExceptionsUseCase = new ProcessHttpExceptionsUseCase(
+          e,
         );
+
+        processHTTPExceptionsUseCase.execute();
+
+        if (this.canRetry()) {
+          await sleep(DEFAULT_REQUEST_RETRY_DELAY);
+          return this.execute(httpClientProps);
+        }
       }
 
       if (Object.prototype.hasOwnProperty.call(e, 'message')) {
@@ -83,19 +90,36 @@ export default class GetHttpResponseWithExceptionUseCase {
     }
 
     try {
-      const thrownResponseException = new ThrownResponseExceptionUseCase({
-        httpClientResponse,
+      const validateHttpResponseUseCase = new ValidateHttpResponseUseCase({
+        request: httpClientProps,
+        response: httpClientResponse,
       });
 
-      const response = thrownResponseException.execute();
+      const response = validateHttpResponseUseCase.execute();
       return response;
     } catch (e) {
-      if (this.canRetry() && e instanceof BadStatusCodeException) {
+      if (e instanceof SteamErrorResultException) {
+        throw e;
+      }
+
+      if (this.canRetry()) {
         await sleep(DEFAULT_REQUEST_RETRY_DELAY);
         return this.execute(httpClientProps);
       }
 
-      throw e;
+      if (Object.prototype.hasOwnProperty.call(e, 'message')) {
+        const { message } = e as Error;
+
+        throw new UseCaseException(
+          GetHttpResponseWithExceptionUseCase.name,
+          `${typeof e}: ${message}`,
+        );
+      }
+
+      throw new UseCaseException(
+        GetHttpResponseWithExceptionUseCase.name,
+        `Unknown Error: ${String(e)}`,
+      );
     }
   }
 

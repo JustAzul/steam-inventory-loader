@@ -1,19 +1,16 @@
-import { IncomingHttpHeaders } from 'http';
+import { HttpClientResponse } from '../ports/http-client.interface';
+import { HttpRequest } from '../types/http-request.type';
 
-export type HttpExceptionProps = {
-  headers: IncomingHttpHeaders;
-  message: string;
-  statusCode: number | string;
+export type HttpExceptionProps<T = unknown> = Pick<Error, 'message'> & {
+  request: HttpRequest;
+  response: Partial<HttpClientResponse<T>>;
 };
 
 export default class HttpException extends Error {
-  public readonly headers: IncomingHttpHeaders;
-
-  public readonly statusCode: number;
+  public readonly props: HttpExceptionProps;
 
   public constructor(props: HttpExceptionProps) {
     super(props.message);
-    this.headers = props.headers;
-    this.statusCode = Number(props.statusCode);
+    this.props = props;
   }
 }

@@ -1,16 +1,13 @@
 import HttpException, { HttpExceptionProps } from './http.exception';
 
-type BadHttpStatusCodeExceptionProps = Pick<
-  HttpExceptionProps,
-  'statusCode' | 'headers'
->;
+type BadHttpStatusCodeExceptionProps = Omit<HttpExceptionProps, 'message'>;
 
 export default class BadStatusCodeException extends HttpException {
   public constructor(props: BadHttpStatusCodeExceptionProps) {
     super({
-      headers: props.headers,
-      message: 'bad status code',
-      statusCode: props.statusCode,
+      message: 'Bad Status Code',
+      request: props.request,
+      response: props.response,
     });
   }
 }
