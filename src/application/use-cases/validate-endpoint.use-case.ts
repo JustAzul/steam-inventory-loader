@@ -28,41 +28,37 @@ export default class ValidateEndpointUseCase {
     // Check if the endpoint contains placeholders and protocols
     const hasAppIDPlaceholder = endpoint.includes(PLACEHOLDER_APP_ID);
     const hasContextIDPlaceholder = endpoint.includes(PLACEHOLDER_CONTEXT_ID);
-    const hasSteamID64Placeholder = endpoint.includes(PLACEHOLDER_STEAM_ID_64);
     const hasHttpProtocol = endpoint.includes(PROTOCOL_HTTP);
     const hasHttpsProtocol = endpoint.includes(PROTOCOL_HTTPS);
+    const hasSteamID64Placeholder = endpoint.includes(PLACEHOLDER_STEAM_ID_64);
 
     // Throw an exception if the endpoint is invalid
-    if (!hasHttpProtocol && !hasHttpsProtocol) {
+    if (hasHttpProtocol === false && hasHttpsProtocol === false) {
       throw new UseCaseException(
         ValidateEndpointUseCase.name,
         `The endpoint must contain either the '${PROTOCOL_HTTP}' or '${PROTOCOL_HTTPS}' protocol.`,
       );
-      return;
     }
 
-    if (!hasSteamID64Placeholder) {
+    if (hasSteamID64Placeholder === false) {
       throw new UseCaseException(
         ValidateEndpointUseCase.name,
         `The endpoint must contain the '${PLACEHOLDER_STEAM_ID_64}' placeholder.`,
       );
-      return;
     }
 
-    if (!hasAppIDPlaceholder) {
+    if (hasAppIDPlaceholder === false) {
       throw new UseCaseException(
         ValidateEndpointUseCase.name,
         `The endpoint must contain the '${PLACEHOLDER_APP_ID}' placeholder.`,
       );
-      return;
     }
 
-    if (!hasContextIDPlaceholder) {
+    if (hasContextIDPlaceholder === false) {
       throw new UseCaseException(
         ValidateEndpointUseCase.name,
         `The endpoint must contain the '${PLACEHOLDER_CONTEXT_ID}' placeholder.`,
       );
-      return;
     }
   }
 }
