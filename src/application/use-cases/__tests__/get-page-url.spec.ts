@@ -1,4 +1,9 @@
-import { DEFAULT_REQUEST_URL, PLACEHOLDER_APP_ID, PLACEHOLDER_CONTEXT_ID, PLACEHOLDER_STEAM_ID_64 } from '../../../shared/constants';
+import {
+  DEFAULT_REQUEST_URL,
+  PLACEHOLDER_APP_ID,
+  PLACEHOLDER_CONTEXT_ID,
+  PLACEHOLDER_STEAM_ID_64,
+} from '../../../shared/constants';
 import GetPageUrlUseCase, { GetPageUrlProps } from './../get-page-url.use-case';
 
 const urlParamsDic = {
@@ -217,7 +222,10 @@ describe(GetPageUrlUseCase.name, () => {
     ).toBeNull();
 
     expect(useCase).toContain(
-      DEFAULT_REQUEST_URL.replace(PLACEHOLDER_STEAM_ID_64, defaultConfig.steamID64)
+      DEFAULT_REQUEST_URL.replace(
+        PLACEHOLDER_STEAM_ID_64,
+        defaultConfig.steamID64,
+      )
         .replace(PLACEHOLDER_APP_ID, defaultConfig.appID)
         .replace(PLACEHOLDER_CONTEXT_ID, defaultConfig.contextID),
     );

@@ -9,10 +9,7 @@ describe(sleep.name, () => {
 
     const start = Date.now();
 
-    await Promise.all([
-      sleep(delayInMilliseconds),
-      jest.runAllTimersAsync(),
-    ]);
+    await Promise.all([sleep(delayInMilliseconds), jest.runAllTimersAsync()]);
 
     const end = Date.now();
     const diff = end - start;

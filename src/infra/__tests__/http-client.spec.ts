@@ -39,7 +39,9 @@ describe(HttpClient.name, () => {
       'x-custom-header': 'custom-header-value',
     };
 
-    const httpClientResponse = await httpClient.get<typeof defaultServerResponse>({
+    const httpClientResponse = await httpClient.get<
+      typeof defaultServerResponse
+    >({
       url: `http://localhost:${port}`,
       headers,
     });
