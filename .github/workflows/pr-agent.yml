@@ -1,7 +1,6 @@
 on:
   pull_request:
   issue_comment:
-
 jobs:
   pr_agent_job:
     runs-on: ubuntu-latest
@@ -13,7 +12,7 @@ jobs:
     steps:
       - name: PR Agent action step
         id: pragent
-        uses: Codium-ai/pr-agent@<commit_sha>
+        uses: Codium-ai/pr-agent@main
         env:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
