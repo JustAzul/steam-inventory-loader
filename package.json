@@ -26,7 +26,7 @@
   "homepage": "https://github.com/JustAzul/steam-inventory-loader",
   "license": "ISC",
   "dependencies": {
-    "agentkeepalive": "^4.2.1",
+    "agentkeepalive": "^4.5.0",
     "axios": "^1.4.0",
     "hpagent": "^1.1.0",
     "tough-cookie": "^4.1.3"
