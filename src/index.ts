@@ -1,3 +1,3 @@
-import AzulSteamInventoryLoader from './infra/azul-steam-inventory-loader';
+import AzulSteamInventoryLoader from './infra/main';
 
 export default AzulSteamInventoryLoader;
