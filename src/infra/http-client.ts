@@ -1,20 +1,22 @@
+import { IncomingHttpHeaders } from 'http';
+
+import { HttpsAgent } from 'agentkeepalive';
 import Axios, {
   AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse,
   CreateAxiosDefaults,
 } from 'axios';
+import { HttpsProxyAgent } from 'hpagent';
+
+import HttpException from '../application/exceptions/http.exception';
 import {
   HttpClientGetProps,
   HttpClientResponse,
   IHttpClient,
 } from '../application/ports/http-client.interface';
-
 import { DEFAULT_REQUEST_TIMEOUT } from '../shared/constants';
-import HttpException from '../application/exceptions/http.exception';
-import { HttpsAgent } from 'agentkeepalive';
-import { HttpsProxyAgent } from 'hpagent';
-import { IncomingHttpHeaders } from 'http';
+
 import InfraException from './exceptions/infra.exception';
 
 export default class HttpClient implements IHttpClient {

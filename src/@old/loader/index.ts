@@ -1,3 +1,13 @@
+import EventEmitter from 'events';
+
+import { AxiosError } from 'axios';
+
+import {
+  DEFAULT_REQUEST_MAX_RETRIES,
+  DEFAULT_REQUEST_RETRY_DELAY,
+} from '../constants';
+import Inventory from '../inventory';
+
 import {
   DEFAULT_REQUEST_ENDPOINT,
   DEFAULT_REQUEST_ITEMS_COUNT,
@@ -5,25 +15,18 @@ import {
   STEAM_APIS_ENDPOINT,
   STEAM_SUPPLY_ENDPOINT,
 } from './constants';
-import {
-  DEFAULT_REQUEST_MAX_RETRIES,
-  DEFAULT_REQUEST_RETRY_DELAY,
-} from '../constants';
-
-import { AxiosError } from 'axios';
-import type { ErrorWithEResult } from './types/error-with-eresult.type';
-import EventEmitter from 'events';
 import HttpClient from './http-client';
+import { SteamBodyResponse } from './types/steam-body-response.type';
+import LoaderUtils from './utils';
+
+import type { ErrorWithEResult } from './types/error-with-eresult.type';
 import type { HttpClientConstructor } from './types/http-client-constructor.type';
-import type { IncomingHttpHeaders } from 'http';
-import Inventory from '../inventory';
 import type { InventoryLoaderConstructor } from './types/inventory-loader-constructor.type';
+import type { LoaderResponse } from './types/loader-response';
+import type { RequestParams } from './types/request-params.type';
 import type { InventoryPageAsset } from '../../domain/types/inventory-page-asset.type';
 import type { InventoryPageDescription } from '../../domain/types/inventory-page-description.type';
-import type { LoaderResponse } from './types/loader-response';
-import LoaderUtils from './utils';
-import type { RequestParams } from './types/request-params.type';
-import { SteamBodyResponse } from './types/steam-body-response.type';
+import type { IncomingHttpHeaders } from 'http';
 
 export default class InventoryLoader {
   private isFetchDone = false;
@@ -171,8 +174,8 @@ export default class InventoryLoader {
 
   private getRequestParams(): RequestParams {
     return {
-      l: this.language,
       count: this.itemsPerPage,
+      l: this.language,
       start_assetid: this.startAssetID,
     };
   }

@@ -1,8 +1,8 @@
 import type { InventoryPageAsset } from '../../domain/types/inventory-page-asset.type';
 import type { InventoryPageDescription } from '../../domain/types/inventory-page-description.type';
 import type { ItemDetails } from '../../domain/types/item-details.type';
-import type { SteamTag } from '../../domain/types/steam-tag.type';
 import type { rawTag } from '../../domain/types/raw-tag.type';
+import type { SteamTag } from '../../domain/types/steam-tag.type';
 
 export default class InventoryUtils {
   public static findDescriptionKey({
@@ -15,11 +15,11 @@ export default class InventoryUtils {
 
   private static parseTag(tag: SteamTag): rawTag {
     return {
+      category: tag?.category,
+      category_name: tag?.localized_category_name || tag.category_name,
+      color: tag.color || '',
       internal_name: tag.internal_name,
       name: tag?.localized_tag_name || tag.name || '',
-      category: tag?.category,
-      color: tag.color || '',
-      category_name: tag?.localized_category_name || tag.category_name,
     };
   }
 
@@ -63,41 +63,38 @@ export default class InventoryUtils {
     }
 
     const itemDetails: ItemDetails = {
-      is_currency,
-      id,
-      appid: item.appid,
-      classid: item.classid,
-      assetid: item.assetid,
-      instanceid: item.instanceid || '0',
+      actions: description?.actions || [],
       amount: parseInt(item.amount, 10),
+      appid: item.appid,
+      assetid: item.assetid,
+      background_color: description.background_color,
+      classid: item.classid,
+      commodity: !!description?.commodity,
       contextid: item.contextid || contextID,
 
-      tradable: !!description?.tradable,
-      marketable: !!description?.marketable,
-      commodity: !!description?.commodity,
-
-      owner_descriptions: description?.owner_descriptions || undefined,
-      item_expiration: description?.item_expiration || undefined,
-
-      fraudwarnings: description?.fraudwarnings || [],
+      currency: description.currency,
       descriptions: description?.descriptions || [],
+      fraudwarnings: description?.fraudwarnings || [],
 
-      market_tradable_restriction: description?.market_tradable_restriction
-        ? parseInt(description.market_tradable_restriction.toString(), 10)
-        : 0,
+      icon_url: description.icon_url,
+      icon_url_large: description.icon_url_large,
+
+      id,
+      instanceid: item.instanceid || '0',
+
+      is_currency,
+      item_expiration: description?.item_expiration || undefined,
+      market_hash_name: description?.market_hash_name,
+
       market_marketable_restriction: description?.market_marketable_restriction
         ? parseInt(description.market_marketable_restriction.toString(), 10)
         : 0,
-      market_hash_name: description?.market_hash_name,
-
-      actions: description?.actions || [],
-      background_color: description.background_color,
-      currency: description.currency,
-      icon_url: description.icon_url,
-      icon_url_large: description.icon_url_large,
       market_name: description.market_name,
+      market_tradable_restriction: description?.market_tradable_restriction
+        ? parseInt(description.market_tradable_restriction.toString(), 10)
+        : 0,
+      marketable: !!description?.marketable,
       name: description.name,
-      type: description.type,
 
       // eslint-disable-next-line eqeqeq
       owner:
@@ -105,6 +102,9 @@ export default class InventoryUtils {
         description.owner && JSON.stringify(description.owner) == '{}'
           ? undefined
           : description.owner,
+      owner_descriptions: description?.owner_descriptions || undefined,
+      tradable: !!description?.tradable,
+      type: description.type,
     };
 
     if (description?.tags) {

@@ -1,20 +1,23 @@
+import EventEmitter from 'events';
+import { IncomingHttpHeaders } from 'http';
+
+import { HttpsAgent } from 'agentkeepalive';
 import Axios, {
   AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse,
   CreateAxiosDefaults,
 } from 'axios';
+import { HttpsProxyAgent } from 'hpagent';
+
+import { DEFAULT_REQUEST_TIMEOUT } from '../constants';
 
 import { DEFAULT_REQUEST_DELAY } from './constants';
-import { DEFAULT_REQUEST_TIMEOUT } from '../constants';
-import EventEmitter from 'events';
+
 import type { HttpClientConstructor } from './types/http-client-constructor.type';
-import { HttpsAgent } from 'agentkeepalive';
-import { HttpsProxyAgent } from 'hpagent';
-import { IncomingHttpHeaders } from 'http';
+import type { SteamRequestParams } from './types/request-params.type';
 import type { RequestQueueItem } from './types/request-queue-item.type';
 import type { SteamBodyResponse } from './types/steam-body-response.type';
-import type { SteamRequestParams } from './types/request-params.type';
 
 export default class HttpClient {
   private client: AxiosInstance;

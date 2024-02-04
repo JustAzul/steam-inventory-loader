@@ -12,8 +12,8 @@ export type InventoryPageDescription = {
   currency: number;
   descriptions: InnerItemDescription[];
   fraudwarnings?: unknown[];
-  icon_url_large: string;
   icon_url: string;
+  icon_url_large: string;
   instanceid: string;
   item_expiration?: string;
   market_fee_app: number;
@@ -23,8 +23,8 @@ export type InventoryPageDescription = {
   market_tradable_restriction: number;
   marketable: number;
   name: string;
-  owner_descriptions?: InnerItemDescription[];
   owner?: unknown;
+  owner_descriptions?: InnerItemDescription[];
   tags: SteamTag[];
   tradable: number;
   type: string;

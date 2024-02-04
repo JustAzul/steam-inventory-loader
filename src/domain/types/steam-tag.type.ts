@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 export type SteamTag = {
-  category_name: string;
   category: string;
+  category_name: string;
   color?: string;
   internal_name: string;
   localized_category_name?: string;

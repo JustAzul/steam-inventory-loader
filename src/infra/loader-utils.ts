@@ -1,8 +1,8 @@
+import IAzulSteamInventoryLoader from '../application/ports/azul-steam-inventory-loader.interface';
+import ILoaderUtils from '../application/ports/loader-utils.interface';
 import FindCardBorderTypeUseCase from '../application/use-cases/find-card-border-type.use-case';
 import FindTagUseCase from '../application/use-cases/find-tag.use-case';
 import GetImageUrlUseCase from '../application/use-cases/get-image-url.use-case';
-import IAzulSteamInventoryLoader from '../application/ports/azul-steam-inventory-loader.interface';
-import ILoaderUtils from '../application/ports/loader-utils.interface';
 
 type AzulSteamInventoryLoader = typeof IAzulSteamInventoryLoader;
 
@@ -11,7 +11,7 @@ export default class LoaderUtils implements ILoaderUtils {
     tags: Parameters<AzulSteamInventoryLoader['getTag']>[0],
     categoryToFind: Parameters<AzulSteamInventoryLoader['getTag']>[1],
   ): ReturnType<AzulSteamInventoryLoader['getTag']> {
-    const result = new FindTagUseCase({ tags, categoryToFind }).execute();
+    const result = new FindTagUseCase({ categoryToFind, tags }).execute();
     return result as ReturnType<AzulSteamInventoryLoader['getTag']>;
   }
 

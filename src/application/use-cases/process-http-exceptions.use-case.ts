@@ -1,7 +1,8 @@
+import { StatusCode } from 'status-code-enum';
+
 import HttpException from '../exceptions/http.exception';
 import PrivateProfileException from '../exceptions/private-profile.exception';
 import RateLimitedException from '../exceptions/rate-limited.exception';
-import { StatusCode } from 'status-code-enum';
 
 export default class ProcessHttpExceptionsUseCase {
   private httpException: HttpException;

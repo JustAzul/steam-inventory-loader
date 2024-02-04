@@ -3,6 +3,7 @@ import { InnerItemDescription } from '../types/inner-item-description.type';
 import { InventoryPageAsset } from '../types/inventory-page-asset.type';
 import { InventoryPageDescription } from '../types/inventory-page-description.type';
 import { ItemActions } from '../types/item-actions.type';
+
 import SteamItemTag from './steam-item-tag.entity';
 
 export type SteamItemProps = {

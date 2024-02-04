@@ -1,5 +1,6 @@
-import type { CardType } from '../domain/types/card-type.type';
 import { DEFAULT_STEAM_IMAGE_URL } from './constants';
+
+import type { CardType } from '../domain/types/card-type.type';
 import type { InventoryPageDescription } from '../domain/types/inventory-page-description.type';
 import type { ItemDetails } from '../domain/types/item-details.type';
 import type { rawTag } from '../domain/types/raw-tag.type';

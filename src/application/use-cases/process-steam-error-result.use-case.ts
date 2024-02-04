@@ -1,5 +1,5 @@
-import { HttpResponse } from '../types/http-response.type';
 import SteamErrorResultException from '../exceptions/steam-error-result.exception';
+import { HttpResponse } from '../types/http-response.type';
 
 export default class ProcessSteamErrorResultUseCase {
   private httpResponse: HttpResponse;

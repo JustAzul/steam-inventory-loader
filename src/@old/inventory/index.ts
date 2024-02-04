@@ -1,7 +1,8 @@
+import InventoryUtils from './utils';
+
 import type { InventoryConstructor } from './types/inventory-constructor.type';
 import type { InventoryPageAsset } from '../../domain/types/inventory-page-asset.type';
 import type { InventoryPageDescription } from '../../domain/types/inventory-page-description.type';
-import InventoryUtils from './utils';
 import type { ItemDetails } from '../../domain/types/item-details.type';
 
 export default class Inventory {

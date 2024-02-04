@@ -1,12 +1,12 @@
+import AsyncQueueWithDelay from '../../domain/entities/async-queue-with-delay.entity';
+import UseCaseException from '../exceptions/use-case.exception';
 import {
   HttpClientGetProps,
   HttpClientResponse,
   IHttpClient,
 } from '../ports/http-client.interface';
 
-import AsyncQueueWithDelay from '../../domain/entities/async-queue-with-delay.entity';
 import FetchUrlUseCase from './fetch-url.use-case';
-import UseCaseException from '../exceptions/use-case.exception';
 
 export type FetchWithDelayUseCaseProps = {
   delayInMilliseconds: number;

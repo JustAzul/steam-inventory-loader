@@ -16,8 +16,8 @@ export type ItemDetails = {
   currency: number;
   descriptions: InnerItemDescription[];
   fraudwarnings: unknown[];
-  icon_url_large: string;
   icon_url: string;
+  icon_url_large: string;
   id: string;
   instanceid: string;
   is_currency: boolean;
@@ -29,9 +29,9 @@ export type ItemDetails = {
   market_tradable_restriction: number;
   marketable: boolean;
   name: string;
+  owner?: unknown;
   owner_actions?: ItemActions[];
   owner_descriptions?: InnerItemDescription[];
-  owner?: unknown;
   tags?: rawTag[];
   tradable: boolean;
   type: string;

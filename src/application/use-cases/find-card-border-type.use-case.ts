@@ -1,10 +1,10 @@
-import { CardType } from '../../domain/types/card-type.type';
 import SteamItemTag from '../../domain/entities/steam-item-tag.entity';
+import { CardType } from '../../domain/types/card-type.type';
 
 // eslint-disable-next-line no-shadow
 enum CardBorderInternalName {
-  Normal = 'cardborder_0',
   Foil = 'cardborder_1',
+  Normal = 'cardborder_0',
 }
 
 export type FindCardBorderTypeProps = {

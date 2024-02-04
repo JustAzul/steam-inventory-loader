@@ -2,20 +2,20 @@ import {
   DEFAULT_REQUEST_MAX_RETRIES,
   DEFAULT_REQUEST_RETRY_DELAY,
 } from '../../shared/constants';
+import sleep from '../../shared/helpers/sleep.helper';
+import HttpException from '../exceptions/http.exception';
+import SteamErrorResultException from '../exceptions/steam-error-result.exception';
+import UseCaseException from '../exceptions/use-case.exception';
 import {
   HttpClientGetProps,
   HttpClientResponse,
 } from '../ports/http-client.interface';
+import { InventoryPageResult } from '../types/inventory-page-result.type';
 
 import FetchUrlUseCase from './fetch-url.use-case';
 import FetchWithDelayUseCase from './fetch-with-delay.use-case';
-import HttpException from '../exceptions/http.exception';
-import { InventoryPageResult } from '../types/inventory-page-result.type';
 import ProcessHttpExceptionsUseCase from './process-http-exceptions.use-case';
-import SteamErrorResultException from '../exceptions/steam-error-result.exception';
-import UseCaseException from '../exceptions/use-case.exception';
 import ValidateHttpResponseUseCase from './validate-http-response.use-case';
-import sleep from '../../shared/helpers/sleep.helper';
 
 export type GetHttpResponseWithExceptionProps = {
   maxRetries?: number;

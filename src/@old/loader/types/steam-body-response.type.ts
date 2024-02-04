@@ -7,10 +7,10 @@ export type SteamSupplyBodyResponse = {
 };
 
 export type SteamBodyResponse = {
+  Error?: string;
   assets: InventoryPageAsset[];
   descriptions: InventoryPageDescription[];
   error?: string;
-  Error?: string;
   last_assetid: string;
   more_items?: number;
   rwgrsn: number;

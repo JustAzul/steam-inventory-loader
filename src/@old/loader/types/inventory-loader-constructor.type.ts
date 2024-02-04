@@ -1,5 +1,5 @@
-import type { CookieJar } from 'tough-cookie';
 import type steamID from 'steamid';
+import type { CookieJar } from 'tough-cookie';
 
 export type JarLike = {
   _jar: CookieJar;

@@ -2,8 +2,8 @@ import SteamItemTag from '../../domain/entities/steam-item-tag.entity';
 import { rawTag } from '../../domain/types/raw-tag.type';
 
 export type FindTagUseCaseProps = {
-  tags: Array<rawTag | SteamItemTag>;
   categoryToFind: string;
+  tags: Array<rawTag | SteamItemTag>;
 };
 
 export default class FindTagUseCase {

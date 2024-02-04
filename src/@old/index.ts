@@ -1,6 +1,6 @@
+import { IAzulSteamInventoryLoader } from '../application/ports/azul-steam-inventory-loader.interface';
 import AzulInventoryResponse from '../application/types/azul-inventory-response.type';
 import FindSteamTagUseCase from '../application/use-cases/find-steam-tag.use-case';
-import { IAzulSteamInventoryLoader } from '../application/ports/azul-steam-inventory-loader.interface';
 import { OptionalConfig } from '../domain/types/optional-config.type';
 import { rawTag } from '../domain/types/raw-tag.type';
 

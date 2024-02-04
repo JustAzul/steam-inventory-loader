@@ -1,8 +1,9 @@
-import DomainException from '../exceptions/domain.exception';
 import EventEmitter from 'events';
+
+import sleep from '../../shared/helpers/sleep.helper';
+import DomainException from '../exceptions/domain.exception';
 import { EventEmitterResponse } from '../types/event-emitter-response.type';
 import { QueueItem } from '../types/queue-item.type';
-import sleep from '../../shared/helpers/sleep.helper';
 
 export type AsyncQueueWithDelayProps = {
   delayInMilliseconds: number;
@@ -53,8 +54,8 @@ export default class AsyncQueueWithDelay {
     this.indexCounter += 1;
 
     const queueItem: QueueItem<ItemType> = {
-      item,
       eventID: AsyncQueueWithDelay.FindEventUID(itemUID),
+      item,
     };
 
     this.items.push(queueItem);

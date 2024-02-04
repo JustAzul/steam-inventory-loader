@@ -2,18 +2,18 @@ import {
   DEFAULT_REQUEST_ITEM_COUNT,
   DEFAULT_REQUEST_LANGUAGE,
 } from '../../shared/constants';
-import GetHttpResponseWithExceptionUseCase, {
-  GetHttpResponseWithExceptionProps,
-} from './get-http-response-with-exception.use-case';
-import GetPageUrlUseCase, { GetPageUrlProps } from './get-page-url.use-case';
 import {
   HttpClientGetProps,
   HttpClientResponse,
 } from '../ports/http-client.interface';
+import { InventoryPageResult } from '../types/inventory-page-result.type';
 
 import FetchUrlUseCase from './fetch-url.use-case';
 import FetchWithDelayUseCase from './fetch-with-delay.use-case';
-import { InventoryPageResult } from '../types/inventory-page-result.type';
+import GetHttpResponseWithExceptionUseCase, {
+  GetHttpResponseWithExceptionProps,
+} from './get-http-response-with-exception.use-case';
+import GetPageUrlUseCase, { GetPageUrlProps } from './get-page-url.use-case';
 
 export type GetInventoryPageResultInterfaces = {
   fetchUrlUseCase: FetchUrlUseCase | FetchWithDelayUseCase;
