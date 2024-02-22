@@ -9,25 +9,19 @@ import Axios, {
 } from 'axios';
 import { HttpsProxyAgent } from 'hpagent';
 
-import HttpException from '../application/exceptions/http.exception';
 import {
   HttpClientGetProps,
-  HttpClientResponse,
   IHttpClient,
 } from '../application/ports/http-client.interface';
 import { DEFAULT_REQUEST_TIMEOUT } from '../shared/constants';
-
-import InfraException from './exceptions/infra.exception';
+import { ErrorPayload } from '../shared/errors';
+import { error, result } from '../shared/utils';
 
 export default class HttpClient implements IHttpClient {
-  private client: AxiosInstance;
-
   private cookies?: string;
-
   private defaultHeaders?: IncomingHttpHeaders;
-
+  private readonly client: AxiosInstance;
   private readonly proxyAgent?: HttpsProxyAgent;
-
   private static readonly defaultHttpsAgent: HttpsAgent = new HttpsAgent();
 
   constructor(proxyAddress?: string) {
@@ -82,9 +76,7 @@ export default class HttpClient implements IHttpClient {
     return this;
   }
 
-  public async get<T>(
-    props: HttpClientGetProps,
-  ): Promise<HttpClientResponse<T>> {
+  public async get<T>(props: HttpClientGetProps) {
     const { url, headers } = props;
 
     const options: AxiosRequestConfig<never> = {
@@ -101,29 +93,50 @@ export default class HttpClient implements IHttpClient {
         options,
       );
 
-      return {
+      return result({
         data,
         headers: incomingHeaders as IncomingHttpHeaders,
         statusCode: status,
-      };
+      });
     } catch (e) {
       if (Axios.isAxiosError(e)) {
-        throw new HttpException({
-          message: e.message,
-          request: props,
-          response: {
-            data: e.response?.data,
-            headers: (e.response?.headers as IncomingHttpHeaders) || null,
-            statusCode: e.response?.status,
-          },
-        });
+        return error(
+          new ErrorPayload({
+            code: 'HTTP_CLIENT_ERROR',
+            payload: {
+              message: e.message,
+              request: props,
+              response: {
+                data: e.response?.data,
+                headers: (e.response?.headers as IncomingHttpHeaders) || null,
+                statusCode: e.response?.status,
+              },
+            },
+          }),
+        );
       }
 
       if (e instanceof Error) {
-        throw new InfraException(HttpClient.name, e.message);
+        return error(
+          new ErrorPayload({
+            code: 'INTERNAL_ERROR',
+            payload: {
+              message: e.message,
+              request: props,
+            },
+          }),
+        );
       }
 
-      throw new InfraException(HttpClient.name, `Unknown error: ${String(e)}`);
+      return error(
+        new ErrorPayload({
+          code: 'UNKNOWN_ERROR',
+          payload: {
+            error: e,
+            request: props,
+          },
+        }),
+      );
     }
   }
 }

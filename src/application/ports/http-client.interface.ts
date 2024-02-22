@@ -1,5 +1,13 @@
 import { IncomingHttpHeaders } from 'http';
 
+import { ErrorPayload } from '../../shared/errors';
+import { DataOrError } from '../../shared/utils';
+
+type HttpClientErrorCodes =
+  | 'HTTP_CLIENT_ERROR'
+  | 'INTERNAL_ERROR'
+  | 'UNKNOWN_ERROR';
+
 export type HttpClientResponse<T extends unknown> = {
   data: T | null;
   headers: IncomingHttpHeaders;
@@ -12,5 +20,9 @@ export type HttpClientGetProps = {
 };
 
 export interface IHttpClient {
-  get<T>(props: HttpClientGetProps): Promise<HttpClientResponse<T>>;
+  get<T>(
+    props: HttpClientGetProps,
+  ): Promise<
+    DataOrError<ErrorPayload<HttpClientErrorCodes>, HttpClientResponse<T>>
+  >;
 }
