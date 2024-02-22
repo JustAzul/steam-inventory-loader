@@ -7,6 +7,8 @@ type ReceivedRequest = {
   headers?: IncomingHttpHeaders;
 };
 
+executeTest(new HttpClient());
+
 function executeTest(httpClient: IHttpClient) {
   describe(httpClient.constructor.name, () => {
     const defaultServerResponse = { message: 'Hello World!' };
@@ -86,6 +88,3 @@ function executeTest(httpClient: IHttpClient) {
     // });
   });
 }
-
-executeTest(new HttpClient());
-
