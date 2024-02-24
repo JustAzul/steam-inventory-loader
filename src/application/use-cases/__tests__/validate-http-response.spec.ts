@@ -1,8 +1,9 @@
+import { StatusCode } from 'status-code-enum';
+
 import BadStatusCodeException from '../../exceptions/bad-status-code.exception';
 import EmptyHttpResponseException from '../../exceptions/empty-http-response.exception';
 import { HttpRequest } from '../../types/http-request.type';
 import { HttpResponse } from '../../types/http-response.type';
-import { StatusCode } from 'status-code-enum';
 import ValidateHttpResponseUseCase from '../validate-http-response.use-case';
 
 describe(ValidateHttpResponseUseCase.name, () => {

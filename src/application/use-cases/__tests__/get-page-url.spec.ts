@@ -4,11 +4,12 @@ import {
   PLACEHOLDER_CONTEXT_ID,
   PLACEHOLDER_STEAM_ID_64,
 } from '../../../shared/constants';
+
 import GetPageUrlUseCase, { GetPageUrlProps } from './../get-page-url.use-case';
 
 const urlParamsDic = {
-  l: 'language',
   count: 'count',
+  l: 'language',
   start_assetid: 'lastAssetID',
 };
 
@@ -106,8 +107,8 @@ describe(GetPageUrlUseCase.name, () => {
   it(`should return a valid URL with language and count`, () => {
     const config: GetPageUrlProps = {
       ...defaultConfig,
-      language: 'english',
       count: 10,
+      language: 'english',
     };
 
     const useCase = new GetPageUrlUseCase(config).execute();

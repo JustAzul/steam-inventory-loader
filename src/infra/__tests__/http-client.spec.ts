@@ -1,7 +1,9 @@
-import Fastify from 'fastify';
-import HttpClient from '../http-client';
 import { IncomingHttpHeaders } from 'http';
+
 import { IHttpClient } from '@application/ports/http-client.interface';
+import Fastify from 'fastify';
+
+import HttpClient from '../http-client';
 
 type ReceivedRequest = {
   headers?: IncomingHttpHeaders;
@@ -36,7 +38,7 @@ function executeTest(httpClient: IHttpClient) {
     beforeEach(() => receivedRequestData.clear());
 
     it('should return HTTP_CLIENT_ERROR when the request fails', async () => {
-      const forceStatusCodes = [401, 402, 403, 404, 500]
+      const forceStatusCodes = [401, 402, 403, 404, 500];
 
       for (const statusCode of forceStatusCodes) {
         const [error] = await httpClient.get({
@@ -49,8 +51,7 @@ function executeTest(httpClient: IHttpClient) {
           if (error.code === 'HTTP_CLIENT_ERROR') {
             expect(error.payload.response.statusCode).toEqual(statusCode);
           }
-        } else
-          throw new Error('Should not have returned a response');
+        } else throw new Error('Should not have returned a response');
       }
     });
 

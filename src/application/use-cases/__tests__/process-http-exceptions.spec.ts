@@ -1,16 +1,16 @@
 import HttpException from '../../exceptions/http.exception';
 import PrivateProfileException from '../../exceptions/private-profile.exception';
-import ProcessHttpExceptionsUseCase from '../process-http-exceptions.use-case';
 import RateLimitedException from '../../exceptions/rate-limited.exception';
+import ProcessHttpExceptionsUseCase from '../process-http-exceptions.use-case';
 
 function generateHttpException(statusCode: number) {
   return new HttpException({
     message: 'Mocked HTTP Exception',
-    response: {
-      statusCode,
-    },
     request: {
       url: 'https://justazul.com',
+    },
+    response: {
+      statusCode,
     },
   });
 }

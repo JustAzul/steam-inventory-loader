@@ -3,7 +3,6 @@ import {
   PLACEHOLDER_CONTEXT_ID,
   PLACEHOLDER_STEAM_ID_64,
 } from '../../../shared/constants';
-
 import UseCaseException from '../../exceptions/use-case.exception';
 import ValidateEndpointUseCase from '../validate-endpoint.use-case';
 

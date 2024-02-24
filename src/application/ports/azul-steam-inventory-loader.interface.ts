@@ -1,4 +1,5 @@
 import { OptionalConfig } from '@domain/types/optional-config.type';
+
 import { AzulInventoryResponse } from '../types/azul-inventory-response.type';
 
 /* eslint-disable @typescript-eslint/no-unused-vars */

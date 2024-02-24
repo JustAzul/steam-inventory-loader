@@ -1,6 +1,7 @@
 import EventEmitter from 'events';
 
 import sleep from '@shared/helpers/sleep.helper';
+
 import DomainException from '../exceptions/domain.exception';
 import { EventEmitterResponse } from '../types/event-emitter-response.type';
 import { QueueItem } from '../types/queue-item.type';

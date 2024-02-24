@@ -1,13 +1,13 @@
 import IAzulSteamInventoryLoader from '@application/ports/azul-steam-inventory-loader.interface';
-
-import LoaderUtils from './loader-utils';
-
 import { UnwrapPromise } from '@shared/utils';
 import { InventoryLoaderConstructor } from '@src/@old/loader/types/inventory-loader-constructor.type';
 
+import LoaderUtils from './loader-utils';
+
 export default class AzulSteamInventoryLoader
   extends LoaderUtils
-  implements IAzulSteamInventoryLoader {
+  implements IAzulSteamInventoryLoader
+{
   // public static readonly InventoryLoader: InventoryLoader;
 
   public static async Loader(
