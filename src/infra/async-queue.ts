@@ -30,11 +30,11 @@ export default class AsyncQueue implements IAsyncQueue {
     });
   }
 
-  private waitForTaskCompletion<R>(
+  private waitForTaskCompletion<T>(
     taskId: ReturnType<AsyncQueue['createTaskId']>,
-  ): Promise<R> {
+  ): Promise<T> {
     return new Promise((resolve, reject) => {
-      this.eventEmitter.once(taskId, (error: unknown, result: R) => {
+      this.eventEmitter.once(taskId, (error: unknown, result: T) => {
         if (this.taskDelay) {
           this.lastTaskTime = Date.now();
         }
