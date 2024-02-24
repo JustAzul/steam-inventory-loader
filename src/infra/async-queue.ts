@@ -7,14 +7,18 @@ import { error, result } from '@shared/utils';
 
 export default class AsyncQueue implements IAsyncQueue {
   private readonly eventEmitter: EventEmitter;
-  private queueStatus: 'IDLE' | 'PROCESSING' = 'IDLE';
+
+  private queueStatus: 'IDLE' | 'PROCESSING';
+  private lastTaskTime?: number;
+
   private readonly taskQueue: Array<
     [ReturnType<AsyncQueue['createTaskId']>, AsyncQueueParams<unknown>]
   >;
-  private lastTaskTime?: number;
 
-  constructor(readonly taskDelay?: number) {
+  constructor(private readonly taskDelay?: number) {
     this.eventEmitter = new EventEmitter();
+
+    this.queueStatus = 'IDLE';
     this.taskQueue = [];
 
     if (taskDelay) {
