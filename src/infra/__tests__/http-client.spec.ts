@@ -1,9 +1,10 @@
 import { IncomingHttpHeaders } from 'http';
 
 import { IHttpClient } from '@application/ports/http-client.interface';
+import { HttpClient } from '@infra/http-client';
 import Fastify from 'fastify';
 
-import HttpClient from '../http-client';
+const ERROR_STATUS_CODES = [401, 402, 403, 404, 500];
 
 type ReceivedRequest = {
   headers?: IncomingHttpHeaders;
@@ -37,21 +38,41 @@ function executeTest(httpClient: IHttpClient) {
     afterAll(async () => server.close());
     beforeEach(() => receivedRequestData.clear());
 
-    it('should return HTTP_CLIENT_ERROR when the request fails', async () => {
-      const forceStatusCodes = [401, 402, 403, 404, 500];
+    it('should not return response when request fails', async () => {
+      const results = await Promise.all(
+        ERROR_STATUS_CODES.map((statusCode) =>
+          httpClient.get({
+            url: `${address}/${statusCode}`,
+          }),
+        ),
+      );
 
-      for (const statusCode of forceStatusCodes) {
+      for (const [, serverResponse] of results) {
+        expect(serverResponse).toBeUndefined();
+      }
+    });
+
+    it('should return HTTP_CLIENT_ERROR when the request fails', async () => {
+      const results = await Promise.all(
+        ERROR_STATUS_CODES.map((statusCode) =>
+          httpClient.get({
+            url: `${address}/${statusCode}`,
+          }),
+        ),
+      );
+
+      for (const [error] of results) {
+        expect(error?.code).toEqual('HTTP_CLIENT_ERROR');
+      }
+    });
+
+    it('should return the status code on the error payload', async () => {
+      for (const statusCode of ERROR_STATUS_CODES) {
         const [error] = await httpClient.get({
           url: `${address}/${statusCode}`,
         });
 
-        if (error) {
-          expect(error.code).toEqual('HTTP_CLIENT_ERROR');
-
-          if (error.code === 'HTTP_CLIENT_ERROR') {
-            expect(error.payload.response.statusCode).toEqual(statusCode);
-          }
-        } else throw new Error('Should not have returned a response');
+        expect(error?.payload.response.statusCode).toEqual(statusCode);
       }
     });
 
