@@ -2,26 +2,30 @@ import { UUID, randomUUID } from 'crypto';
 import EventEmitter from 'events';
 
 import { AsyncQueueParams, IAsyncQueue } from '@application/ports/async-queue';
+import { IRepository } from '@application/ports/repository.interface';
 import { ErrorPayload } from '@shared/errors';
 import { error, result } from '@shared/utils';
 
-export default class AsyncQueue implements IAsyncQueue {
-  private readonly eventEmitter: EventEmitter;
+interface AsyncQueueProps {
+  eventEmitter: EventEmitter;
+  repository: IRepository<
+    [ReturnType<AsyncQueue['createTaskId']>, AsyncQueueParams<unknown>]
+  >;
+  taskDelay?: number;
+}
 
+export default class AsyncQueue implements IAsyncQueue {
   private queueStatus: 'IDLE' | 'PROCESSING';
   private lastTaskTime?: number;
 
-  private readonly taskQueue: Array<
-    [ReturnType<AsyncQueue['createTaskId']>, AsyncQueueParams<unknown>]
-  >;
-
-  constructor(private readonly taskDelay?: number) {
-    this.eventEmitter = new EventEmitter();
-
+  constructor(private readonly props: AsyncQueueProps) {
     this.queueStatus = 'IDLE';
-    this.taskQueue = [];
 
-    if (taskDelay) {
+    if (props.taskDelay) {
+      if (props.taskDelay < 0) {
+        throw new Error('Task delay must be a positive number');
+      }
+
       this.lastTaskTime = 0;
     }
   }
@@ -51,8 +55,8 @@ export default class AsyncQueue implements IAsyncQueue {
     taskId: ReturnType<AsyncQueue['createTaskId']>,
   ): Promise<T> {
     return new Promise((resolve, reject) => {
-      this.eventEmitter.once(taskId, (error: unknown, result: T) => {
-        if (this.taskDelay) {
+      this.props.eventEmitter.once(taskId, (error: unknown, result: T) => {
+        if (this.props.taskDelay) {
           this.lastTaskTime = Date.now();
         }
 
@@ -76,36 +80,52 @@ export default class AsyncQueue implements IAsyncQueue {
   }
 
   private calculateDelayBeforeNextTask() {
-    if (!this.taskDelay || !this.lastTaskTime) return 0;
+    if (!this.props.taskDelay || !this.lastTaskTime) return 0;
 
     const elapsed = Date.now() - this.lastTaskTime;
-    const shouldDelay = elapsed < this.taskDelay;
+    const shouldDelay = elapsed < this.props.taskDelay;
 
     if (!shouldDelay) return 0;
-    return Math.max(0, this.taskDelay - elapsed);
+    return Math.max(0, this.props.taskDelay - elapsed);
   }
 
   private async executeNextTask() {
-    const nextTask = this.taskQueue.shift();
+    const [error, nextTask] = this.props.repository.findAny();
 
-    if (!nextTask) {
-      this.queueStatus = 'IDLE';
-      return;
+    if (error) {
+      if (error.code === 'REPOSITORY_FIND_ANY_ERROR_REPOSITORY_EMPTY') {
+        this.queueStatus = 'IDLE';
+        return;
+      }
+
+      throw new Error(error.code);
     }
 
     const [taskId, { job }] = nextTask;
 
     try {
       const result = await job();
-      this.eventEmitter.emit(taskId, null, result);
+      this.props.eventEmitter.emit(taskId, null, result);
     } catch (error) {
-      this.eventEmitter.emit(taskId, error);
+      this.props.eventEmitter.emit(taskId, error);
     }
+
+    this.deleteItem(taskId);
 
     setTimeout(
       () => this.executeNextTask(),
       this.calculateDelayBeforeNextTask(),
     );
+  }
+
+  private deleteItem(taskId: ReturnType<AsyncQueue['createTaskId']>) {
+    const [error] = this.props.repository.delete(taskId);
+
+    if (error) {
+      if (error.code !== 'REPOSITORY_DELETE_ERROR_ITEM_NOT_FOUND') {
+        throw new Error(error.code);
+      }
+    }
   }
 
   private createTaskId(): UUID {
@@ -116,6 +136,10 @@ export default class AsyncQueue implements IAsyncQueue {
     task: AsyncQueueParams<T>,
     taskId: ReturnType<AsyncQueue['createTaskId']>,
   ) {
-    this.taskQueue.push([taskId, task]);
+    const [error] = this.props.repository.insert([taskId, task]);
+
+    if (error) {
+      throw new Error(error.code);
+    }
   }
 }
