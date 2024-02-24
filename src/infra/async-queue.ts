@@ -7,7 +7,7 @@ import { ErrorPayload } from '@shared/errors';
 import { error, result } from '@shared/utils';
 
 interface AsyncQueueProps {
-  eventEmitter: EventEmitter;
+  eventHandler?: EventEmitter;
   repository: IRepository<
     [ReturnType<AsyncQueue['createTaskId']>, AsyncQueueParams<unknown>]
   >;
@@ -15,11 +15,15 @@ interface AsyncQueueProps {
 }
 
 export default class AsyncQueue implements IAsyncQueue {
-  private queueStatus: 'IDLE' | 'PROCESSING';
   private lastTaskTime?: number;
+  private queueStatus: 'IDLE' | 'PROCESSING';
+
+  private readonly events: EventEmitter;
 
   constructor(private readonly props: AsyncQueueProps) {
     this.queueStatus = 'IDLE';
+
+    this.events = props.eventHandler || new EventEmitter();
 
     if (props.taskDelay) {
       if (props.taskDelay < 0) {
@@ -55,7 +59,7 @@ export default class AsyncQueue implements IAsyncQueue {
     taskId: ReturnType<AsyncQueue['createTaskId']>,
   ): Promise<T> {
     return new Promise((resolve, reject) => {
-      this.props.eventEmitter.once(taskId, (error: unknown, result: T) => {
+      this.events.once(taskId, (error: unknown, result: T) => {
         if (this.props.taskDelay) {
           this.lastTaskTime = Date.now();
         }
@@ -105,9 +109,9 @@ export default class AsyncQueue implements IAsyncQueue {
 
     try {
       const result = await job();
-      this.props.eventEmitter.emit(taskId, null, result);
+      this.events.emit(taskId, null, result);
     } catch (error) {
-      this.props.eventEmitter.emit(taskId, error);
+      this.events.emit(taskId, error);
     }
 
     this.deleteItem(taskId);
