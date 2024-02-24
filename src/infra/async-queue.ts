@@ -11,10 +11,7 @@ export default class AsyncQueue implements IAsyncQueue {
 
     private queueStatus: 'IDLE' | 'PROCESSING' = 'IDLE';
     private readonly queue: Array<
-        [
-            ReturnType<AsyncQueue['generateQueueID']>,
-            AsyncQueueParams<any, any>,
-        ]
+        [ReturnType<AsyncQueue['generateQueueID']>, AsyncQueueParams<any, any>]
     >;
 
     private lastExecutionTime?: number;
@@ -114,17 +111,8 @@ export default class AsyncQueue implements IAsyncQueue {
             this.eventEmitter.emit(id, error);
         }
 
-        this.removeFromQueue(id);
         const timeToWait = this.findTimeToWait();
-
         setTimeout(() => this.processQueue(), timeToWait);
-    }
-
-    private removeFromQueue(
-        id: ReturnType<AsyncQueue['generateQueueID']>,
-    ) {
-        const index = this.queue.findIndex(([queueID]) => queueID === id);
-        if (index !== -1) this.queue.splice(index, 1);
     }
 
     private generateQueueID(): UUID {
