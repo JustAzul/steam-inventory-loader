@@ -12,10 +12,10 @@ import { HttpsProxyAgent } from 'hpagent';
 import {
   HttpClientGetProps,
   IHttpClient,
-} from '../application/ports/http-client.interface';
-import { DEFAULT_REQUEST_TIMEOUT } from '../shared/constants';
-import { ErrorPayload } from '../shared/errors';
-import { error, result } from '../shared/utils';
+} from '@application/ports/http-client.interface';
+import { DEFAULT_REQUEST_TIMEOUT } from '@shared/constants';
+import { ErrorPayload } from '@shared/errors';
+import { error, result } from '@shared/utils';
 
 export default class HttpClient implements IHttpClient {
   private cookies?: string;

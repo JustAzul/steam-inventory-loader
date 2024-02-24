@@ -1,7 +1,7 @@
 import Fastify from 'fastify';
 import HttpClient from '../http-client';
 import { IncomingHttpHeaders } from 'http';
-import { IHttpClient } from '../../application/ports/http-client.interface';
+import { IHttpClient } from '@application/ports/http-client.interface';
 
 type ReceivedRequest = {
   headers?: IncomingHttpHeaders;

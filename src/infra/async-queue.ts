@@ -4,7 +4,7 @@ import EventEmitter from 'events';
 import {
     AsyncQueueParams,
     IAsyncQueue,
-} from '../application/ports/async-queue';
+} from '@application/ports/async-queue';
 
 export default class AsyncQueue implements IAsyncQueue {
     private readonly eventEmitter: EventEmitter;

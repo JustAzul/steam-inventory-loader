@@ -1,15 +1,13 @@
-import IAzulSteamInventoryLoader from '../application/ports/azul-steam-inventory-loader.interface';
-import { UnwrapPromise } from '../shared/types/unwrap-promise.type';
+import IAzulSteamInventoryLoader from '@application/ports/azul-steam-inventory-loader.interface';
 
 import LoaderUtils from './loader-utils';
-import InventoryLoader, {
-  InventoryLoaderConstructor,
-} from './steam-community-inventory-loader';
+
+import { UnwrapPromise } from '@shared/utils';
+import { InventoryLoaderConstructor } from '@src/@old/loader/types/inventory-loader-constructor.type';
 
 export default class AzulSteamInventoryLoader
   extends LoaderUtils
-  implements IAzulSteamInventoryLoader
-{
+  implements IAzulSteamInventoryLoader {
   // public static readonly InventoryLoader: InventoryLoader;
 
   public static async Loader(

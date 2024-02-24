@@ -1,7 +1,7 @@
 import { IncomingHttpHeaders } from 'http';
 
-import { ErrorPayload } from '../../shared/errors';
-import { DataOrError } from '../../shared/utils';
+import { ErrorPayload } from '@shared/errors';
+import { DataOrError } from '@shared/utils';
 
 type HttpClientErrorCodes =
   | 'HTTP_CLIENT_ERROR'

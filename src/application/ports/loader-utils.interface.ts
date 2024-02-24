@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { CardType } from '../../domain/types/card-type.type';
-import { InputWithIconURL } from '../../domain/types/input-with-icon-url.type';
-import { rawTag } from '../../domain/types/raw-tag.type';
+import { CardType } from '@domain/types/card-type.type';
+import { InputWithIconURL } from '@domain/types/input-with-icon-url.type';
+import { rawTag } from '@domain/types/raw-tag.type';
 
 export default abstract class ILoaderUtils {
   static getTag(tags: rawTag[], categoryToFind: string): rawTag | null {

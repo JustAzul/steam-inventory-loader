@@ -1,8 +1,8 @@
-import IAzulSteamInventoryLoader from '../application/ports/azul-steam-inventory-loader.interface';
-import ILoaderUtils from '../application/ports/loader-utils.interface';
-import FindCardBorderTypeUseCase from '../application/use-cases/find-card-border-type.use-case';
-import FindTagUseCase from '../application/use-cases/find-tag.use-case';
-import GetImageUrlUseCase from '../application/use-cases/get-image-url.use-case';
+import IAzulSteamInventoryLoader from '@application/ports/azul-steam-inventory-loader.interface';
+import ILoaderUtils from '@application/ports/loader-utils.interface';
+import FindCardBorderTypeUseCase from '@application/use-cases/find-card-border-type.use-case';
+import FindTagUseCase from '@application/use-cases/find-tag.use-case';
+import GetImageUrlUseCase from '@application/use-cases/get-image-url.use-case';
 
 type AzulSteamInventoryLoader = typeof IAzulSteamInventoryLoader;
 

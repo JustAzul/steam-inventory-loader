@@ -1,4 +1,4 @@
-import { CookieJar, JarLike } from '../../domain/types/cookie-jar.type';
+import { CookieJar, JarLike } from '@domain/types/cookie-jar.type';
 import { LoaderResponse } from '../types/loader-response.type';
 
 export interface IInventoryLoader {
