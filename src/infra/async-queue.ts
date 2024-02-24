@@ -8,7 +8,7 @@ export default class AsyncQueue implements IAsyncQueue {
 
   private queueStatus: 'IDLE' | 'PROCESSING' = 'IDLE';
   private readonly queue: Array<
-    [ReturnType<AsyncQueue['generateQueueID']>, AsyncQueueParams<any, any>]
+    [ReturnType<AsyncQueue['generateQueueID']>, AsyncQueueParams<unknown>]
   >;
 
   private lastExecutionTime?: number;
@@ -22,15 +22,15 @@ export default class AsyncQueue implements IAsyncQueue {
     }
   }
 
-  async insertAndProcess<R, T>(param: AsyncQueueParams<R, T>): Promise<R> {
+  async insertAndProcess<T>(param: AsyncQueueParams<T>): Promise<T> {
     const queueID = this.generateQueueID();
 
     return new Promise((resolve, reject) => {
       // Listen for result
-      this.setupEventResponse<R>(queueID).then(resolve).catch(reject);
+      this.setupEventResponse<T>(queueID).then(resolve).catch(reject);
 
       // Add item to queue
-      this.insertIntoQueue<R, T>(param, queueID);
+      this.insertIntoQueue<T>(param, queueID);
 
       // Handle/Process queue
       this.handleQueue();
@@ -95,14 +95,12 @@ export default class AsyncQueue implements IAsyncQueue {
       return;
     }
 
-    const [id, { item, processItem }] = queueItem;
+    const [id, { job }] = queueItem;
 
     let result;
 
     try {
-      if (item) result = await processItem(item);
-      else result = await processItem();
-
+      result = await job();
       this.eventEmitter.emit(id, null, result);
     } catch (error) {
       this.eventEmitter.emit(id, error);
@@ -116,8 +114,8 @@ export default class AsyncQueue implements IAsyncQueue {
     return randomUUID();
   }
 
-  private insertIntoQueue<R, T>(
-    params: AsyncQueueParams<R, T>,
+  private insertIntoQueue<T>(
+    params: AsyncQueueParams<T>,
     id: ReturnType<AsyncQueue['generateQueueID']>,
   ) {
     this.queue.push([id, params]);

@@ -1,8 +1,7 @@
-export interface AsyncQueueParams<R, T> {
-  item?: T;
-  processItem: (item?: T) => Promise<R>;
+export interface AsyncQueueParams<T> {
+  job: () => Promise<T>;
 }
 
 export abstract class IAsyncQueue {
-  abstract insertAndProcess<R, T>(params: AsyncQueueParams<R, T>): Promise<R>;
+  abstract insertAndProcess<T>(params: AsyncQueueParams<T>): Promise<T>;
 }
