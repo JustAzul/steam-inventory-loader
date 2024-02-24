@@ -118,11 +118,9 @@ export default class AsyncQueue implements IAsyncQueue {
 
   private insertIntoQueue<R, T>(
     params: AsyncQueueParams<R, T>,
-    id?: ReturnType<AsyncQueue['generateQueueID']>,
+    id: ReturnType<AsyncQueue['generateQueueID']>,
   ) {
-    if (!id) id = this.generateQueueID();
     this.queue.push([id, params]);
-
     return id;
   }
 }
