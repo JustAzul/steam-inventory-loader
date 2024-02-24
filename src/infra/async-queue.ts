@@ -5,45 +5,38 @@ import { AsyncQueueParams, IAsyncQueue } from '@application/ports/async-queue';
 
 export default class AsyncQueue implements IAsyncQueue {
   private readonly eventEmitter: EventEmitter;
-
   private queueStatus: 'IDLE' | 'PROCESSING' = 'IDLE';
-  private readonly queue: Array<
-    [ReturnType<AsyncQueue['generateQueueID']>, AsyncQueueParams<unknown>]
+  private readonly taskQueue: Array<
+    [ReturnType<AsyncQueue['createTaskId']>, AsyncQueueParams<unknown>]
   >;
+  private lastTaskTime?: number;
 
-  private lastExecutionTime?: number;
-
-  constructor(readonly delayInMilliseconds?: number) {
+  constructor(readonly taskDelay?: number) {
     this.eventEmitter = new EventEmitter();
-    this.queue = [];
+    this.taskQueue = [];
 
-    if (delayInMilliseconds) {
-      this.lastExecutionTime = 0;
+    if (taskDelay) {
+      this.lastTaskTime = 0;
     }
   }
 
-  async insertAndProcess<T>(param: AsyncQueueParams<T>): Promise<T> {
-    const queueID = this.generateQueueID();
+  async enqueueAndProcess<T>(task: AsyncQueueParams<T>): Promise<T> {
+    const taskId = this.createTaskId();
 
     return new Promise((resolve, reject) => {
-      // Listen for result
-      this.setupEventResponse<T>(queueID).then(resolve).catch(reject);
-
-      // Add item to queue
-      this.insertIntoQueue<T>(param, queueID);
-
-      // Handle/Process queue
-      this.handleQueue();
+      this.waitForTaskCompletion<T>(taskId).then(resolve).catch(reject);
+      this.addTaskToQueue<T>(task, taskId);
+      this.processTaskQueue();
     });
   }
 
-  private setupEventResponse<R>(
-    queueID: ReturnType<AsyncQueue['generateQueueID']>,
+  private waitForTaskCompletion<R>(
+    taskId: ReturnType<AsyncQueue['createTaskId']>,
   ): Promise<R> {
     return new Promise((resolve, reject) => {
-      this.eventEmitter.once(queueID, (error: unknown, result: R) => {
-        if (this.delayInMilliseconds) {
-          this.lastExecutionTime = Date.now();
+      this.eventEmitter.once(taskId, (error: unknown, result: R) => {
+        if (this.taskDelay) {
+          this.lastTaskTime = Date.now();
         }
 
         if (error) reject(error);
@@ -52,73 +45,60 @@ export default class AsyncQueue implements IAsyncQueue {
     });
   }
 
-  private handleQueue() {
+  private processTaskQueue() {
     if (this.queueStatus === 'PROCESSING') return;
-
     this.queueStatus = 'PROCESSING';
-    this.triggerQueue();
+    this.startTaskProcessing();
   }
 
-  private triggerQueue() {
-    const timeToWait = this.findTimeToWait();
+  private startTaskProcessing() {
+    const delay = this.calculateDelayBeforeNextTask();
 
-    if (timeToWait) setTimeout(() => this.processQueue(), timeToWait);
-    else this.processQueue();
+    if (delay) setTimeout(() => this.executeNextTask(), delay);
+    else this.executeNextTask();
   }
 
-  private findTimeToWait() {
-    if (!this.delayInMilliseconds || !this.lastExecutionTime) return 0;
+  private calculateDelayBeforeNextTask() {
+    if (!this.taskDelay || !this.lastTaskTime) return 0;
 
-    // Calculate the time elapsed since the last execution
-    const timeElapsedSinceLastExecution = Date.now() - this.lastExecutionTime;
+    const elapsed = Date.now() - this.lastTaskTime;
+    const shouldDelay = elapsed < this.taskDelay;
 
-    // Determine if the elapsed time is less than the delay, indicating we should wait more
-    const shouldWait = timeElapsedSinceLastExecution < this.delayInMilliseconds;
-
-    if (!shouldWait) {
-      // If we shouldn't wait, no additional delay is necessary
-      return 0;
-    }
-
-    // Calculate how much more time we need to wait, if any
-    return Math.max(
-      0,
-      this.delayInMilliseconds - timeElapsedSinceLastExecution,
-    );
+    if (!shouldDelay) return 0;
+    return Math.max(0, this.taskDelay - elapsed);
   }
 
-  private async processQueue() {
-    const queueItem = this.queue.shift();
+  private async executeNextTask() {
+    const nextTask = this.taskQueue.shift();
 
-    if (!queueItem) {
+    if (!nextTask) {
       this.queueStatus = 'IDLE';
       return;
     }
 
-    const [id, { job }] = queueItem;
-
-    let result;
+    const [taskId, { job }] = nextTask;
 
     try {
-      result = await job();
-      this.eventEmitter.emit(id, null, result);
+      const result = await job();
+      this.eventEmitter.emit(taskId, null, result);
     } catch (error) {
-      this.eventEmitter.emit(id, error);
+      this.eventEmitter.emit(taskId, error);
     }
 
-    const timeToWait = this.findTimeToWait();
-    setTimeout(() => this.processQueue(), timeToWait);
+    setTimeout(
+      () => this.executeNextTask(),
+      this.calculateDelayBeforeNextTask(),
+    );
   }
 
-  private generateQueueID(): UUID {
+  private createTaskId(): UUID {
     return randomUUID();
   }
 
-  private insertIntoQueue<T>(
-    params: AsyncQueueParams<T>,
-    id: ReturnType<AsyncQueue['generateQueueID']>,
+  private addTaskToQueue<T>(
+    task: AsyncQueueParams<T>,
+    taskId: ReturnType<AsyncQueue['createTaskId']>,
   ) {
-    this.queue.push([id, params]);
-    return id;
+    this.taskQueue.push([taskId, task]);
   }
 }

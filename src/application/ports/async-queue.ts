@@ -3,5 +3,5 @@ export interface AsyncQueueParams<T> {
 }
 
 export abstract class IAsyncQueue {
-  abstract insertAndProcess<T>(params: AsyncQueueParams<T>): Promise<T>;
+  abstract enqueueAndProcess<T>(params: AsyncQueueParams<T>): Promise<T>;
 }
