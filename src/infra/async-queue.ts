@@ -2,6 +2,8 @@ import { UUID, randomUUID } from 'crypto';
 import EventEmitter from 'events';
 
 import { AsyncQueueParams, IAsyncQueue } from '@application/ports/async-queue';
+import { ErrorPayload } from '@shared/errors';
+import { error, result } from '@shared/utils';
 
 export default class AsyncQueue implements IAsyncQueue {
   private readonly eventEmitter: EventEmitter;
@@ -20,14 +22,25 @@ export default class AsyncQueue implements IAsyncQueue {
     }
   }
 
-  async enqueueAndProcess<T>(task: AsyncQueueParams<T>): Promise<T> {
+  async enqueueAndProcess<T>(task: AsyncQueueParams<T>) {
     const taskId = this.createTaskId();
 
-    return new Promise((resolve, reject) => {
-      this.waitForTaskCompletion<T>(taskId).then(resolve).catch(reject);
-      this.addTaskToQueue<T>(task, taskId);
-      this.processTaskQueue();
-    });
+    try {
+      const taskResult: T = await new Promise((resolve, reject) => {
+        this.waitForTaskCompletion<T>(taskId).then(resolve).catch(reject);
+        this.addTaskToQueue<T>(task, taskId);
+        this.processTaskQueue();
+      });
+
+      return result(taskResult);
+    } catch (e) {
+      return error(
+        new ErrorPayload({
+          code: 'ASYNC_QUEUE_UNKNOW_ERROR',
+          payload: { error: e },
+        }),
+      );
+    }
   }
 
   private waitForTaskCompletion<T>(
