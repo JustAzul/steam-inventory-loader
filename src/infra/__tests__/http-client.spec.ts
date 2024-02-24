@@ -66,6 +66,22 @@ function executeTest(httpClient: IHttpClient) {
       }
     });
 
+    it('should return headers when the request fails', async () => {
+      const results = await Promise.all(
+        ERROR_STATUS_CODES.map((statusCode) =>
+          httpClient.get({
+            url: `${address}/${statusCode}`,
+          }),
+        ),
+      );
+
+      for (const [error] of results) {
+        expect(error?.code).toEqual('HTTP_CLIENT_ERROR');
+        expect(error?.payload.response.headers).toBeDefined();
+        expect(error?.payload.response.headers).toBeInstanceOf(Object);
+      }
+    });
+
     it('should return the status code on the error payload', async () => {
       for (const statusCode of ERROR_STATUS_CODES) {
         const [error] = await httpClient.get({
