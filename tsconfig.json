@@ -2,7 +2,9 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "lib": ["ES2021"],
+    "lib": [
+      "ES2021"
+    ],
     "declaration": true,
     "declarationMap": true,
     "outDir": "./dist",
@@ -14,13 +16,26 @@
     "moduleResolution": "node",
     "baseUrl": "./",
     "paths": {
-      "@application/*": ["src/application/*"],
-      "@domain/*": ["src/domain/*"],
-      "@infra/*": ["src/infra/*"],
-      "@shared/*": ["src/shared/*"],
-      "@src/*":["src/*"]
+      "@application/*": [
+        "src/application/*"
+      ],
+      "@domain/*": [
+        "src/domain/*"
+      ],
+      "@infra/*": [
+        "src/infra/*"
+      ],
+      "@shared/*": [
+        "src/shared/*"
+      ],
+      "@src/*": [
+        "src/*"
+      ]
     },
-    "types": ["node", "jest"],
+    "types": [
+      "node",
+      "jest"
+    ],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "inlineSourceMap": true,
@@ -29,8 +44,8 @@
   },
   "exclude": [
     ".wakatime-project",
-    "@old",
     "**/__mocks__/*",
+    "**/@old",
     "**/*.test.*",
     "dist",
     "index.js",
