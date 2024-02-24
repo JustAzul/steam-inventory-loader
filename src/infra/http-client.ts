@@ -16,7 +16,7 @@ import Axios, {
 } from 'axios';
 import { HttpsProxyAgent } from 'hpagent';
 
-export default class HttpClient implements IHttpClient {
+export class HttpClient implements IHttpClient {
   private cookies?: string;
   private defaultHeaders?: IncomingHttpHeaders;
   private readonly client: AxiosInstance;

@@ -14,7 +14,7 @@ interface AsyncQueueProps {
   taskDelay?: number;
 }
 
-export default class AsyncQueue implements IAsyncQueue {
+export class AsyncQueue implements IAsyncQueue {
   private lastTaskTime?: number;
   private queueStatus: 'IDLE' | 'PROCESSING';
 
