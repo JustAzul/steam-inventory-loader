@@ -39,6 +39,9 @@ export default class ValidateHttpResponseUseCase {
       return response;
     }
 
-    throw new EmptyHttpResponseException(response);
+    throw new EmptyHttpResponseException({
+      response,
+      request: this.props.request,
+    });
   }
 }
