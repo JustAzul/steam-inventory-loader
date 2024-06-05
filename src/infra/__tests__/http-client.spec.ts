@@ -134,38 +134,5 @@ function executeTest(httpClient: IHttpClient) {
         expect(error?.payload.response.statusCode).toEqual(statusCode);
       }
     });
-
-    // it('should send the request with the correct headers', async () => {
-    //   const httpClient = new HttpClient();
-
-    //   const headers = {
-    //     'x-custom-header': 'custom-header-value',
-    //   };
-
-    //   const forceStatusCode = StatusCode.SuccessOK;
-
-    //   const httpClientResponse = await httpClient.get<
-    //     typeof defaultServerResponse
-    //   >({
-    //     url: `http://localhost:${port}/${forceStatusCode}`,
-    //     headers,
-    //   });
-
-    //   const httpServerResponse = receivedRequestData.get(
-    //     `get#${forceStatusCode}`,
-    //   );
-
-    //   const hasHttpServerResponse = Boolean(httpServerResponse);
-    //   const hasHttpClientResponse = Boolean(httpClientResponse);
-
-    //   expect(hasHttpServerResponse).toBe(true);
-    //   expect(hasHttpClientResponse).toBe(true);
-
-    //   if (hasHttpServerResponse && hasHttpClientResponse) {
-    //     expect(httpServerResponse?.headers).toMatchObject(headers);
-    //   }
-
-    //   expect(httpClientResponse?.data).toMatchObject(defaultServerResponse);
-    // });
   });
 }
