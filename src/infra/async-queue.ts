@@ -6,7 +6,7 @@ import { IRepository } from '@application/ports/repository.interface';
 import { ErrorPayload } from '@shared/errors';
 import { error, result } from '@shared/utils';
 
-interface AsyncQueueProps {
+export interface AsyncQueueProps {
   eventHandler?: EventEmitter;
   repository: IRepository<
     [ReturnType<AsyncQueue['createTaskId']>, AsyncQueueParams<unknown>]
