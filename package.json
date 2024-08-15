@@ -27,7 +27,7 @@
   "license": "ISC",
   "dependencies": {
     "agentkeepalive": "^4.2.1",
-    "axios": "^1.5.1",
+    "axios": "^1.7.4",
     "hpagent": "^1.1.0",
     "tough-cookie": "^4.1.3"
   },
