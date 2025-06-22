@@ -4,7 +4,7 @@ import {
   HttpClientErrorCodes,
   HttpClientGetProps,
   HttpClientResponse,
-} from '../../application/ports/http-client.interface';
+} from '../../application/types/http-response.type';
 import { ResilientHttpFetcher } from '../ResilientHttpFetcher';
 import * as sleepHelper from '@shared/helpers/sleep.helper';
 import { StatusCode } from 'status-code-enum';

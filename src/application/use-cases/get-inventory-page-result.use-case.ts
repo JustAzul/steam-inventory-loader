@@ -5,7 +5,7 @@ import {
 import {
   HttpClientGetProps,
   HttpClientResponse,
-} from '../ports/http-client.interface';
+} from '../types/http-response.type';
 import { InventoryPageResult } from '../types/inventory-page-result.type';
 
 import GetHttpResponseWithExceptionUseCase from './get-http-response-with-exception.use-case';

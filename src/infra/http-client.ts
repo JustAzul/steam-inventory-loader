@@ -1,9 +1,7 @@
 import { IncomingHttpHeaders } from 'http';
 
 import { IFetcher } from '@application/ports/fetcher.port';
-import {
-  HttpClientGetProps,
-} from '@application/ports/http-client.interface';
+import { HttpClientGetProps } from '@application/types/http-response.type';
 import { DEFAULT_REQUEST_TIMEOUT } from '@shared/constants';
 import { ErrorPayload } from '@shared/errors';
 import { error, result } from '@shared/utils';

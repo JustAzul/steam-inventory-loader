@@ -2,14 +2,14 @@ import { IFetcher } from '../ports/fetcher.port';
 import {
   HttpClientGetProps,
   HttpClientResponse,
-} from '../ports/http-client.interface';
+  HttpClientErrorCodes,
+} from '../types/http-response.type';
 import { InventoryPageResult } from '../types/inventory-page-result.type';
 
 import ProcessHttpExceptionsUseCase from './process-http-exceptions.use-case';
 import ValidateHttpResponseUseCase from './validate-http-response.use-case';
 import UseCaseException from '@application/exceptions/use-case.exception';
 import { ErrorPayload } from '@shared/errors';
-import { HttpClientErrorCodes } from '@application/ports/http-client.interface';
 
 export type GetHttpResponseWithExceptionConstructor = {
   fetcher: IFetcher;

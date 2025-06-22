@@ -1,6 +1,6 @@
 import { StatusCode } from 'status-code-enum';
 import { ErrorPayload } from '@shared/errors';
-import { HttpClientErrorCodes } from '@application/ports/http-client.interface';
+import { HttpClientErrorCodes } from '@application/types/http-response.type';
 
 import HttpException from '../exceptions/http.exception';
 import PrivateProfileException from '../exceptions/private-profile.exception';

@@ -1,5 +1,21 @@
-import { HttpClientResponse } from '../ports/http-client.interface';
-
+import { IncomingHttpHeaders } from 'http';
 import { InventoryPageResult } from './inventory-page-result.type';
+
+export type HttpClientErrorCodes =
+  | 'HTTP_CLIENT_ERROR'
+  | 'INTERNAL_ERROR'
+  | 'UNKNOWN_ERROR';
+
+export type HttpClientResponse<T extends unknown> = {
+  data: T | null;
+  headers: IncomingHttpHeaders;
+  statusCode: number;
+};
+
+export type HttpClientGetProps = {
+  headers?: IncomingHttpHeaders;
+  params?: Record<string, string | number>;
+  url: string;
+};
 
 export type HttpResponse<T = InventoryPageResult> = HttpClientResponse<T>;

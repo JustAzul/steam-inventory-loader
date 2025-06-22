@@ -5,7 +5,7 @@ import {
   HttpClientErrorCodes,
   HttpClientGetProps,
   HttpClientResponse,
-} from './http-client.interface';
+} from '../types/http-response.type';
 
 export interface IFetcher {
   execute<FetchUrlResult>(

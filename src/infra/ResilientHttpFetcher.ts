@@ -9,7 +9,7 @@ import {
   HttpClientErrorCodes,
   HttpClientGetProps,
   HttpClientResponse,
-} from '../application/ports/http-client.interface';
+} from '../application/types/http-response.type';
 import HttpException from '@application/exceptions/http.exception';
 import { DataOrError } from '@shared/utils';
 import { ErrorPayload } from '@shared/errors';

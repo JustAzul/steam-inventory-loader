@@ -2,7 +2,7 @@ import { ErrorPayload } from '@shared/errors';
 import {
   HttpClientErrorCodes,
   HttpClientResponse,
-} from '@application/ports/http-client.interface';
+} from '@application/types/http-response.type';
 import ProcessHttpExceptionsUseCase from '../process-http-exceptions.use-case';
 import ValidateHttpResponseUseCase from '../validate-http-response.use-case';
 import ProcessSteamErrorResultUseCase from '../process-steam-error-result.use-case';
