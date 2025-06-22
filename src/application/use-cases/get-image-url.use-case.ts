@@ -8,21 +8,18 @@ type GetImageUrlUseCaseProps = {
 };
 
 export default class GetImageUrlUseCase {
-  private readonly props: GetImageUrlUseCaseProps;
-
-  public constructor(props: Readonly<GetImageUrlUseCaseProps>) {
-    this.props = props;
-  }
-
-  public execute(): string {
-    const isLarge = this.props?.size === 'large';
+  public execute({
+    input,
+    size,
+  }: GetImageUrlUseCaseProps): string {
+    const isLarge = size === 'large';
 
     if (isLarge) {
       return `${STEAM_CDN_IMAGE_URL}/${
-        this.props.input?.icon_url_large || this.props.input.icon_url
+        input?.icon_url_large || input.icon_url
       }`;
     }
 
-    return `${STEAM_CDN_IMAGE_URL}/${this.props.input.icon_url}`;
+    return `${STEAM_CDN_IMAGE_URL}/${input.icon_url}`;
   }
 }

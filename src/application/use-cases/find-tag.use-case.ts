@@ -7,18 +7,15 @@ export type FindTagUseCaseProps = {
 };
 
 export default class FindTagUseCase {
-  private readonly props: FindTagUseCaseProps;
-
-  public constructor(props: Readonly<FindTagUseCaseProps>) {
-    this.props = props;
-  }
-
-  public execute(): rawTag | SteamItemTag | null {
-    const hasAtLeastOneTag = Boolean(this.props?.tags?.length);
+  public execute({
+    tags,
+    categoryToFind,
+  }: FindTagUseCaseProps): rawTag | SteamItemTag | null {
+    const hasAtLeastOneTag = Boolean(tags?.length);
     if (hasAtLeastOneTag === false) return null;
 
-    const tag: rawTag | SteamItemTag | undefined = this.props.tags.find(
-      ({ category }) => category === this.props.categoryToFind,
+    const tag: rawTag | SteamItemTag | undefined = tags.find(
+      ({ category }) => category === categoryToFind,
     );
 
     return tag ?? null;

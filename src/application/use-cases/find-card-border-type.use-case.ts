@@ -12,15 +12,9 @@ export type FindCardBorderTypeProps = {
 };
 
 export default class FindCardBorderTypeUseCase {
-  private readonly props: FindCardBorderTypeProps;
-
-  public constructor(props: Readonly<FindCardBorderTypeProps>) {
-    this.props = props;
-  }
-
-  public execute(): CardType | null {
-    const { tags } = this.props;
-
+  public execute({
+    tags,
+  }: FindCardBorderTypeProps): CardType | null {
     const itemClass = FindCardBorderTypeUseCase.InternalFindTag(
       tags,
       'item_class',
