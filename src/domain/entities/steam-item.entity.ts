@@ -154,43 +154,4 @@ export default class SteamItemEntity {
   public get tags(): SteamItemTag[] | undefined {
     return this.tagsInternal;
   }
-
-  public getMarketFeeApp(): number | undefined {
-    if (
-      this.getAppId() === 753 &&
-      this.contextid === '6' &&
-      !!this.market_hash_name
-    ) {
-      const matchResult = /^(\d+)-/.exec(this.market_hash_name);
-      if (matchResult) return parseInt(matchResult[1], 10);
-    }
-
-    return undefined;
-  }
-
-  public getCacheExpiration(): string | undefined {
-    if (this.item_expiration) return this.item_expiration;
-
-    if (
-      this.getAppId() === 730 &&
-      this.contextid === '2' &&
-      this.owner_descriptions
-    ) {
-      const tradableDescription = this.owner_descriptions.find(
-        (description) =>
-          description.value &&
-          description.value.indexOf('Tradable After ') === 0,
-      );
-
-      if (tradableDescription) {
-        const date: Date = new Date(
-          tradableDescription.value.substring(15).replace(/[,()]/g, ''),
-        );
-
-        return date.toISOString();
-      }
-    }
-
-    return undefined;
-  }
 }
