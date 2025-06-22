@@ -9,21 +9,18 @@ import SteamItemTag from './steam-item-tag.entity';
 export type SteamItemProps = {
   asset: InventoryPageAsset;
   description: InventoryPageDescription;
+  tags?: SteamItemTag[];
 };
 
 export default class SteamItemEntity {
   private readonly asset: InventoryPageAsset;
-
   private readonly description: InventoryPageDescription;
+  private readonly tagsInternal?: SteamItemTag[];
 
-  public constructor({ asset, description }: SteamItemProps) {
+  public constructor({ asset, description, tags }: SteamItemProps) {
     this.asset = asset;
-
-    if (Object.prototype.hasOwnProperty.call(description, this.listingKey))
-      this.description = description[
-        this.listingKey as never
-      ] as InventoryPageDescription;
-    else this.description = description;
+    this.description = description;
+    this.tagsInternal = tags;
   }
 
   private get is_currency(): boolean {
@@ -155,20 +152,10 @@ export default class SteamItemEntity {
   }
 
   public get tags(): SteamItemTag[] | undefined {
-    if (Object.prototype.hasOwnProperty.call(this.description, 'tags')) {
-      const tags: SteamItemTag[] = [];
-
-      for (let i = 0; i < this.description.tags.length; i += 1) {
-        tags.push(new SteamItemTag(this.description.tags[i]));
-      }
-
-      return tags;
-    }
-
-    return undefined;
+    return this.tagsInternal;
   }
 
-  public get market_fee_app(): number | undefined {
+  public getMarketFeeApp(): number | undefined {
     if (
       this.appid === 753 &&
       this.contextid === '6' &&
@@ -181,7 +168,7 @@ export default class SteamItemEntity {
     return undefined;
   }
 
-  public get cache_expiration(): string | undefined {
+  public getCacheExpiration(): string | undefined {
     if (this.item_expiration) return this.item_expiration;
 
     if (
