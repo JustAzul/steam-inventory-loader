@@ -1,3 +1,0 @@
-export const DEFAULT_REQUEST_MAX_RETRIES = 3;
-export const DEFAULT_REQUEST_RETRY_DELAY = 1000;
-export const DEFAULT_REQUEST_TIMEOUT = 1000 * 30; // 30 seconds
