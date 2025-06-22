@@ -3,7 +3,6 @@ import SteamItemEntity from '@domain/entities/steam-item.entity';
 import { CookieJar } from 'tough-cookie';
 import GetInventoryPageResultUseCase from '../get-inventory-page-result.use-case';
 import LoadInventoryUseCase, {
-  LoadInventoryUseCaseInterfaces,
   LoadInventoryUseCaseProps,
 } from '../load-inventory.use-case';
 import MapAssetsToSteamItemsUseCase from '../map-assets-to-steam-items.use-case';
@@ -51,24 +50,32 @@ describe('Application :: UseCases :: LoadInventoryUseCase', () => {
       },
     };
 
-    const useCaseInterfaces: LoadInventoryUseCaseInterfaces = {
-      getInventoryPage: getInventoryPageMock,
-      mapAssetsToSteamItems: mapAssetsToSteamItemsMock,
-    };
+    const useCase = new LoadInventoryUseCase(
+      getInventoryPageMock,
+      mapAssetsToSteamItemsMock,
+    );
 
-    const useCase = new LoadInventoryUseCase({
-      props: useCaseProps,
-      interfaces: useCaseInterfaces,
-    });
-
-    const inventory = await useCase.execute();
+    const inventory = await useCase.execute(useCaseProps);
 
     expect(inventory).toHaveLength(2);
     expect(inventory[0]).toBeInstanceOf(SteamItemEntity);
     expect(inventory[1]).toBeInstanceOf(SteamItemEntity);
     expect(getInventoryPageMock.execute).toHaveBeenCalledTimes(2);
-    expect(getInventoryPageMock.execute).toHaveBeenCalledWith(undefined);
-    expect(getInventoryPageMock.execute).toHaveBeenCalledWith('1');
+
+    const { config, ...expectedProps } = useCaseProps;
+
+    expect(getInventoryPageMock.execute).toHaveBeenCalledWith({
+      ...expectedProps,
+      count: 1,
+      language: 'english',
+      lastAssetID: undefined,
+    });
+    expect(getInventoryPageMock.execute).toHaveBeenCalledWith({
+      ...expectedProps,
+      count: 1,
+      language: 'english',
+      lastAssetID: '1',
+    });
     expect(mapAssetsToSteamItemsMock.execute).toHaveBeenCalledTimes(2);
   });
 
@@ -109,17 +116,12 @@ describe('Application :: UseCases :: LoadInventoryUseCase', () => {
       },
     };
 
-    const useCaseInterfaces: LoadInventoryUseCaseInterfaces = {
-      getInventoryPage: getInventoryPageMock,
-      mapAssetsToSteamItems: mapAssetsToSteamItemsMock,
-    };
+    const useCase = new LoadInventoryUseCase(
+      getInventoryPageMock,
+      mapAssetsToSteamItemsMock,
+    );
 
-    const useCase = new LoadInventoryUseCase({
-      props: useCaseProps,
-      interfaces: useCaseInterfaces,
-    });
-
-    const inventory = await useCase.execute();
+    const inventory = await useCase.execute(useCaseProps);
 
     expect(inventory).toHaveLength(1);
     expect(inventory[0].tradable).toBe(true);
@@ -150,16 +152,13 @@ describe('Application :: UseCases :: LoadInventoryUseCase', () => {
       },
     };
 
-    const useCaseInterfaces: LoadInventoryUseCaseInterfaces = {
-      getInventoryPage: getInventoryPageMock,
-      mapAssetsToSteamItems: mapAssetsToSteamItemsMock,
-    };
+    const useCase = new LoadInventoryUseCase(
+      getInventoryPageMock,
+      mapAssetsToSteamItemsMock,
+    );
 
-    const useCase = new LoadInventoryUseCase({
-      props: useCaseProps,
-      interfaces: useCaseInterfaces,
-    });
-
-    await expect(useCase.execute()).rejects.toThrow(PrivateProfileException);
+    await expect(useCase.execute(useCaseProps)).rejects.toThrow(
+      PrivateProfileException,
+    );
   });
 }); 

@@ -15,6 +15,7 @@ const config: Config.InitialOptions = {
   },
   testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
   roots: ['<rootDir>/src'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 };
 
 export default config;

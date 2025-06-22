@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import AzulSteamInventoryLoader from './infra/main';
 import { LoaderConfig } from '@domain/types/loader-config.type';
 

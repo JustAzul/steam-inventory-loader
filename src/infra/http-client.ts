@@ -1,3 +1,4 @@
+import { injectable } from 'tsyringe';
 import { IncomingHttpHeaders } from 'http';
 
 import { IFetcher } from '@application/ports/fetcher.port';
@@ -14,6 +15,7 @@ import Axios, {
 } from 'axios';
 import { HttpsProxyAgent } from 'hpagent';
 
+@injectable()
 export class HttpClient implements IFetcher {
   private cookies?: string;
   private defaultHeaders?: IncomingHttpHeaders;

@@ -1,3 +1,4 @@
+import { injectable } from 'tsyringe';
 import SteamItemFactory from '@domain/factories/steam-item.factory';
 import SteamItemEntity from '@domain/entities/steam-item.entity';
 import { InventoryPageAsset } from '@domain/types/inventory-page-asset.type';
@@ -8,6 +9,7 @@ export interface MapAssetsToSteamItemsUseCaseProps {
   descriptions: InventoryPageDescription[];
 }
 
+@injectable()
 export default class MapAssetsToSteamItemsUseCase {
   public execute({
     assets,

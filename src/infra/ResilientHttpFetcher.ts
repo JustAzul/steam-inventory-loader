@@ -30,6 +30,10 @@ export class ResilientHttpFetcher implements IFetcher {
     this.props = props;
   }
 
+  public getFetcher(): IFetcher {
+    return this.decoratedFetcher;
+  }
+
   public execute<T>(
     props: HttpClientGetProps,
   ): Promise<

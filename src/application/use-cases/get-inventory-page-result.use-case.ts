@@ -7,6 +7,7 @@ import {
   HttpClientResponse,
 } from '../types/http-response.type';
 import { InventoryPageResult } from '../types/inventory-page-result.type';
+import { injectable, inject } from 'tsyringe';
 
 import GetHttpResponseWithExceptionUseCase from './get-http-response-with-exception.use-case';
 import GetPageUrlUseCase from './get-page-url.use-case';
@@ -17,36 +18,20 @@ export type GetInventoryPageResultProps = {
   count: number;
   language: string;
   steamID64: string;
+  lastAssetID?: string;
 };
 
-export type GetInventoryPageResultConstructor = {
-  props: GetInventoryPageResultProps;
-  getHttpResponseUseCase: GetHttpResponseWithExceptionUseCase;
-  getPageUrlUseCase: GetPageUrlUseCase;
-};
-
+@injectable()
 export default class GetInventoryPageResultUseCase {
-  public readonly props: GetInventoryPageResultProps;
-  private readonly getHttpResponseUseCase: GetHttpResponseWithExceptionUseCase;
-  private readonly getPageUrlUseCase: GetPageUrlUseCase;
-
-  public constructor({
-    props,
-    getHttpResponseUseCase,
-    getPageUrlUseCase,
-  }: Readonly<GetInventoryPageResultConstructor>) {
-    this.props = props;
-    this.getHttpResponseUseCase = getHttpResponseUseCase;
-    this.getPageUrlUseCase = getPageUrlUseCase;
-  }
+  public constructor(
+    private readonly getHttpResponseUseCase: GetHttpResponseWithExceptionUseCase,
+    private readonly getPageUrlUseCase: GetPageUrlUseCase,
+  ) {}
 
   public async execute(
-    lastAssetID?: string,
+    props: GetInventoryPageResultProps,
   ): Promise<InventoryPageResult> {
-    const { url, params } = this.getPageUrlUseCase.execute({
-      ...this.props,
-      lastAssetID,
-    });
+    const { url, params } = this.getPageUrlUseCase.execute(props);
 
     const httpClientProps: HttpClientGetProps = {
       url,

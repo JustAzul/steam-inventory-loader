@@ -40,7 +40,9 @@
     "esModuleInterop": true,
     "inlineSourceMap": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "exclude": [
     ".wakatime-project",

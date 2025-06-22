@@ -1,3 +1,4 @@
+import { injectable } from 'tsyringe';
 import { StatusCode } from 'status-code-enum';
 import { ErrorPayload } from '@shared/errors';
 import { HttpClientErrorCodes } from '@application/types/http-response.type';
@@ -7,6 +8,7 @@ import PrivateProfileException from '../exceptions/private-profile.exception';
 import RateLimitedException from '../exceptions/rate-limited.exception';
 import { HttpExceptionProps } from '../exceptions/http.exception';
 
+@injectable()
 export default class ProcessHttpExceptionsUseCase {
   public execute(error: ErrorPayload<HttpClientErrorCodes>): void {
     const httpException = new HttpException(

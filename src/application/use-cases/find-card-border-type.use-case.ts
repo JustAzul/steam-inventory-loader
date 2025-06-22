@@ -1,3 +1,4 @@
+import { injectable, inject } from 'tsyringe';
 import SteamItemTag from '../../domain/entities/steam-item-tag.entity';
 import { CardType } from '../../domain/types/card-type.type';
 import FindTagUseCase from './find-tag.use-case';
@@ -13,12 +14,11 @@ export type FindCardBorderTypeProps = {
   tags: Array<rawTag | SteamItemTag>;
 };
 
+@injectable()
 export default class FindCardBorderTypeUseCase {
-  private readonly findTagUseCase: FindTagUseCase;
-
-  public constructor(findTagUseCase: FindTagUseCase) {
-    this.findTagUseCase = findTagUseCase;
-  }
+  public constructor(
+    @inject(FindTagUseCase) private readonly findTagUseCase: FindTagUseCase,
+  ) {}
 
   public execute({ tags }: FindCardBorderTypeProps): CardType | null {
     const itemClass = this.findTagUseCase.execute({

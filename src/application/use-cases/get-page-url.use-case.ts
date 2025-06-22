@@ -1,3 +1,4 @@
+import { injectable, inject } from 'tsyringe';
 import {
   DEFAULT_REQUEST_URL,
   PLACEHOLDER_APP_ID,
@@ -22,12 +23,12 @@ export type GetPageUrlResult = {
   params: Record<string, string | number>;
 };
 
+@injectable()
 export default class GetPageUrlUseCase {
-  private readonly validateEndpointUseCase: ValidateEndpointUseCase;
-
-  public constructor(validateEndpointUseCase: ValidateEndpointUseCase) {
-    this.validateEndpointUseCase = validateEndpointUseCase;
-  }
+  public constructor(
+    @inject(ValidateEndpointUseCase)
+    private readonly validateEndpointUseCase: ValidateEndpointUseCase,
+  ) {}
 
   public execute(props: GetPageUrlProps): GetPageUrlResult {
     const {

@@ -1,3 +1,4 @@
+import { injectable } from 'tsyringe';
 import {
   PLACEHOLDER_APP_ID,
   PLACEHOLDER_CONTEXT_ID,
@@ -5,51 +6,31 @@ import {
 } from '../../shared/constants';
 import UseCaseException from '../exceptions/use-case.exception';
 
-// Represents the properties required to validate an endpoint
-interface ValidateEndpointProps {
-  endpoint: string;
-}
-
-// Protocol constants
 const PROTOCOL_HTTP = 'http://';
 const PROTOCOL_HTTPS = 'https://';
 
+@injectable()
 export default class ValidateEndpointUseCase {
   public execute(endpoint: string): void {
-    // Check if the endpoint contains placeholders and protocols
-    const hasAppIDPlaceholder = endpoint.includes(PLACEHOLDER_APP_ID);
-    const hasContextIDPlaceholder = endpoint.includes(PLACEHOLDER_CONTEXT_ID);
-    const hasHttpProtocol = endpoint.includes(PROTOCOL_HTTP);
-    const hasHttpsProtocol = endpoint.includes(PROTOCOL_HTTPS);
-    const hasSteamID64Placeholder = endpoint.includes(PLACEHOLDER_STEAM_ID_64);
+    const hasPlaceholders =
+      endpoint.includes(PLACEHOLDER_APP_ID) &&
+      endpoint.includes(PLACEHOLDER_CONTEXT_ID) &&
+      endpoint.includes(PLACEHOLDER_STEAM_ID_64);
 
-    // Throw an exception if the endpoint is invalid
-    if (hasHttpProtocol === false && hasHttpsProtocol === false) {
+    if (!hasPlaceholders) {
       throw new UseCaseException(
         ValidateEndpointUseCase.name,
-        `The endpoint must contain either the '${PROTOCOL_HTTP}' or '${PROTOCOL_HTTPS}' protocol.`,
+        `The endpoint must contain the placeholders ${PLACEHOLDER_APP_ID}, ${PLACEHOLDER_CONTEXT_ID} and ${PLACEHOLDER_STEAM_ID_64}`,
       );
     }
+    const hasProtocol =
+      endpoint.startsWith(PROTOCOL_HTTP) || endpoint.startsWith(PROTOCOL_HTTPS);
 
-    if (hasSteamID64Placeholder === false) {
+    if (!hasProtocol) {
       throw new UseCaseException(
         ValidateEndpointUseCase.name,
-        `The endpoint must contain the '${PLACEHOLDER_STEAM_ID_64}' placeholder.`,
-      );
-    }
-
-    if (hasAppIDPlaceholder === false) {
-      throw new UseCaseException(
-        ValidateEndpointUseCase.name,
-        `The endpoint must contain the '${PLACEHOLDER_APP_ID}' placeholder.`,
-      );
-    }
-
-    if (hasContextIDPlaceholder === false) {
-      throw new UseCaseException(
-        ValidateEndpointUseCase.name,
-        `The endpoint must contain the '${PLACEHOLDER_CONTEXT_ID}' placeholder.`,
+        `The endpoint must contain the protocol ${PROTOCOL_HTTP} or ${PROTOCOL_HTTPS}`,
       );
     }
   }
-}
+} 

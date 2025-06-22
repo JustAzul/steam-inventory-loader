@@ -89,13 +89,16 @@ describe('Application :: UseCases :: HttpProcessingChain', () => {
 
     beforeEach(() => {
       mockFetcher = { execute: jest.fn() };
-      processHttpExceptionsUseCase = { execute: jest.fn() };
-      validateHttpResponseUseCase = { execute: jest.fn() } as any;
-      useCase = new GetHttpResponseWithExceptionUseCase({
-        fetcher: mockFetcher,
+      processHttpExceptionsUseCase = new ProcessHttpExceptionsUseCase();
+      jest.spyOn(processHttpExceptionsUseCase, 'execute');
+      const processSteamErrorUseCase = new ProcessSteamErrorResultUseCase();
+      validateHttpResponseUseCase = new ValidateHttpResponseUseCase(processSteamErrorUseCase);
+      jest.spyOn(validateHttpResponseUseCase, 'execute');
+      useCase = new GetHttpResponseWithExceptionUseCase(
+        mockFetcher,
         processHttpExceptionsUseCase,
         validateHttpResponseUseCase,
-      });
+      );
     });
 
     it('should call validation use case on success', async () => {

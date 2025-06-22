@@ -1,3 +1,4 @@
+import { injectable, inject } from 'tsyringe';
 import { StatusCode } from 'status-code-enum';
 
 import BadStatusCodeException from '../exceptions/bad-status-code.exception';
@@ -7,14 +8,12 @@ import { HttpResponse } from '../types/http-response.type';
 
 import ProcessSteamErrorResultUseCase from './process-steam-error-result.use-case';
 
+@injectable()
 export default class ValidateHttpResponseUseCase {
-  private readonly processSteamErrorResultUseCase: ProcessSteamErrorResultUseCase;
-
   public constructor(
-    processSteamErrorResultUseCase: ProcessSteamErrorResultUseCase,
-  ) {
-    this.processSteamErrorResultUseCase = processSteamErrorResultUseCase;
-  }
+    @inject(ProcessSteamErrorResultUseCase)
+    private readonly processSteamErrorResultUseCase: ProcessSteamErrorResultUseCase,
+  ) {}
 
   public execute(
     request: HttpRequest,

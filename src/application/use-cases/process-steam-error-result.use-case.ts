@@ -1,9 +1,11 @@
+import { injectable } from 'tsyringe';
 import SteamErrorResultException from '../exceptions/steam-error-result.exception';
 import { HttpResponse } from '../types/http-response.type';
 
+@injectable()
 export default class ProcessSteamErrorResultUseCase {
-  public execute(httpResponse: HttpResponse): void {
-    const dataError = httpResponse?.data?.error;
+  public execute(response: HttpResponse): void {
+    const dataError = response?.data?.error;
     const dataHasError = Boolean(dataError);
 
     if (dataHasError) {

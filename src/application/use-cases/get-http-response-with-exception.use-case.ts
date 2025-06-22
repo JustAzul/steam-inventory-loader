@@ -1,3 +1,4 @@
+import { injectable, inject } from 'tsyringe';
 import { IFetcher } from '../ports/fetcher.port';
 import {
   HttpClientGetProps,
@@ -11,26 +12,13 @@ import ValidateHttpResponseUseCase from './validate-http-response.use-case';
 import UseCaseException from '@application/exceptions/use-case.exception';
 import { ErrorPayload } from '@shared/errors';
 
-export type GetHttpResponseWithExceptionConstructor = {
-  fetcher: IFetcher;
-  processHttpExceptionsUseCase: ProcessHttpExceptionsUseCase;
-  validateHttpResponseUseCase: ValidateHttpResponseUseCase;
-};
-
+@injectable()
 export default class GetHttpResponseWithExceptionUseCase {
-  private readonly fetcher: IFetcher;
-  private readonly processHttpExceptionsUseCase: ProcessHttpExceptionsUseCase;
-  private readonly validateHttpResponseUseCase: ValidateHttpResponseUseCase;
-
-  public constructor({
-    fetcher,
-    processHttpExceptionsUseCase,
-    validateHttpResponseUseCase,
-  }: Readonly<GetHttpResponseWithExceptionConstructor>) {
-    this.fetcher = fetcher;
-    this.processHttpExceptionsUseCase = processHttpExceptionsUseCase;
-    this.validateHttpResponseUseCase = validateHttpResponseUseCase;
-  }
+  public constructor(
+    @inject('IFetcher') private readonly fetcher: IFetcher,
+    private readonly processHttpExceptionsUseCase: ProcessHttpExceptionsUseCase,
+    private readonly validateHttpResponseUseCase: ValidateHttpResponseUseCase,
+  ) {}
 
   public async execute(
     httpClientProps: Readonly<HttpClientGetProps>,

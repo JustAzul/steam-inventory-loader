@@ -1,3 +1,4 @@
+import { injectable } from 'tsyringe';
 import SteamItemTag from '../../domain/entities/steam-item-tag.entity';
 import { rawTag } from '../../domain/types/raw-tag.type';
 
@@ -6,6 +7,7 @@ export type FindTagUseCaseProps = {
   tags: Array<rawTag | SteamItemTag>;
 };
 
+@injectable()
 export default class FindTagUseCase {
   public execute({
     tags,
