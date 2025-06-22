@@ -18,7 +18,10 @@ export default class ProcessHttpExceptionsUseCase {
     if (hasStatusCode) {
       const { statusCode } = response;
 
-      if (statusCode === StatusCode.ClientErrorForbidden) {
+      if (
+        statusCode === StatusCode.ClientErrorForbidden ||
+        statusCode === StatusCode.ClientErrorBadRequest
+      ) {
         throw new PrivateProfileException(this.httpException.props);
       }
 

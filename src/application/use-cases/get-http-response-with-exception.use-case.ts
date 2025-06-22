@@ -17,6 +17,10 @@ import { InventoryPageResult } from '../types/inventory-page-result.type';
 
 import FetchWithDelayUseCase from './fetch-with-delay.use-case';
 import ValidateHttpResponseUseCase from './validate-http-response.use-case';
+import ProcessHttpExceptionsUseCase from './process-http-exceptions.use-case';
+import HttpException, {
+  HttpExceptionProps,
+} from '../exceptions/http.exception';
 
 export type GetHttpResponseWithExceptionProps = {
   maxRetries?: number;
@@ -59,24 +63,33 @@ export default class GetHttpResponseWithExceptionUseCase {
       await fetchUrlUseCase.execute<InventoryPageResult>(httpClientProps);
 
     if (error) {
-      const statusCode = error.payload.response?.statusCode;
+      const httpException = new HttpException(
+        error.payload as HttpExceptionProps,
+      );
+      const processHttpExceptionsUseCase = new ProcessHttpExceptionsUseCase(
+        httpException,
+      );
 
-      if (statusCode === StatusCode.ClientErrorForbidden) {
-        throw new PrivateProfileException({
-          request: error.payload.request,
-          response: error.payload.response,
-        });
+      try {
+        processHttpExceptionsUseCase.execute();
+      } catch (e) {
+        if (e instanceof PrivateProfileException) throw e;
+        if (e instanceof RateLimitedException) {
+          if (this.canRetry()) {
+            return this.retry(
+              httpClientProps,
+              e.props.response.statusCode,
+              e.props.response as Partial<
+                HttpClientResponse<InventoryPageResult>
+              >,
+            );
+          }
+          throw e;
+        }
       }
 
       if (this.canRetry()) {
-        return this.retry(httpClientProps, statusCode, error.payload.response);
-      }
-
-      if (statusCode === StatusCode.ClientErrorTooManyRequests) {
-        throw new RateLimitedException({
-          request: error.payload.request,
-          response: error.payload.response,
-        });
+        return this.retry(httpClientProps);
       }
 
       throw new UseCaseException(
@@ -119,7 +132,7 @@ export default class GetHttpResponseWithExceptionUseCase {
   private async retry(
     httpClientProps: Readonly<HttpClientGetProps>,
     statusCode?: number,
-    response?: HttpClientResponse<InventoryPageResult>,
+    response?: Partial<HttpClientResponse<InventoryPageResult>>,
   ): Promise<HttpClientResponse<InventoryPageResult>> {
     if (statusCode === StatusCode.ClientErrorTooManyRequests) {
       const retryAfter = response?.headers?.['retry-after'];
