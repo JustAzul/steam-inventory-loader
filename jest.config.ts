@@ -14,7 +14,7 @@ const config: Config.InitialOptions = {
     '^@src/(.*)$': '<rootDir>/src/$1'
   },
   testMatch: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
-  roots: ['<rootDir>/src']
+  roots: ['<rootDir>/src'],
 };
 
 export default config;
