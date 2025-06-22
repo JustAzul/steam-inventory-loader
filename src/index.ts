@@ -1,9 +1,11 @@
 import 'reflect-metadata';
-import AzulSteamInventoryLoader from './infra/main';
+import IAzulSteamInventoryLoader from '@application/ports/azul-steam-inventory-loader.interface';
 import { LoaderConfig } from '@domain/types/loader-config.type';
+import AzulSteamInventoryLoader from '@infra/main';
 
 /**
  * Creates an instance of the Steam Inventory Loader.
+ * This is the primary entry point for using the library.
  *
  * @param config - The configuration object for the loader.
  * @param config.SteamCommunity_Jar - A `tough-cookie` CookieJar instance containing valid `sessionid` and `steamLoginSecure` cookies for steamcommunity.com.
@@ -13,7 +15,7 @@ import { LoaderConfig } from '@domain/types/loader-config.type';
  * @param config.proxyAddress - The address of a proxy to use for requests.
  * @param config.maxRetries - The maximum number of retries for a failed request.
  *
- * @returns An instance of the AzulSteamInventoryLoader.
+ * @returns An instance of the inventory loader.
  *
  * @example
  * ```
@@ -32,9 +34,17 @@ import { LoaderConfig } from '@domain/types/loader-config.type';
  * // console.log(inventory);
  * ```
  */
-export default function createInventoryLoader(config: LoaderConfig) {
+export function createInventoryLoader(
+  config: LoaderConfig,
+): IAzulSteamInventoryLoader {
   return new AzulSteamInventoryLoader(config);
 }
 
-// For backward compatibility, we can still export the class.
-export { AzulSteamInventoryLoader };
+// Export key types and entities for consumers of the library
+export type { LoaderConfig } from '@domain/types/loader-config.type';
+export { default as SteamItemEntity } from '@domain/entities/steam-item.entity';
+export { default as SteamItemTag } from '@domain/entities/steam-item-tag.entity';
+export type { CardType } from '@domain/types/card-type.type';
+export type { rawTag } from '@domain/types/raw-tag.type';
+export type { InputWithIconURL } from '@domain/types/input-with-icon-url.type';
+export { default as IAzulSteamInventoryLoader } from '@application/ports/azul-steam-inventory-loader.interface';

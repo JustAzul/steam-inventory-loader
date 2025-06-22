@@ -1,54 +1,36 @@
-import { IFetcher } from '@application/ports/fetcher.port';
 import SteamItemEntity from '@domain/entities/steam-item.entity';
 import { CookieJar } from 'tough-cookie';
-import GetInventoryPageResultUseCase from '../get-inventory-page-result.use-case';
 import LoadInventoryUseCase, {
   LoadInventoryUseCaseProps,
 } from '../load-inventory.use-case';
-import MapAssetsToSteamItemsUseCase from '../map-assets-to-steam-items.use-case';
 import { inventoryPageResultMock } from './mocks';
 import PrivateProfileException from '@application/exceptions/private-profile.exception';
+import {
+  createGetInventoryPageMock,
+  createMapAssetsToSteamItemsMock,
+} from './use-case.mocks';
+import GetInventoryPageResultUseCase from '../get-inventory-page-result.use-case';
+import MapAssetsToSteamItemsUseCase from '../map-assets-to-steam-items.use-case';
 
 describe('Application :: UseCases :: LoadInventoryUseCase', () => {
-  let getInventoryPageMock: GetInventoryPageResultUseCase;
-  let mapAssetsToSteamItemsMock: MapAssetsToSteamItemsUseCase;
+  let getInventoryPageMock: jest.Mocked<GetInventoryPageResultUseCase>;
+  let mapAssetsToSteamItemsMock: jest.Mocked<MapAssetsToSteamItemsUseCase>;
+
+  const useCaseProps: LoadInventoryUseCaseProps = {
+    steamID64: '76561197994150794',
+    appID: '730',
+    contextID: '2',
+    config: {
+      SteamCommunity_Jar: new CookieJar(),
+      Language: 'english',
+      itemsPerPage: 1,
+      tradableOnly: false,
+    },
+  };
 
   it('should process and return a full inventory, respecting pagination', async () => {
-    getInventoryPageMock = {
-      execute: jest
-        .fn()
-        .mockResolvedValueOnce(inventoryPageResultMock.page1)
-        .mockResolvedValueOnce(inventoryPageResultMock.page2),
-    } as any;
-
-    mapAssetsToSteamItemsMock = {
-      execute: jest
-        .fn()
-        .mockImplementationOnce(() => [
-          new SteamItemEntity({
-            asset: inventoryPageResultMock.page1.assets[0],
-            description: inventoryPageResultMock.page1.descriptions[0],
-          }),
-        ])
-        .mockImplementationOnce(() => [
-          new SteamItemEntity({
-            asset: inventoryPageResultMock.page2.assets[0],
-            description: inventoryPageResultMock.page2.descriptions[0],
-          }),
-        ]),
-    } as any;
-
-    const useCaseProps: LoadInventoryUseCaseProps = {
-      steamID64: '76561197994150794',
-      appID: '730',
-      contextID: '2',
-      config: {
-        SteamCommunity_Jar: new CookieJar(),
-        Language: 'english',
-        itemsPerPage: 1,
-        tradableOnly: false,
-      },
-    };
+    getInventoryPageMock = createGetInventoryPageMock();
+    mapAssetsToSteamItemsMock = createMapAssetsToSteamItemsMock();
 
     const useCase = new LoadInventoryUseCase(
       getInventoryPageMock,
@@ -80,38 +62,13 @@ describe('Application :: UseCases :: LoadInventoryUseCase', () => {
   });
 
   it('should filter for tradable items only', async () => {
-    getInventoryPageMock = {
-      execute: jest
-        .fn()
-        .mockResolvedValueOnce(inventoryPageResultMock.page1)
-        .mockResolvedValueOnce(inventoryPageResultMock.page2),
-    } as any;
+    getInventoryPageMock = createGetInventoryPageMock();
+    mapAssetsToSteamItemsMock = createMapAssetsToSteamItemsMock();
 
-    mapAssetsToSteamItemsMock = {
-      execute: jest
-        .fn()
-        .mockImplementationOnce(() => [
-          new SteamItemEntity({
-            asset: inventoryPageResultMock.page1.assets[0],
-            description: inventoryPageResultMock.page1.descriptions[0],
-          }),
-        ])
-        .mockImplementationOnce(() => [
-          new SteamItemEntity({
-            asset: inventoryPageResultMock.page2.assets[0],
-            description: inventoryPageResultMock.page2.descriptions[0],
-          }),
-        ]),
-    } as any;
-
-    const useCaseProps: LoadInventoryUseCaseProps = {
-      steamID64: '76561197994150794',
-      appID: '730',
-      contextID: '2',
+    const propsWithTradableFilter: LoadInventoryUseCaseProps = {
+      ...useCaseProps,
       config: {
-        SteamCommunity_Jar: new CookieJar(),
-        Language: 'english',
-        itemsPerPage: 1,
+        ...useCaseProps.config,
         tradableOnly: true,
       },
     };
@@ -121,7 +78,7 @@ describe('Application :: UseCases :: LoadInventoryUseCase', () => {
       mapAssetsToSteamItemsMock,
     );
 
-    const inventory = await useCase.execute(useCaseProps);
+    const inventory = await useCase.execute(propsWithTradableFilter);
 
     expect(inventory).toHaveLength(1);
     expect(inventory[0].tradable).toBe(true);
@@ -135,22 +92,11 @@ describe('Application :: UseCases :: LoadInventoryUseCase', () => {
           response: {},
         }),
       ),
-    } as any;
+    } as unknown as jest.Mocked<GetInventoryPageResultUseCase>;
 
     mapAssetsToSteamItemsMock = {
       execute: jest.fn(),
-    } as any;
-
-    const useCaseProps: LoadInventoryUseCaseProps = {
-      steamID64: '76561197994150794',
-      appID: '730',
-      contextID: '2',
-      config: {
-        SteamCommunity_Jar: new CookieJar(),
-        Language: 'english',
-        itemsPerPage: 1,
-      },
-    };
+    } as unknown as jest.Mocked<MapAssetsToSteamItemsUseCase>;
 
     const useCase = new LoadInventoryUseCase(
       getInventoryPageMock,

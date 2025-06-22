@@ -1,11 +1,3 @@
-import { LoaderConfig } from '@domain/types/loader-config.type';
-
-import { AzulInventoryResponse } from '../types/azul-inventory-response.type';
-
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { IInventoryLoader } from './inventory-loader.interface';
-import ILoaderUtils from './loader-utils.interface';
-
 import SteamItemEntity from '@domain/entities/steam-item.entity';
 import SteamItemTag from '@domain/entities/steam-item-tag.entity';
 import { CardType } from '@domain/types/card-type.type';
