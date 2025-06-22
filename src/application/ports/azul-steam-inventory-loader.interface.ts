@@ -1,4 +1,4 @@
-import { OptionalConfig } from '@domain/types/optional-config.type';
+import { LoaderConfig } from '@domain/types/loader-config.type';
 
 import { AzulInventoryResponse } from '../types/azul-inventory-response.type';
 
@@ -13,7 +13,7 @@ export default abstract class IAzulSteamInventoryLoader extends ILoaderUtils {
     SteamID64: string,
     appID: string | number,
     contextID: string | number,
-    optionalConfig?: OptionalConfig,
+    config: LoaderConfig,
   ): Promise<AzulInventoryResponse> {
     throw new Error('Not implemented');
   }

@@ -8,7 +8,6 @@ import {
 } from '../ports/http-client.interface';
 import { InventoryPageResult } from '../types/inventory-page-result.type';
 
-import FetchUrlUseCase from './fetch-url.use-case';
 import FetchWithDelayUseCase from './fetch-with-delay.use-case';
 import GetHttpResponseWithExceptionUseCase, {
   GetHttpResponseWithExceptionProps,
@@ -16,7 +15,7 @@ import GetHttpResponseWithExceptionUseCase, {
 import GetPageUrlUseCase, { GetPageUrlProps } from './get-page-url.use-case';
 
 export type GetInventoryPageResultInterfaces = {
-  fetchUrlUseCase: FetchUrlUseCase | FetchWithDelayUseCase;
+  fetchUrlUseCase: FetchWithDelayUseCase;
 };
 
 export type GetInventoryPageResultProps = {
@@ -71,8 +70,11 @@ export default class GetInventoryPageResultUseCase {
       props: getHttpResponseProps,
     });
 
+    const { url, params } = new GetPageUrlUseCase(getPageUrlProps).execute();
+
     const httpClientProps: HttpClientGetProps = {
-      url: new GetPageUrlUseCase(getPageUrlProps).execute(),
+      url,
+      params,
     };
 
     const { data }: HttpClientResponse<InventoryPageResult> =

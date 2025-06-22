@@ -36,7 +36,6 @@ export class HttpClient implements IHttpClient {
 
   private getClientConstructor(): CreateAxiosDefaults {
     return {
-      headers: this.getDefaultHeaders(),
       httpsAgent: this.getAgent(),
       responseType: 'json',
       timeout: DEFAULT_REQUEST_TIMEOUT,
@@ -46,17 +45,6 @@ export class HttpClient implements IHttpClient {
 
   private getAgent(): HttpsProxyAgent | HttpsAgent {
     return this?.proxyAgent || HttpClient.defaultHttpsAgent;
-  }
-
-  private getDefaultHeaders(): IncomingHttpHeaders | undefined {
-    if (this.cookies) {
-      return {
-        ...this.defaultHeaders,
-        cookie: this.cookies,
-      };
-    }
-
-    return this.defaultHeaders;
   }
 
   public destroy(): void {
@@ -76,10 +64,20 @@ export class HttpClient implements IHttpClient {
   }
 
   public async get<T>(props: HttpClientGetProps) {
-    const { url, headers } = props;
+    const { url, headers: propsHeaders, params } = props;
+
+    const requestHeaders = { ...this.defaultHeaders, ...propsHeaders };
+    const requestCookies = [this.cookies, propsHeaders?.cookie]
+      .filter(Boolean)
+      .join('; ');
+
+    if (requestCookies) {
+      requestHeaders.cookie = requestCookies;
+    }
 
     const options: AxiosRequestConfig<never> = {
-      headers,
+      headers: requestHeaders,
+      params,
     };
 
     try {

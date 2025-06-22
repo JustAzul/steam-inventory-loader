@@ -3,7 +3,7 @@ import { IncomingHttpHeaders } from 'http';
 import { ErrorPayload } from '@shared/errors';
 import { DataOrError } from '@shared/utils';
 
-type HttpClientErrorCodes =
+export type HttpClientErrorCodes =
   | 'HTTP_CLIENT_ERROR'
   | 'INTERNAL_ERROR'
   | 'UNKNOWN_ERROR';
@@ -16,6 +16,7 @@ export type HttpClientResponse<T extends unknown> = {
 
 export type HttpClientGetProps = {
   headers?: IncomingHttpHeaders;
+  params?: Record<string, string | number>;
   url: string;
 };
 

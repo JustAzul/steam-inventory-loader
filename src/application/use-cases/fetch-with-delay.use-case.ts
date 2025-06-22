@@ -1,6 +1,10 @@
-import AsyncQueueWithDelay from '../../domain/entities/async-queue-with-delay.entity';
+import { ErrorPayload } from '@shared/errors';
+import { DataOrError } from '@shared/utils';
+
+import AsyncQueueWithDelay from '@domain/entities/async-queue-with-delay.entity';
 import UseCaseException from '../exceptions/use-case.exception';
 import {
+  HttpClientErrorCodes,
   HttpClientGetProps,
   HttpClientResponse,
   IHttpClient,
@@ -20,7 +24,13 @@ export type FetchWithDelayUseCaseConstructor = {
 };
 
 export default class FetchWithDelayUseCase {
-  private readonly asyncQueueWithDelay: AsyncQueueWithDelay;
+  private readonly asyncQueueWithDelay: AsyncQueueWithDelay<
+    HttpClientGetProps,
+    DataOrError<
+      ErrorPayload<HttpClientErrorCodes>,
+      HttpClientResponse<unknown>
+    >
+  >;
 
   private readonly interfaces: FetchWithDelayUseCaseInterfaces;
 
@@ -49,7 +59,19 @@ export default class FetchWithDelayUseCase {
 
   public execute<FetchUrlResult>(
     httpClientGetProps: Readonly<HttpClientGetProps>,
-  ): Promise<HttpClientResponse<FetchUrlResult>> {
-    return this.asyncQueueWithDelay.insertAndProcess(httpClientGetProps);
+  ): Promise<
+    DataOrError<
+      ErrorPayload<HttpClientErrorCodes>,
+      HttpClientResponse<FetchUrlResult>
+    >
+  > {
+    return this.asyncQueueWithDelay.insertAndProcess(
+      httpClientGetProps,
+    ) as Promise<
+      DataOrError<
+        ErrorPayload<HttpClientErrorCodes>,
+        HttpClientResponse<FetchUrlResult>
+      >
+    >;
   }
 }

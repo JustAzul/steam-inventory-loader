@@ -3,10 +3,27 @@ import ILoaderUtils from '@application/ports/loader-utils.interface';
 import FindCardBorderTypeUseCase from '@application/use-cases/find-card-border-type.use-case';
 import FindTagUseCase from '@application/use-cases/find-tag.use-case';
 import GetImageUrlUseCase from '@application/use-cases/get-image-url.use-case';
+import { Cookie } from '@domain/types/cookie.type';
+import { CookieJar } from 'tough-cookie';
 
 type AzulSteamInventoryLoader = typeof IAzulSteamInventoryLoader;
 
 export default class LoaderUtils implements ILoaderUtils {
+  public static parseCookies(jarLikeInput?: CookieJar): string[] {
+    if (!jarLikeInput) return [];
+
+    if ('_jar' in jarLikeInput) {
+      // eslint-disable-next-line no-underscore-dangle
+      return LoaderUtils.parseCookies(jarLikeInput._jar as CookieJar);
+    }
+
+    const result = (jarLikeInput.serializeSync().cookies as Cookie[])
+      .filter(({ domain }) => domain === 'steamcommunity.com')
+      .map(({ key, value }) => `${key}=${value};`);
+
+    return result;
+  }
+
   public static getTags(
     tags: Parameters<AzulSteamInventoryLoader['getTag']>[0],
     categoryToFind: Parameters<AzulSteamInventoryLoader['getTag']>[1],

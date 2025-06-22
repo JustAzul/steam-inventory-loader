@@ -17,6 +17,11 @@ export type GetPageUrlProps = {
   steamID64: string;
 };
 
+export type GetPageUrlResult = {
+  url: string;
+  params: Record<string, string | number>;
+};
+
 export default class GetPageUrlUseCase {
   private readonly props: GetPageUrlProps;
 
@@ -24,7 +29,7 @@ export default class GetPageUrlUseCase {
     this.props = props;
   }
 
-  public execute(): string {
+  public execute(): GetPageUrlResult {
     const {
       appID,
       contextID,
@@ -45,29 +50,29 @@ export default class GetPageUrlUseCase {
     const validateEndpointUseCase = new ValidateEndpointUseCase({ endpoint });
     validateEndpointUseCase.execute();
 
-    const url = new URL(
-      endpoint
-        .replace(PLACEHOLDER_APP_ID, appID)
-        .replace(PLACEHOLDER_CONTEXT_ID, contextID)
-        .replace(PLACEHOLDER_STEAM_ID_64, steamID64),
-    );
+    const url = endpoint
+      .replace(PLACEHOLDER_APP_ID, appID)
+      .replace(PLACEHOLDER_CONTEXT_ID, contextID)
+      .replace(PLACEHOLDER_STEAM_ID_64, steamID64);
+
+    const params: Record<string, string | number> = {};
 
     const hasCount = Boolean(count);
     const hasLanguage = Boolean(language);
     const hasLastAssetID = Boolean(lastAssetID);
 
-    if (hasCount) {
-      url.searchParams.append('count', String(count));
+    if (hasCount && typeof count !== 'undefined') {
+      params.count = count;
     }
 
-    if (hasLanguage) {
-      url.searchParams.append('l', String(language));
+    if (hasLanguage && typeof language !== 'undefined') {
+      params.l = language;
     }
 
-    if (hasLastAssetID) {
-      url.searchParams.append('start_assetid', String(lastAssetID));
+    if (hasLastAssetID && typeof lastAssetID !== 'undefined') {
+      params.start_assetid = lastAssetID;
     }
 
-    return url.toString();
+    return { url, params };
   }
 }
