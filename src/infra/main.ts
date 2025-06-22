@@ -1,17 +1,24 @@
 import IAzulSteamInventoryLoader from '@application/ports/azul-steam-inventory-loader.interface';
-import {
-  GetInventoryPageResultInterfaces,
-  GetInventoryPageResultProps,
-} from '@application/use-cases/get-inventory-page-result.use-case';
+import GetHttpResponseWithExceptionUseCase from '@application/use-cases/get-http-response-with-exception.use-case';
 import GetInventoryPageResultUseCase from '@application/use-cases/get-inventory-page-result.use-case';
+import GetPageUrlUseCase from '@application/use-cases/get-page-url.use-case';
+import LoadInventoryUseCase from '@application/use-cases/load-inventory.use-case';
+import MapAssetsToSteamItemsUseCase from '@application/use-cases/map-assets-to-steam-items.use-case';
+import ProcessHttpExceptionsUseCase from '@application/use-cases/process-http-exceptions.use-case';
+import ProcessSteamErrorResultUseCase from '@application/use-cases/process-steam-error-result.use-case';
+import ValidateEndpointUseCase from '@application/use-cases/validate-endpoint.use-case';
+import ValidateHttpResponseUseCase from '@application/use-cases/validate-http-response.use-case';
 import SteamItemEntity from '@domain/entities/steam-item.entity';
 import { LoaderConfig } from '@domain/types/loader-config.type';
-import FetchWithDelayUseCase from '@application/use-cases/fetch-with-delay.use-case';
+import {
+  DEFAULT_REQUEST_ITEM_COUNT,
+  DEFAULT_REQUEST_LANGUAGE,
+} from '@shared/constants';
 import { HttpClient } from './http-client';
-import LoaderUtils from './loader-utils';
+import { parseCookies } from './loader-utils';
+import { ResilientHttpFetcher } from './ResilientHttpFetcher';
 
 export default class AzulSteamInventoryLoader
-  extends LoaderUtils
   implements IAzulSteamInventoryLoader
 {
   /**
@@ -53,81 +60,61 @@ export default class AzulSteamInventoryLoader
     contextID: string,
     config: LoaderConfig,
   ): Promise<SteamItemEntity[]> {
+    // 1. Instantiate Infrastructure
     const httpClient = new HttpClient(config.proxyAddress);
+    const resilientFetcher = new ResilientHttpFetcher(httpClient, {
+      maxRetries: config.maxRetries,
+    });
 
+    // 2. Setup Headers and Cookies
     httpClient.setDefaultHeaders({
       host: 'steamcommunity.com',
       referer: `https://steamcommunity.com/profiles/${steamID64}/inventory`,
     });
-
     const cookies: string[] = [`strInventoryLastContext=${appID}_${contextID}`];
-
     if (config.SteamCommunity_Jar) {
-      cookies.push(...LoaderUtils.parseCookies(config.SteamCommunity_Jar));
+      cookies.push(...parseCookies(config.SteamCommunity_Jar));
     }
-
     httpClient.setDefaultCookies(cookies.join('; '));
 
-    const fetcher = new FetchWithDelayUseCase({
-      interfaces: { httpClient },
-      props: {
-        delayInMilliseconds: config.requestDelay ?? 300,
-      },
+    // 3. Instantiate Leaf Use Cases (no dependencies)
+    const validateEndpointUseCase = new ValidateEndpointUseCase();
+    const processSteamErrorResultUseCase = new ProcessSteamErrorResultUseCase();
+    const processHttpExceptionsUseCase = new ProcessHttpExceptionsUseCase();
+    const mapAssetsToSteamItemsUseCase = new MapAssetsToSteamItemsUseCase();
+
+    // 4. Instantiate Composite Use Cases (with dependencies)
+    const getPageUrlUseCase = new GetPageUrlUseCase(validateEndpointUseCase);
+    const validateHttpResponseUseCase = new ValidateHttpResponseUseCase(
+      processSteamErrorResultUseCase,
+    );
+    const getHttpResponseUseCase = new GetHttpResponseWithExceptionUseCase({
+      fetcher: resilientFetcher,
+      processHttpExceptionsUseCase,
+      validateHttpResponseUseCase,
     });
 
-    const allItems: SteamItemEntity[] = [];
-    let lastAssetID: string | undefined;
-    let moreItems = true;
-
-    do {
-      const useCaseProps: GetInventoryPageResultProps = {
+    const getInventoryPageResultUseCase = new GetInventoryPageResultUseCase({
+      getHttpResponseUseCase,
+      getPageUrlUseCase,
+      props: {
         appID,
         contextID,
         steamID64,
-        count: config.itemsPerPage ?? 5000,
-        language: config.Language ?? 'english',
-        lastAssetID,
-      };
+        count: config.itemsPerPage ?? DEFAULT_REQUEST_ITEM_COUNT,
+        language: config.Language ?? DEFAULT_REQUEST_LANGUAGE,
+      },
+    });
 
-      const useCaseInterfaces: GetInventoryPageResultInterfaces = {
-        fetchUrlUseCase: fetcher,
-      };
+    const loadInventoryUseCase = new LoadInventoryUseCase({
+      props: { steamID64, appID, contextID, config },
+      interfaces: {
+        getInventoryPage: getInventoryPageResultUseCase,
+        mapAssetsToSteamItems: mapAssetsToSteamItemsUseCase,
+      },
+    });
 
-      const getInventoryPage = new GetInventoryPageResultUseCase({
-        interfaces: useCaseInterfaces,
-        props: useCaseProps,
-      });
-
-      const pageResult = await getInventoryPage.execute();
-
-      if (pageResult?.assets && pageResult?.descriptions) {
-        const descriptionsMap = pageResult.descriptions.reduce(
-          (acc, desc) => {
-            const key = `${desc.classid}_${desc.instanceid}`;
-            acc[key] = desc;
-            return acc;
-          },
-          {} as Record<string, typeof pageResult.descriptions[0]>,
-        );
-
-        for (const asset of pageResult.assets) {
-          const key = `${asset.classid}_${asset.instanceid}`;
-          const description = descriptionsMap[key];
-          if (description) {
-            const item = new SteamItemEntity({ asset, description });
-            allItems.push(item);
-          }
-        }
-      }
-
-      moreItems = !!pageResult?.more_items;
-      lastAssetID = pageResult?.last_assetid;
-    } while (moreItems);
-
-    if (config.tradableOnly) {
-      return allItems.filter((item) => item.tradable);
-    }
-
-    return allItems;
+    // 5. Execute the top-level use case
+    return loadInventoryUseCase.execute();
   }
 }

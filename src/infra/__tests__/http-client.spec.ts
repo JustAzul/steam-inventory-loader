@@ -1,7 +1,7 @@
 import { UUID, randomUUID } from 'crypto';
 import { IncomingHttpHeaders } from 'http';
 
-import { IHttpClient } from '@application/ports/http-client.interface';
+import { IFetcher } from '@application/ports/fetcher.port';
 import { HttpClient } from '@infra/http-client';
 import Fastify from 'fastify';
 
@@ -14,7 +14,7 @@ type RequestData = {
 
 executeTest(new HttpClient());
 
-function executeTest(httpClient: IHttpClient) {
+function executeTest(httpClient: IFetcher) {
   describe(httpClient.constructor.name, () => {
     const defaultServerResponse = { message: 'Hello World!' };
     const server = Fastify();
@@ -54,7 +54,7 @@ function executeTest(httpClient: IHttpClient) {
 
       const forceStatusCode = 200;
 
-      const [error, response] = await httpClient.get<
+      const [error, response] = await httpClient.execute<
         typeof defaultServerResponse
       >({
         headers,
@@ -73,7 +73,7 @@ function executeTest(httpClient: IHttpClient) {
     });
 
     it('should complete a GET request', async () => {
-      const [error, response] = await httpClient.get({
+      const [error, response] = await httpClient.execute({
         url: `${address}/200`,
       });
 
@@ -84,7 +84,7 @@ function executeTest(httpClient: IHttpClient) {
     it('should not return response when request fails', async () => {
       const results = await Promise.all(
         ERROR_STATUS_CODES.map((statusCode) =>
-          httpClient.get({
+          httpClient.execute({
             url: `${address}/${statusCode}`,
           }),
         ),
@@ -98,7 +98,7 @@ function executeTest(httpClient: IHttpClient) {
     it('should return HTTP_CLIENT_ERROR when the request fails', async () => {
       const results = await Promise.all(
         ERROR_STATUS_CODES.map((statusCode) =>
-          httpClient.get({
+          httpClient.execute({
             url: `${address}/${statusCode}`,
           }),
         ),
@@ -112,7 +112,7 @@ function executeTest(httpClient: IHttpClient) {
     it('should return headers when the request fails', async () => {
       const results = await Promise.all(
         ERROR_STATUS_CODES.map((statusCode) =>
-          httpClient.get({
+          httpClient.execute({
             url: `${address}/${statusCode}`,
           }),
         ),
@@ -127,7 +127,7 @@ function executeTest(httpClient: IHttpClient) {
 
     it('should return the status code on the error payload', async () => {
       for (const statusCode of ERROR_STATUS_CODES) {
-        const [error] = await httpClient.get({
+        const [error] = await httpClient.execute({
           url: `${address}/${statusCode}`,
         });
 

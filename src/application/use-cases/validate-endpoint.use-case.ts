@@ -15,15 +15,7 @@ const PROTOCOL_HTTP = 'http://';
 const PROTOCOL_HTTPS = 'https://';
 
 export default class ValidateEndpointUseCase {
-  private readonly props: ValidateEndpointProps;
-
-  public constructor(props: Readonly<ValidateEndpointProps>) {
-    this.props = props;
-  }
-
-  public execute(): void {
-    const { endpoint } = this.props;
-
+  public execute(endpoint: string): void {
     // Check if the endpoint contains placeholders and protocols
     const hasAppIDPlaceholder = endpoint.includes(PLACEHOLDER_APP_ID);
     const hasContextIDPlaceholder = endpoint.includes(PLACEHOLDER_CONTEXT_ID);

@@ -1,70 +1,72 @@
-import IAzulSteamInventoryLoader from '@application/ports/azul-steam-inventory-loader.interface';
-import ILoaderUtils from '@application/ports/loader-utils.interface';
 import FindCardBorderTypeUseCase from '@application/use-cases/find-card-border-type.use-case';
 import FindTagUseCase from '@application/use-cases/find-tag.use-case';
 import GetImageUrlUseCase from '@application/use-cases/get-image-url.use-case';
+import {
+  InputWithIconUrl,
+  SteamTag,
+} from '@domain/types/inventory-page-description.type';
 import { Cookie } from '@domain/types/cookie.type';
 import { CookieJar } from 'tough-cookie';
+import ILoaderUtils from '@application/ports/loader-utils.interface';
+import { rawTag } from '@domain/types/raw-tag.type';
 
-type AzulSteamInventoryLoader = typeof IAzulSteamInventoryLoader;
+export function parseCookies(jarLikeInput?: CookieJar): string[] {
+  if (!jarLikeInput) return [];
 
-export default class LoaderUtils implements ILoaderUtils {
-  public static parseCookies(jarLikeInput?: CookieJar): string[] {
-    if (!jarLikeInput) return [];
+  // eslint-disable-next-line no-underscore-dangle
+  if ('_jar' in jarLikeInput) return parseCookies(jarLikeInput._jar as CookieJar);
 
-    if ('_jar' in jarLikeInput) {
-      // eslint-disable-next-line no-underscore-dangle
-      return LoaderUtils.parseCookies(jarLikeInput._jar as CookieJar);
-    }
+  const result = (jarLikeInput.serializeSync().cookies as Cookie[])
+    .filter(({ domain }) => domain === 'steamcommunity.com')
+    .map(({ key, value }) => `${key}=${value};`);
 
-    const result = (jarLikeInput.serializeSync().cookies as Cookie[])
-      .filter(({ domain }) => domain === 'steamcommunity.com')
-      .map(({ key, value }) => `${key}=${value};`);
+  return result;
+}
 
+export function getTags(
+  ...args: Parameters<typeof ILoaderUtils.getTag>
+): ReturnType<typeof ILoaderUtils.getTag> {
+  const [tags, categoryToFind] = args;
+  const result = new FindTagUseCase({ categoryToFind, tags }).execute();
+  return result as rawTag | null;
+}
+
+export function getLargeImageURL(
+  ...args: Parameters<typeof ILoaderUtils.getLargeImageURL>
+): ReturnType<typeof ILoaderUtils.getLargeImageURL> {
+  const [input] = args;
+  const result: string = new GetImageUrlUseCase({
+    input,
+    size: 'large',
+  }).execute();
+
+  return result;
+}
+
+export function getImageURL(
+  ...args: Parameters<typeof ILoaderUtils.getImageURL>
+): ReturnType<typeof ILoaderUtils.getImageURL> {
+  const [input] = args;
+  const result: string = new GetImageUrlUseCase({
+    input,
+    size: 'normal',
+  }).execute();
+
+  return result;
+}
+
+export function isCardType(
+  ...args: Parameters<typeof ILoaderUtils.isCardType>
+): ReturnType<typeof ILoaderUtils.isCardType> {
+  const [tags] = args;
+  if (!tags || !tags.length) return false;
+
+  const result = new FindCardBorderTypeUseCase({ tags }).execute();
+  const hasFoundResult = result !== null;
+
+  if (hasFoundResult) {
     return result;
   }
 
-  public static getTags(
-    tags: Parameters<AzulSteamInventoryLoader['getTag']>[0],
-    categoryToFind: Parameters<AzulSteamInventoryLoader['getTag']>[1],
-  ): ReturnType<AzulSteamInventoryLoader['getTag']> {
-    const result = new FindTagUseCase({ categoryToFind, tags }).execute();
-    return result as ReturnType<AzulSteamInventoryLoader['getTag']>;
-  }
-
-  public static getLargeImageURL(
-    input: Parameters<AzulSteamInventoryLoader['getLargeImageURL']>[0],
-  ): ReturnType<AzulSteamInventoryLoader['getLargeImageURL']> {
-    const result: ReturnType<AzulSteamInventoryLoader['getLargeImageURL']> =
-      new GetImageUrlUseCase({ input, size: 'large' }).execute();
-
-    return result;
-  }
-
-  public static getImageURL(
-    input: Parameters<AzulSteamInventoryLoader['getImageURL']>[0],
-  ): ReturnType<AzulSteamInventoryLoader['getImageURL']> {
-    const result: ReturnType<AzulSteamInventoryLoader['getImageURL']> =
-      new GetImageUrlUseCase({
-        input,
-        size: 'normal',
-      }).execute();
-
-    return result;
-  }
-
-  public static isCardType(
-    tags?: Parameters<AzulSteamInventoryLoader['isCardType']>[0],
-  ): ReturnType<AzulSteamInventoryLoader['isCardType']> {
-    if (!tags || !tags.length) return false;
-
-    const result = new FindCardBorderTypeUseCase({ tags }).execute();
-    const hasFoundResult = result !== null;
-
-    if (hasFoundResult) {
-      return result;
-    }
-
-    return false;
-  }
+  return false;
 }

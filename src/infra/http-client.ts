@@ -1,8 +1,8 @@
 import { IncomingHttpHeaders } from 'http';
 
+import { IFetcher } from '@application/ports/fetcher.port';
 import {
   HttpClientGetProps,
-  IHttpClient,
 } from '@application/ports/http-client.interface';
 import { DEFAULT_REQUEST_TIMEOUT } from '@shared/constants';
 import { ErrorPayload } from '@shared/errors';
@@ -16,7 +16,7 @@ import Axios, {
 } from 'axios';
 import { HttpsProxyAgent } from 'hpagent';
 
-export class HttpClient implements IHttpClient {
+export class HttpClient implements IFetcher {
   private cookies?: string;
   private defaultHeaders?: IncomingHttpHeaders;
   private readonly client: AxiosInstance;
@@ -63,7 +63,7 @@ export class HttpClient implements IHttpClient {
     return this;
   }
 
-  public async get<T>(props: HttpClientGetProps) {
+  public async execute<T>(props: HttpClientGetProps) {
     const { url, headers: propsHeaders, params } = props;
 
     const requestHeaders = { ...this.defaultHeaders, ...propsHeaders };

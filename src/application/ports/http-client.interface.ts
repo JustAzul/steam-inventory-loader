@@ -19,11 +19,3 @@ export type HttpClientGetProps = {
   params?: Record<string, string | number>;
   url: string;
 };
-
-export interface IHttpClient {
-  get<T>(
-    props: HttpClientGetProps,
-  ): Promise<
-    DataOrError<ErrorPayload<HttpClientErrorCodes>, HttpClientResponse<T>>
-  >;
-}

@@ -2,14 +2,8 @@ import SteamErrorResultException from '../exceptions/steam-error-result.exceptio
 import { HttpResponse } from '../types/http-response.type';
 
 export default class ProcessSteamErrorResultUseCase {
-  private httpResponse: HttpResponse;
-
-  public constructor(httpResponse: HttpResponse) {
-    this.httpResponse = httpResponse;
-  }
-
-  public execute(): void {
-    const dataError = this.httpResponse?.data?.error;
+  public execute(httpResponse: HttpResponse): void {
+    const dataError = httpResponse?.data?.error;
     const dataHasError = Boolean(dataError);
 
     if (dataHasError) {

@@ -1,7 +1,12 @@
 /* eslint-disable camelcase */
 import type { InnerItemDescription } from './inner-item-description.type';
 import type { ItemActions } from './item-actions.type';
-import type { SteamTag } from './steam-tag.type';
+import type { SteamTag as SteamTagType } from './steam-tag.type';
+
+export type SteamTag = SteamTagType;
+export type InputWithIconUrl = {
+  icon_url: string;
+};
 
 export type InventoryPageDescription = {
   actions: ItemActions[];

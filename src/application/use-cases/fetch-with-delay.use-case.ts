@@ -1,3 +1,4 @@
+import { IFetcher } from '@application/ports/fetcher.port';
 import { ErrorPayload } from '@shared/errors';
 import { DataOrError } from '@shared/utils';
 
@@ -23,7 +24,7 @@ export type FetchWithDelayUseCaseConstructor = {
   props: FetchWithDelayUseCaseProps;
 };
 
-export default class FetchWithDelayUseCase {
+export default class FetchWithDelayUseCase implements IFetcher {
   private readonly asyncQueueWithDelay: AsyncQueueWithDelay<
     HttpClientGetProps,
     DataOrError<

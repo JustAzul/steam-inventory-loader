@@ -8,69 +8,45 @@ import {
 } from '../ports/http-client.interface';
 import { InventoryPageResult } from '../types/inventory-page-result.type';
 
-import FetchWithDelayUseCase from './fetch-with-delay.use-case';
-import GetHttpResponseWithExceptionUseCase, {
-  GetHttpResponseWithExceptionProps,
-} from './get-http-response-with-exception.use-case';
-import GetPageUrlUseCase, { GetPageUrlProps } from './get-page-url.use-case';
-
-export type GetInventoryPageResultInterfaces = {
-  fetchUrlUseCase: FetchWithDelayUseCase;
-};
+import GetHttpResponseWithExceptionUseCase from './get-http-response-with-exception.use-case';
+import GetPageUrlUseCase from './get-page-url.use-case';
 
 export type GetInventoryPageResultProps = {
   appID: string;
   contextID: string;
   count: number;
   language: string;
-  lastAssetID?: string;
   steamID64: string;
 };
 
 export type GetInventoryPageResultConstructor = {
-  interfaces: GetInventoryPageResultInterfaces;
   props: GetInventoryPageResultProps;
+  getHttpResponseUseCase: GetHttpResponseWithExceptionUseCase;
+  getPageUrlUseCase: GetPageUrlUseCase;
 };
 
 export default class GetInventoryPageResultUseCase {
-  public readonly interfaces: GetInventoryPageResultInterfaces;
-
   public readonly props: GetInventoryPageResultProps;
+  private readonly getHttpResponseUseCase: GetHttpResponseWithExceptionUseCase;
+  private readonly getPageUrlUseCase: GetPageUrlUseCase;
 
   public constructor({
     props,
-    interfaces,
+    getHttpResponseUseCase,
+    getPageUrlUseCase,
   }: Readonly<GetInventoryPageResultConstructor>) {
-    this.interfaces = interfaces;
     this.props = props;
+    this.getHttpResponseUseCase = getHttpResponseUseCase;
+    this.getPageUrlUseCase = getPageUrlUseCase;
   }
 
-  public async execute(): Promise<InventoryPageResult> {
-    const count = this.props?.count || DEFAULT_REQUEST_ITEM_COUNT;
-    const language = this.props?.language || DEFAULT_REQUEST_LANGUAGE;
-
-    const getPageUrlProps: GetPageUrlProps = {
-      appID: this.props.appID,
-      contextID: this.props.contextID,
-      count,
-      language,
-      steamID64: this.props.steamID64,
-    };
-
-    const hasLastAssetID = Boolean(this.props.lastAssetID);
-
-    if (hasLastAssetID) {
-      getPageUrlProps.lastAssetID = this.props.lastAssetID;
-    }
-
-    const getHttpResponseProps: GetHttpResponseWithExceptionProps = {};
-
-    const getHttpResponseUseCase = new GetHttpResponseWithExceptionUseCase({
-      interfaces: this.interfaces,
-      props: getHttpResponseProps,
+  public async execute(
+    lastAssetID?: string,
+  ): Promise<InventoryPageResult> {
+    const { url, params } = this.getPageUrlUseCase.execute({
+      ...this.props,
+      lastAssetID,
     });
-
-    const { url, params } = new GetPageUrlUseCase(getPageUrlProps).execute();
 
     const httpClientProps: HttpClientGetProps = {
       url,
@@ -78,7 +54,7 @@ export default class GetInventoryPageResultUseCase {
     };
 
     const { data }: HttpClientResponse<InventoryPageResult> =
-      await getHttpResponseUseCase.execute(httpClientProps);
+      await this.getHttpResponseUseCase.execute(httpClientProps);
 
     return data as InventoryPageResult;
   }

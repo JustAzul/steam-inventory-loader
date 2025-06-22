@@ -23,13 +23,13 @@ export type GetPageUrlResult = {
 };
 
 export default class GetPageUrlUseCase {
-  private readonly props: GetPageUrlProps;
+  private readonly validateEndpointUseCase: ValidateEndpointUseCase;
 
-  public constructor(props: Readonly<GetPageUrlProps>) {
-    this.props = props;
+  public constructor(validateEndpointUseCase: ValidateEndpointUseCase) {
+    this.validateEndpointUseCase = validateEndpointUseCase;
   }
 
-  public execute(): GetPageUrlResult {
+  public execute(props: GetPageUrlProps): GetPageUrlResult {
     const {
       appID,
       contextID,
@@ -38,7 +38,7 @@ export default class GetPageUrlUseCase {
       language,
       lastAssetID,
       steamID64,
-    } = this.props;
+    } = props;
 
     const hasCustomEndpoint =
       Boolean(customEndpoint) && typeof customEndpoint === 'string';
@@ -47,8 +47,7 @@ export default class GetPageUrlUseCase {
       ? customEndpoint
       : DEFAULT_REQUEST_URL;
 
-    const validateEndpointUseCase = new ValidateEndpointUseCase({ endpoint });
-    validateEndpointUseCase.execute();
+    this.validateEndpointUseCase.execute(endpoint);
 
     const url = endpoint
       .replace(PLACEHOLDER_APP_ID, appID)

@@ -13,7 +13,7 @@ const config: Config.InitialOptions = {
     '^@shared/(.*)$': '<rootDir>/src/shared/$1',
     '^@src/(.*)$': '<rootDir>/src/$1'
   },
-  testMatch: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
+  testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
   roots: ['<rootDir>/src'],
 };
 

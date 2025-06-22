@@ -1,176 +1,59 @@
-import { StatusCode } from 'status-code-enum';
-
-import {
-  DEFAULT_REQUEST_MAX_RETRIES,
-  DEFAULT_REQUEST_RETRY_DELAY,
-} from '../../shared/constants';
-import sleep from '../../shared/helpers/sleep.helper';
-import PrivateProfileException from '../exceptions/private-profile.exception';
-import RateLimitedException from '../exceptions/rate-limited.exception';
-import SteamErrorResultException from '../exceptions/steam-error-result.exception';
-import UseCaseException from '../exceptions/use-case.exception';
+import { IFetcher } from '../ports/fetcher.port';
 import {
   HttpClientGetProps,
   HttpClientResponse,
 } from '../ports/http-client.interface';
 import { InventoryPageResult } from '../types/inventory-page-result.type';
 
-import FetchWithDelayUseCase from './fetch-with-delay.use-case';
-import ValidateHttpResponseUseCase from './validate-http-response.use-case';
 import ProcessHttpExceptionsUseCase from './process-http-exceptions.use-case';
-import HttpException, {
-  HttpExceptionProps,
-} from '../exceptions/http.exception';
-
-export type GetHttpResponseWithExceptionProps = {
-  maxRetries?: number;
-};
-
-export type GetHttpResponseWithExceptionInterfaces = {
-  fetchUrlUseCase: FetchWithDelayUseCase;
-};
+import ValidateHttpResponseUseCase from './validate-http-response.use-case';
+import UseCaseException from '@application/exceptions/use-case.exception';
+import { ErrorPayload } from '@shared/errors';
+import { HttpClientErrorCodes } from '@application/ports/http-client.interface';
 
 export type GetHttpResponseWithExceptionConstructor = {
-  interfaces: GetHttpResponseWithExceptionInterfaces;
-  props: GetHttpResponseWithExceptionProps;
+  fetcher: IFetcher;
+  processHttpExceptionsUseCase: ProcessHttpExceptionsUseCase;
+  validateHttpResponseUseCase: ValidateHttpResponseUseCase;
 };
 
 export default class GetHttpResponseWithExceptionUseCase {
-  private executeCount: number;
-
-  private readonly interfaces: GetHttpResponseWithExceptionInterfaces;
-
-  private readonly props: GetHttpResponseWithExceptionProps;
+  private readonly fetcher: IFetcher;
+  private readonly processHttpExceptionsUseCase: ProcessHttpExceptionsUseCase;
+  private readonly validateHttpResponseUseCase: ValidateHttpResponseUseCase;
 
   public constructor({
-    interfaces,
-    props,
+    fetcher,
+    processHttpExceptionsUseCase,
+    validateHttpResponseUseCase,
   }: Readonly<GetHttpResponseWithExceptionConstructor>) {
-    this.executeCount = 0;
-
-    this.interfaces = interfaces;
-    this.props = props;
+    this.fetcher = fetcher;
+    this.processHttpExceptionsUseCase = processHttpExceptionsUseCase;
+    this.validateHttpResponseUseCase = validateHttpResponseUseCase;
   }
 
   public async execute(
     httpClientProps: Readonly<HttpClientGetProps>,
   ): Promise<HttpClientResponse<InventoryPageResult>> {
-    this.executeCount += 1;
-
-    const { fetchUrlUseCase } = this.interfaces;
-
-    const [error, response] =
-      await fetchUrlUseCase.execute<InventoryPageResult>(httpClientProps);
+    const [error, response] = await this.fetcher.execute<InventoryPageResult>(
+      httpClientProps,
+    );
 
     if (error) {
-      const httpException = new HttpException(
-        error.payload as HttpExceptionProps,
+      this.processHttpExceptionsUseCase.execute(
+        error as ErrorPayload<HttpClientErrorCodes>,
       );
-      const processHttpExceptionsUseCase = new ProcessHttpExceptionsUseCase(
-        httpException,
-      );
-
-      try {
-        processHttpExceptionsUseCase.execute();
-      } catch (e) {
-        if (e instanceof PrivateProfileException) throw e;
-        if (e instanceof RateLimitedException) {
-          if (this.canRetry()) {
-            return this.retry(
-              httpClientProps,
-              e.props.response.statusCode,
-              e.props.response as Partial<
-                HttpClientResponse<InventoryPageResult>
-              >,
-            );
-          }
-          throw e;
-        }
-      }
-
-      if (this.canRetry()) {
-        return this.retry(httpClientProps);
-      }
-
+      // The above line is expected to throw. If it doesn't, we have an issue.
       throw new UseCaseException(
         GetHttpResponseWithExceptionUseCase.name,
-        `Failed after max retries: ${error.payload.message}`,
+        'ProcessHttpExceptionsUseCase failed to throw an exception for a known error.',
       );
     }
 
-    try {
-      const validateHttpResponseUseCase = new ValidateHttpResponseUseCase({
-        request: httpClientProps,
-        response,
-      });
-
-      const validatedResponse = validateHttpResponseUseCase.execute();
-      return validatedResponse;
-    } catch (e) {
-      if (e instanceof SteamErrorResultException) {
-        throw e;
-      }
-
-      if (this.canRetry()) {
-        return this.retry(httpClientProps);
-      }
-
-      if (e instanceof Error) {
-        throw new UseCaseException(
-          GetHttpResponseWithExceptionUseCase.name,
-          `Validation failed after max retries: ${e.message}`,
-        );
-      }
-
-      throw new UseCaseException(
-        GetHttpResponseWithExceptionUseCase.name,
-        `Unknown validation error after max retries: ${String(e)}`,
-      );
-    }
-  }
-
-  private async retry(
-    httpClientProps: Readonly<HttpClientGetProps>,
-    statusCode?: number,
-    response?: Partial<HttpClientResponse<InventoryPageResult>>,
-  ): Promise<HttpClientResponse<InventoryPageResult>> {
-    if (statusCode === StatusCode.ClientErrorTooManyRequests) {
-      const retryAfter = response?.headers?.['retry-after'];
-      if (retryAfter) {
-        const delay = this.parseRetryAfter(retryAfter);
-        await sleep(delay);
-        return this.execute(httpClientProps);
-      }
-    }
-
-    const jitter = Math.floor(Math.random() * 1000);
-    const delay = 2 ** (this.executeCount - 1) * 1000 + jitter;
-    await sleep(delay);
-    return this.execute(httpClientProps);
-  }
-
-  private parseRetryAfter(retryAfter: string | number | string[]): number {
-    if (typeof retryAfter === 'number') {
-      return retryAfter * 1000;
-    }
-
-    if (typeof retryAfter === 'string') {
-      const seconds = Number(retryAfter);
-      if (!isNaN(seconds)) {
-        return seconds * 1000;
-      }
-
-      const date = new Date(retryAfter);
-      const now = new Date();
-      const diff = date.getTime() - now.getTime();
-      return Math.max(0, diff);
-    }
-
-    return DEFAULT_REQUEST_RETRY_DELAY;
-  }
-
-  private canRetry(): boolean {
-    const { maxRetries = DEFAULT_REQUEST_MAX_RETRIES } = this.props;
-    return this.executeCount <= maxRetries;
+    const validatedResponse = this.validateHttpResponseUseCase.execute(
+      httpClientProps,
+      response,
+    );
+    return validatedResponse;
   }
 }

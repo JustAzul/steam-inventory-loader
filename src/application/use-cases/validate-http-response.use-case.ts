@@ -7,30 +7,25 @@ import { HttpResponse } from '../types/http-response.type';
 
 import ProcessSteamErrorResultUseCase from './process-steam-error-result.use-case';
 
-export type ValidateHttpResponseProps = {
-  request: HttpRequest;
-  response: HttpResponse;
-};
-
 export default class ValidateHttpResponseUseCase {
-  private props: ValidateHttpResponseProps;
+  private readonly processSteamErrorResultUseCase: ProcessSteamErrorResultUseCase;
 
-  public constructor(props: ValidateHttpResponseProps) {
-    this.props = props;
+  public constructor(
+    processSteamErrorResultUseCase: ProcessSteamErrorResultUseCase,
+  ) {
+    this.processSteamErrorResultUseCase = processSteamErrorResultUseCase;
   }
 
-  public execute(): HttpResponse {
-    const { response } = this.props;
+  public execute(
+    request: HttpRequest,
+    response: HttpResponse,
+  ): HttpResponse {
     const { statusCode } = response;
 
-    const processSteamErrorResultUseCase = new ProcessSteamErrorResultUseCase(
-      response,
-    );
-
-    processSteamErrorResultUseCase.execute();
+    this.processSteamErrorResultUseCase.execute(response);
 
     if (statusCode !== StatusCode.SuccessOK) {
-      throw new BadStatusCodeException(this.props);
+      throw new BadStatusCodeException({ request, response });
     }
 
     const hasReceivedData = Boolean(response?.data);
@@ -41,7 +36,7 @@ export default class ValidateHttpResponseUseCase {
 
     throw new EmptyHttpResponseException({
       response,
-      request: this.props.request,
+      request,
     });
   }
 }
