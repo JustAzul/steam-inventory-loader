@@ -1,5 +1,7 @@
 import SteamItemTag from '../../domain/entities/steam-item-tag.entity';
 import { CardType } from '../../domain/types/card-type.type';
+import FindTagUseCase from './find-tag.use-case';
+import { rawTag } from '@domain/types/raw-tag.type';
 
 // eslint-disable-next-line no-shadow
 enum CardBorderInternalName {
@@ -8,23 +10,27 @@ enum CardBorderInternalName {
 }
 
 export type FindCardBorderTypeProps = {
-  tags: Readonly<Pick<SteamItemTag, 'internal_name' | 'category'>>[];
+  tags: Array<rawTag | SteamItemTag>;
 };
 
 export default class FindCardBorderTypeUseCase {
-  public execute({
-    tags,
-  }: FindCardBorderTypeProps): CardType | null {
-    const itemClass = FindCardBorderTypeUseCase.InternalFindTag(
+  private readonly findTagUseCase: FindTagUseCase;
+
+  public constructor(findTagUseCase: FindTagUseCase) {
+    this.findTagUseCase = findTagUseCase;
+  }
+
+  public execute({ tags }: FindCardBorderTypeProps): CardType | null {
+    const itemClass = this.findTagUseCase.execute({
       tags,
-      'item_class',
-    );
+      categoryToFind: 'item_class',
+    });
 
     if (itemClass && itemClass.internal_name === 'item_class_2') {
-      const cardBorder = FindCardBorderTypeUseCase.InternalFindTag(
+      const cardBorder = this.findTagUseCase.execute({
         tags,
-        'cardborder',
-      );
+        categoryToFind: 'cardborder',
+      });
 
       if (cardBorder) {
         if (cardBorder.internal_name === CardBorderInternalName.Normal)
@@ -34,18 +40,6 @@ export default class FindCardBorderTypeUseCase {
           return 'Foil';
       }
     }
-
-    return null;
-  }
-
-  private static InternalFindTag(
-    tags: Readonly<Pick<SteamItemTag, 'internal_name' | 'category'>[]>,
-    categoryToFind: string,
-  ): Pick<SteamItemTag, 'internal_name' | 'category'> | null {
-    if (tags.length === 0) return null;
-
-    const tag = tags.find(({ category }) => category === categoryToFind);
-    if (tag) return tag;
 
     return null;
   }

@@ -95,7 +95,7 @@ export class DIContainer {
   }
 
   public getFindCardBorderTypeUseCase(): FindCardBorderTypeUseCase {
-    return new FindCardBorderTypeUseCase();
+    return new FindCardBorderTypeUseCase(this.getFindTagUseCase());
   }
 
   public getFindTagUseCase(): FindTagUseCase {
