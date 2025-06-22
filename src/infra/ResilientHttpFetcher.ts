@@ -3,6 +3,7 @@ import {
   DEFAULT_REQUEST_RETRY_DELAY,
 } from '@shared/constants';
 import sleep from '@shared/helpers/sleep.helper';
+import { parseRetryAfter } from '@shared/helpers/parse-retry-after.helper';
 import { StatusCode } from 'status-code-enum';
 import { IFetcher } from '../application/ports/fetcher.port';
 import {
@@ -72,11 +73,9 @@ export class ResilientHttpFetcher implements IFetcher {
       const retryAfter = (error.payload as any)?.response?.headers?.[
         'retry-after'
       ];
-      if (retryAfter) {
-        const delay = this.parseRetryAfter(retryAfter);
-        await sleep(delay);
-        return this.tryExecute(props, attempt + 1);
-      }
+      const delay = parseRetryAfter(retryAfter);
+      await sleep(delay);
+      return this.tryExecute(props, attempt + 1);
     }
 
     // Default exponential backoff with jitter
@@ -84,25 +83,5 @@ export class ResilientHttpFetcher implements IFetcher {
     const delay = 2 ** attempt * 1000 + jitter;
     await sleep(delay);
     return this.tryExecute(props, attempt + 1);
-  }
-
-  private parseRetryAfter(retryAfter: string | number | string[]): number {
-    if (typeof retryAfter === 'number') {
-      return retryAfter * 1000;
-    }
-
-    if (typeof retryAfter === 'string') {
-      const seconds = Number(retryAfter);
-      if (!isNaN(seconds)) {
-        return seconds * 1000;
-      }
-
-      const date = new Date(retryAfter);
-      const now = new Date();
-      const diff = date.getTime() - now.getTime();
-      return Math.max(0, diff);
-    }
-
-    return DEFAULT_REQUEST_RETRY_DELAY;
   }
 } 
