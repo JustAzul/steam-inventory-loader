@@ -1,5 +1,6 @@
 import { injectable } from 'tsyringe';
 import SteamItemEntity from '@domain/entities/steam-item.entity';
+import { STEAM_APP_IDS, STEAM_CONTEXT_IDS, STEAM_MARKET_PATTERNS } from '@shared/constants';
 
 @injectable()
 export default class GetItemCacheExpirationUseCase {
@@ -7,22 +8,33 @@ export default class GetItemCacheExpirationUseCase {
     if (item.item_expiration) return item.item_expiration;
 
     if (
-      item.getAppId() === 730 &&
-      item.contextid === '2' &&
+      item.getAppId() === STEAM_APP_IDS.COUNTER_STRIKE_2 &&
+      item.contextid === STEAM_CONTEXT_IDS.INVENTORY &&
       item.owner_descriptions
     ) {
       const tradableDescription = item.owner_descriptions.find(
         (description) =>
           description.value &&
-          description.value.indexOf('Tradable After ') === 0,
+          STEAM_MARKET_PATTERNS.TRADABLE_AFTER.test(description.value),
       );
 
-      if (tradableDescription) {
-        const date: Date = new Date(
-          tradableDescription.value.substring(15).replace(/[,()]/g, ''),
-        );
-
-        return date.toISOString();
+      if (tradableDescription?.value) {
+        try {
+          const dateString = tradableDescription.value
+            .substring(15) // Remove "Tradable After " prefix
+            .replace(/[,()]/g, ''); // Remove commas and parentheses
+          
+          const date = new Date(dateString);
+          
+          // Validate the date
+          if (isNaN(date.getTime())) {
+            return undefined;
+          }
+          
+          return date.toISOString();
+        } catch {
+          return undefined;
+        }
       }
     }
 

@@ -139,13 +139,13 @@ export default class SteamItemEntity {
     return this.description.name;
   }
 
-  public get owner(): unknown | undefined {
+  public get owner(): Record<string, unknown> | undefined {
     if (Object.prototype.hasOwnProperty.call(this.description, 'owner')) {
       if (JSON.stringify(this.description.owner) === '{}') {
         return undefined;
       }
 
-      return this.description.owner;
+      return this.description.owner as Record<string, unknown>;
     }
 
     return undefined;

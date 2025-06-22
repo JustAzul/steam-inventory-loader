@@ -8,7 +8,7 @@ export function result<const T = undefined>(result?: T) {
   return [undefined, result] as [undefined, T];
 }
 
-export function only<const T = any>(result: T) {
+export function only<const T = unknown>(result: T) {
   return result as Only<T>;
 }
 
@@ -24,12 +24,12 @@ export type PrettifyMutable<T extends object> = PrettifySoft<{
     : T[P];
 }>;
 
-export type Only<T extends any> = T extends object ? PrettifyMutable<T> : T;
+export type Only<T> = T | undefined;
 
 export type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;
 
 export type PropType<TObj, TProp extends keyof TObj> = TObj[TProp];
 
-export type DataOrError<TError = ErrorPayload | ErrorCode, TData = any> =
+export type DataOrError<TError = ErrorPayload | ErrorCode, TData = unknown> =
   | [error: TError]
   | [error: undefined, data: TData];

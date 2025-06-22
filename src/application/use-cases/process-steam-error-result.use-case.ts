@@ -1,6 +1,7 @@
 import { injectable } from 'tsyringe';
 import SteamErrorResultException from '../exceptions/steam-error-result.exception';
 import { HttpResponse } from '../types/http-response.type';
+import { STEAM_MARKET_PATTERNS } from '@shared/constants';
 
 @injectable()
 export default class ProcessSteamErrorResultUseCase {
@@ -11,12 +12,14 @@ export default class ProcessSteamErrorResultUseCase {
     if (dataHasError) {
       const error = String(dataError);
 
-      const match = /^(.+) \((\d+)\)$/.exec(error);
+      const match = STEAM_MARKET_PATTERNS.STEAM_ERROR_FORMAT.exec(error);
       const hasMatch = Boolean(match);
 
-      if (hasMatch) {
-        const [, resErr, eResult] = match as RegExpExecArray;
-        throw new SteamErrorResultException(eResult, resErr);
+      if (hasMatch && match) {
+        const [, resErr, eResult] = match;
+        if (resErr && eResult) {
+          throw new SteamErrorResultException(eResult, resErr);
+        }
       }
     }
   }

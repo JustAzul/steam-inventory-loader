@@ -1,7 +1,10 @@
 import 'reflect-metadata';
-import { container, Lifecycle } from 'tsyringe';
+import { container } from 'tsyringe';
 import IAzulSteamInventoryLoader from '@application/ports/azul-steam-inventory-loader.interface';
 import { IFetcher } from '@application/ports/fetcher.port';
+import SteamInventoryService from '@application/services/steam-inventory.service';
+import HttpConfigurationService from '@application/services/http-configuration.service';
+import CookieParserService from '@domain/services/cookie-parser.service';
 import FindCardBorderTypeUseCase from '@application/use-cases/find-card-border-type.use-case';
 import FindTagUseCase from '@application/use-cases/find-tag.use-case';
 import GetImageUrlUseCase from '@application/use-cases/get-image-url.use-case';
@@ -9,24 +12,31 @@ import LoadInventoryUseCase from '@application/use-cases/load-inventory.use-case
 import SteamItemEntity from '@domain/entities/steam-item.entity';
 import SteamItemTag from '@domain/entities/steam-item-tag.entity';
 import { CardType } from '@domain/types/card-type.type';
-import { Cookie } from '@domain/types/cookie.type';
 import { InputWithIconURL } from '@domain/types/input-with-icon-url.type';
 import { LoaderConfig } from '@domain/types/loader-config.type';
 import { rawTag } from '@domain/types/raw-tag.type';
-import { CookieJar } from 'tough-cookie';
 import { HttpClient } from './http-client';
 import { ResilientHttpFetcher } from './ResilientHttpFetcher';
 
+// Register all dependencies
+container.registerSingleton(CookieParserService);
+container.registerSingleton(HttpConfigurationService);
+container.registerSingleton(SteamInventoryService);
 container.registerSingleton(FindTagUseCase);
 container.registerSingleton(GetImageUrlUseCase);
 container.registerSingleton(FindCardBorderTypeUseCase);
 
-export default class AzulSteamInventoryLoader
-  implements IAzulSteamInventoryLoader
-{
+/**
+ * Main Steam Inventory Loader - Pure Composition Root
+ * Delegates all business operations to the service layer
+ */
+export default class AzulSteamInventoryLoader implements IAzulSteamInventoryLoader {
   private readonly container = container.createChildContainer();
+  private readonly steamInventoryService: SteamInventoryService;
+  private readonly httpConfigurationService: HttpConfigurationService;
 
   constructor(private readonly config: LoaderConfig) {
+    // Register fetcher factory
     this.container.register<IFetcher>('IFetcher', {
       useFactory: () => {
         const httpClient = new HttpClient(this.config.proxyAddress);
@@ -35,38 +45,33 @@ export default class AzulSteamInventoryLoader
         });
       },
     });
+
+    // Resolve services
+    this.steamInventoryService = this.container.resolve(SteamInventoryService);
+    this.httpConfigurationService = this.container.resolve(HttpConfigurationService);
   }
 
-  public load(
+  /**
+   * Loads a Steam inventory for the specified user and application
+   */
+  public async load(
     steamID64: string,
     appID: string,
     contextID: string,
   ): Promise<SteamItemEntity[]> {
-    const useCase = this.container.resolve(LoadInventoryUseCase);
-    const fetcher = this.container.resolve<IFetcher>(
-      'IFetcher',
-    ) as ResilientHttpFetcher;
+    // Configure HTTP client for this request
+    const fetcher = this.container.resolve<IFetcher>('IFetcher') as ResilientHttpFetcher;
     const httpClient = fetcher.getFetcher() as HttpClient;
-
-    const cookies: string[] = [`strInventoryLastContext=${appID}_${contextID}`];
-    if (this.config.SteamCommunity_Jar) {
-      function parseCookies(jar?: CookieJar): string[] {
-        if (!jar) return [];
-        if ('_jar' in jar) return parseCookies((jar as any)._jar);
-        const result = (jar.serializeSync().cookies as Cookie[])
-          .filter(({ domain }) => domain === 'steamcommunity.com')
-          .map(({ key, value }) => `${key}=${value};`);
-        return result;
-      }
-      cookies.push(...parseCookies(this.config.SteamCommunity_Jar));
-    }
-    httpClient.setDefaultCookies(cookies.join('; '));
-    httpClient.setDefaultHeaders({
-      host: 'steamcommunity.com',
-      referer: `https://steamcommunity.com/profiles/${steamID64}/inventory`,
+    
+    this.httpConfigurationService.configureHttpClient(httpClient, {
+      steamID64,
+      appID,
+      contextID,
+      config: this.config,
     });
 
-    return useCase.execute({
+    // Delegate to service layer
+    return this.steamInventoryService.loadInventory({
       steamID64,
       appID,
       contextID,
@@ -74,26 +79,32 @@ export default class AzulSteamInventoryLoader
     });
   }
 
+  /**
+   * Finds a specific tag within a collection of tags
+   */
   public getTag(
     tags: Array<rawTag | SteamItemTag>,
     categoryToFind: string,
   ): rawTag | SteamItemTag | null {
-    const useCase = this.container.resolve(FindTagUseCase);
-    return useCase.execute({ tags, categoryToFind });
+    return this.steamInventoryService.findTag({ tags, categoryToFind });
   }
 
+  /**
+   * Generates the appropriate image URL for a Steam item
+   */
   public getImageUrl(
     input: InputWithIconURL,
     size?: 'normal' | 'large',
   ): string {
-    const useCase = this.container.resolve(GetImageUrlUseCase);
-    return useCase.execute({ input, size });
+    return this.steamInventoryService.getImageUrl({ input, size });
   }
 
+  /**
+   * Determines if a trading card is foil based on its tags
+   */
   public isCardFoil(
     tags: Array<rawTag | SteamItemTag>,
   ): CardType | null {
-    const useCase = this.container.resolve(FindCardBorderTypeUseCase);
-    return useCase.execute({ tags });
+    return this.steamInventoryService.findCardBorderType({ tags });
   }
 }
