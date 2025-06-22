@@ -43,7 +43,7 @@ export default class SteamItemEntity {
     return this.asset.assetid;
   }
 
-  public get appid(): number {
+  public getAppId(): number {
     return Number(this.asset.appid);
   }
 
@@ -55,11 +55,11 @@ export default class SteamItemEntity {
     return this.asset.assetid;
   }
 
-  public get instanceid(): string {
+  public getInstanceId(): string {
     return this.asset.instanceid || '0';
   }
 
-  public get amount(): number {
+  public getAmount(): number {
     return Number(this.asset.amount);
   }
 
@@ -95,11 +95,11 @@ export default class SteamItemEntity {
     return this.description?.descriptions || [];
   }
 
-  public get market_tradable_restriction(): number {
+  public getMarketTradableRestriction(): number {
     return Number(this.description?.market_tradable_restriction) || 0;
   }
 
-  public get market_marketable_restriction(): number {
+  public getMarketMarketableRestriction(): number {
     return Number(this.description?.market_marketable_restriction) || 0;
   }
 
@@ -115,7 +115,7 @@ export default class SteamItemEntity {
     return this.description.background_color;
   }
 
-  public get currency(): number {
+  public getCurrency(): number {
     return Number(this.description?.currency) || 0;
   }
 
@@ -157,7 +157,7 @@ export default class SteamItemEntity {
 
   public getMarketFeeApp(): number | undefined {
     if (
-      this.appid === 753 &&
+      this.getAppId() === 753 &&
       this.contextid === '6' &&
       !!this.market_hash_name
     ) {
@@ -172,7 +172,7 @@ export default class SteamItemEntity {
     if (this.item_expiration) return this.item_expiration;
 
     if (
-      this.appid === 730 &&
+      this.getAppId() === 730 &&
       this.contextid === '2' &&
       this.owner_descriptions
     ) {
