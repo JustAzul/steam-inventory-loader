@@ -1,15 +1,14 @@
-import SteamItemTag from '@domain/entities/steam-item-tag.entity';
-import SteamItemEntity from '@domain/entities/steam-item.entity';
-import { CardType } from '@domain/types/card-type.type';
-import { InputWithIconURL } from '@domain/types/input-with-icon-url.type';
-import { LoaderConfig } from '@domain/types/loader-config.type';
-import { rawTag } from '@domain/types/raw-tag.type';
-import { injectable, inject } from 'tsyringe';
+import { injectable } from 'tsyringe';
 
-import FindCardBorderTypeUseCase from '../use-cases/find-card-border-type.use-case';
-import FindTagUseCase from '../use-cases/find-tag.use-case';
-import GetImageUrlUseCase from '../use-cases/get-image-url.use-case';
-import LoadInventoryUseCase from '../use-cases/load-inventory.use-case';
+import {
+  DEFAULT_REQUEST_ITEM_COUNT,
+  DEFAULT_REQUEST_LANGUAGE,
+} from '@application/constants';
+import SteamItemEntity from '@domain/entities/steam-item.entity';
+import SteamItemFactory from '@domain/factories/steam-item.factory';
+import { LoaderConfig } from '@domain/types/loader-config.type';
+
+import InventoryPageService from './inventory-page.service';
 
 export interface LoadInventoryParams {
   appID: string;
@@ -18,36 +17,13 @@ export interface LoadInventoryParams {
   steamID64: string;
 }
 
-export interface FindTagParams {
-  categoryToFind: string;
-  tags: Array<rawTag | SteamItemTag>;
-}
-
-export interface GetImageUrlParams {
-  input: InputWithIconURL;
-  size?: 'normal' | 'large';
-}
-
-export interface FindCardBorderTypeParams {
-  tags: Array<rawTag | SteamItemTag>;
-}
-
 /**
  * Service layer for Steam inventory operations
  * Provides cohesive business operations instead of exposing individual use cases
  */
 @injectable()
 export default class SteamInventoryService {
-  public constructor(
-    @inject(LoadInventoryUseCase)
-    private readonly loadInventoryUseCase: LoadInventoryUseCase,
-    @inject(FindTagUseCase)
-    private readonly findTagUseCase: FindTagUseCase,
-    @inject(GetImageUrlUseCase)
-    private readonly getImageUrlUseCase: GetImageUrlUseCase,
-    @inject(FindCardBorderTypeUseCase)
-    private readonly findCardBorderTypeUseCase: FindCardBorderTypeUseCase,
-  ) {}
+  public constructor(private readonly inventoryService: InventoryPageService) {}
 
   /**
    * Loads a complete Steam inventory for the specified user and application
@@ -57,33 +33,44 @@ export default class SteamInventoryService {
   public async loadInventory(
     params: LoadInventoryParams,
   ): Promise<SteamItemEntity[]> {
-    return this.loadInventoryUseCase.execute(params);
-  }
+    const { config, steamID64, appID, contextID } = params;
+    const allItems: SteamItemEntity[] = [];
+    let lastAssetID: string | undefined;
 
-  /**
-   * Finds a specific tag within a collection of tags
-   * @param params - Parameters for finding tag
-   * @returns The matching tag or null if not found
-   */
-  public findTag(params: FindTagParams): rawTag | SteamItemTag | null {
-    return this.findTagUseCase.execute(params);
-  }
+    while (true) {
+      const pageResult = await this.inventoryService.getInventoryPage({
+        appID,
+        contextID,
+        count: config.itemsPerPage ?? DEFAULT_REQUEST_ITEM_COUNT,
+        language: config.Language ?? DEFAULT_REQUEST_LANGUAGE,
+        lastAssetID,
+        steamID64,
+      });
 
-  /**
-   * Generates the appropriate image URL for a Steam item
-   * @param params - Parameters for generating image URL
-   * @returns Complete image URL
-   */
-  public getImageUrl(params: GetImageUrlParams): string {
-    return this.getImageUrlUseCase.execute(params);
-  }
+      if (pageResult?.assets && pageResult?.descriptions) {
+        let assets = pageResult.assets;
+        let descriptions = pageResult.descriptions;
 
-  /**
-   * Determines the card border type (Normal/Foil) for trading cards
-   * @param params - Parameters for determining card border type
-   * @returns Card border type or null if not a card
-   */
-  public findCardBorderType(params: FindCardBorderTypeParams): CardType | null {
-    return this.findCardBorderTypeUseCase.execute(params);
+        if (config.tradableOnly) {
+          const tradableDescriptions = descriptions.filter((d) => d.tradable);
+          const tradableClassIds = tradableDescriptions.map((d) => d.classid);
+          assets = assets.filter((a) => tradableClassIds.includes(a.classid));
+          descriptions = tradableDescriptions;
+        }
+
+        const items = SteamItemFactory.createFromInventoryPage(
+          assets,
+          descriptions,
+        );
+        allItems.push(...items);
+      }
+
+      if (!pageResult?.more_items) {
+        break;
+      }
+      lastAssetID = pageResult.last_assetid;
+    }
+
+    return allItems;
   }
 }
