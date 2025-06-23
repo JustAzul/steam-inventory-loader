@@ -1,6 +1,6 @@
+import HttpException from '@application/exceptions/http.exception';
 import { HttpRequest } from '@application/types/http-request.type';
 import { HttpResponse } from '@application/types/http-response.type';
-import { ErrorPayload } from '@shared/errors';
 
 export interface IHandler<TRequest, TResponse> {
   setNext(handler: IHandler<TRequest, TResponse>): IHandler<TRequest, TResponse>;
@@ -10,7 +10,7 @@ export interface IHandler<TRequest, TResponse> {
 export type HttpProcessingContext<T = unknown> = {
   request: HttpRequest;
   response?: HttpResponse<T>;
-  error?: ErrorPayload;
+  error?: HttpException;
 };
 
 export abstract class AbstractHandler<T = unknown>

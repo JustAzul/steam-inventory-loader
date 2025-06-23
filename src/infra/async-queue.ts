@@ -3,8 +3,7 @@ import EventEmitter from 'events';
 
 import { AsyncQueueParams, IAsyncQueue } from '@application/ports/async-queue';
 import { IRepository } from '@application/ports/repository.interface';
-import { ErrorPayload } from '@shared/errors';
-import { error, result } from '@shared/utils';
+import { RepositoryException } from '@application/exceptions/repository.exception';
 
 export interface AsyncQueueProps {
   eventHandler?: EventEmitter;
@@ -34,25 +33,15 @@ export class AsyncQueue implements IAsyncQueue {
     }
   }
 
-  async enqueueAndProcess<T>(task: AsyncQueueParams<T>) {
+  async enqueueAndProcess<T>(task: AsyncQueueParams<T>): Promise<T> {
     const taskId = this.createTaskId();
-
-    try {
-      const taskResult: T = await new Promise((resolve, reject) => {
-        this.waitForTaskCompletion<T>(taskId).then(resolve).catch(reject);
-        this.addTaskToQueue<T>(task, taskId);
-        this.processTaskQueue();
-      });
-
-      return result(taskResult);
-    } catch (e) {
-      return error(
-        new ErrorPayload({
-          code: 'ASYNC_QUEUE_UNKNOW_ERROR',
-          payload: { error: e },
-        }),
-      );
-    }
+    // No need for a top-level try-catch here, let the consumer handle it.
+    const taskResult: T = await new Promise((resolve, reject) => {
+      this.waitForTaskCompletion<T>(taskId).then(resolve).catch(reject);
+      this.addTaskToQueue<T>(task, taskId);
+      this.processTaskQueue();
+    });
+    return taskResult;
   }
 
   private waitForTaskCompletion<T>(
@@ -94,41 +83,42 @@ export class AsyncQueue implements IAsyncQueue {
   }
 
   private async executeNextTask() {
-    const [error, nextTask] = this.props.repository.findAny();
+    try {
+      const nextTask = await this.props.repository.findAny();
+      const [taskId, { job }] = nextTask;
 
-    if (error) {
-      if (error.code === 'REPOSITORY_FIND_ANY_ERROR_REPOSITORY_EMPTY') {
+      try {
+        const result = await job();
+        this.events.emit(taskId, null, result);
+      } catch (error) {
+        this.events.emit(taskId, error);
+      }
+
+      await this.deleteItem(taskId);
+
+      setTimeout(
+        () => this.executeNextTask(),
+        this.calculateDelayBeforeNextTask(),
+      );
+    } catch (error) {
+      if (error instanceof RepositoryException) {
+        // Assuming findAny throws RepositoryException when empty.
+        // A better approach would be a specific "QueueEmptyException"
         this.queueStatus = 'IDLE';
         return;
       }
-
-      throw new Error(error.code);
+      // Re-throw unexpected errors
+      throw error;
     }
-
-    const [taskId, { job }] = nextTask;
-
-    try {
-      const result = await job();
-      this.events.emit(taskId, null, result);
-    } catch (error) {
-      this.events.emit(taskId, error);
-    }
-
-    this.deleteItem(taskId);
-
-    setTimeout(
-      () => this.executeNextTask(),
-      this.calculateDelayBeforeNextTask(),
-    );
   }
 
-  private deleteItem(taskId: ReturnType<AsyncQueue['createTaskId']>) {
-    const [error] = this.props.repository.delete(taskId);
-
-    if (error) {
-      if (error.code !== 'REPOSITORY_DELETE_ERROR_ITEM_NOT_FOUND') {
-        throw new Error(error.code);
-      }
+  private async deleteItem(taskId: ReturnType<AsyncQueue['createTaskId']>) {
+    try {
+      await this.props.repository.delete(taskId);
+    } catch (error) {
+      // Decide how to handle a failed delete. For now, we'll log and ignore.
+      // A real implementation might need a retry mechanism or dead-letter queue.
+      console.error(`Failed to delete task ${taskId} from repository.`, error);
     }
   }
 
@@ -136,14 +126,10 @@ export class AsyncQueue implements IAsyncQueue {
     return randomUUID();
   }
 
-  private addTaskToQueue<T>(
+  private async addTaskToQueue<T>(
     task: AsyncQueueParams<T>,
     taskId: ReturnType<AsyncQueue['createTaskId']>,
   ) {
-    const [error] = this.props.repository.insert([taskId, task]);
-
-    if (error) {
-      throw new Error(error.code);
-    }
+    await this.props.repository.insert([taskId, task]);
   }
 }

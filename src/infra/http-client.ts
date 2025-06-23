@@ -11,6 +11,7 @@ import { HttpsProxyAgent } from 'hpagent';
 import { injectable, inject } from 'tsyringe';
 
 import { DEFAULT_REQUEST_TIMEOUT } from '@application/constants';
+import HttpException from '@application/exceptions/http.exception';
 import { IFetcher } from '@application/ports/fetcher.port';
 import { IHttpClient } from '@application/ports/http-client.port';
 import {
@@ -78,7 +79,7 @@ export class HttpClient implements IFetcher, IHttpClient {
 
   public async execute<T>(
     props: HttpClientGetProps,
-  ): Promise<DataOrError<ErrorPayload<HttpClientErrorCodes>, HttpClientResponse<T>>> {
+  ): Promise<HttpClientResponse<T>> {
     const { url, headers: propsHeaders, params } = props;
 
     const requestHeaders = { ...this.defaultHeaders, ...propsHeaders };
@@ -102,62 +103,28 @@ export class HttpClient implements IFetcher, IHttpClient {
         status,
       } = await this.client.get<T, AxiosResponse<T, never>, never>(url, options);
 
-      return result({
+      return {
         data,
         headers: incomingHeaders as IncomingHttpHeaders,
         statusCode: status,
-      });
+      };
     } catch (e: unknown) {
-      if (
-        e &&
-        typeof e === 'object' &&
-        'code' in e &&
-        (e.code === 'ECONNRESET' || e.code === 'ECONNABORTED')
-      ) {
-        return error(
-          new ErrorPayload({
-            code: 'PROXY_ERROR',
-            payload: {
-              message:
-                e instanceof Error ? e.message : 'Proxy connection error',
-              request: props,
-            },
-          }),
-        );
-      }
+      const message = e instanceof Error ? e.message : 'An unknown error occurred';
+      let response: Partial<HttpClientResponse<unknown>> = {};
 
       if (Axios.isAxiosError(e)) {
-        return error(
-          new ErrorPayload<HttpClientErrorCodes, HttpErrorPayload>({
-            code: 'HTTP_CLIENT_ERROR',
-            payload: {
-              message: e.message,
-              request: props,
-              response: {
-                data: e.response?.data,
-                headers: (e.response?.headers as IncomingHttpHeaders) || null,
-                statusCode: e.response?.status,
-              },
-            },
-          }),
-        );
+        response = {
+          data: e.response?.data,
+          headers: (e.response?.headers as IncomingHttpHeaders) || {},
+          statusCode: e.response?.status,
+        };
       }
 
-      if (e instanceof Error) {
-        return error(
-          new ErrorPayload({
-            code: 'INTERNAL_ERROR',
-            payload: { message: e.message, request: props },
-          }),
-        );
-      }
-
-      return error(
-        new ErrorPayload({
-          code: 'UNKNOWN_ERROR',
-          payload: { error: e, request: props },
-        }),
-      );
+      throw new HttpException({
+        message,
+        request: { url, headers: requestHeaders, params },
+        response,
+      });
     }
   }
 }
