@@ -52,6 +52,7 @@
     "dist",
     "index.js",
     "jest.config.ts",
+    "jest.setup.ts",
     "node_modules"
   ]
 }
