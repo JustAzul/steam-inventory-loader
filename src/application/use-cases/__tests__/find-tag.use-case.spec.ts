@@ -1,6 +1,7 @@
 import SteamItemTag from '@domain/entities/steam-item-tag.entity';
 import { SteamTag } from '@domain/types/steam-tag.type';
 import { Tag } from '@domain/types/tag.interface';
+
 import FindTagUseCase, { FindTagUseCaseProps } from '../find-tag.use-case';
 
 describe('Application :: UseCases :: FindTagUseCase', () => {

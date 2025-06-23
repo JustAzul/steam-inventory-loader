@@ -1,4 +1,5 @@
 import { injectable } from 'tsyringe';
+
 import { Tag } from '@domain/types/tag.interface';
 
 export type FindTagUseCaseProps = {
