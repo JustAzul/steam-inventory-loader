@@ -15,6 +15,7 @@ import GetInventoryPageResultUseCase from '../../use-cases/get-inventory-page-re
 import GetPageUrlUseCase from '../../use-cases/get-page-url.use-case';
 import { HttpProcessingChainUseCase } from '../../use-cases/http-processing-chain.use-case';
 import InventoryPageService from '../inventory-page.service';
+import HttpException from '@application/exceptions/http.exception';
 
 describe('Application :: Services :: InventoryPageService', () => {
   let service: InventoryPageService;
@@ -51,10 +52,7 @@ describe('Application :: Services :: InventoryPageService', () => {
     };
 
     getPageUrlUseCase.execute.mockReturnValue({ url, params: {} });
-    getInventoryPageResultUseCase.execute.mockResolvedValue([
-      undefined,
-      response,
-    ]);
+    getInventoryPageResultUseCase.execute.mockResolvedValue(response);
     httpProcessingChain.execute.mockReturnValue(response);
 
     const result = await service.getInventoryPage(props);
@@ -72,18 +70,25 @@ describe('Application :: Services :: InventoryPageService', () => {
   it('should orchestrate http exception handling', async () => {
     const props = {} as GetInventoryPageResultUseCaseProps;
     const url = 'http://test.com';
+    const error = new HttpException({
+      message: 'Forbidden',
+      request: { url },
+      response: { statusCode: 403 },
+    });
 
     getPageUrlUseCase.execute.mockReturnValue({ url, params: {} });
-    getInventoryPageResultUseCase.execute.mockResolvedValue([
-      undefined,
-      { data: null, headers: {}, statusCode: 403 },
-    ]);
+    getInventoryPageResultUseCase.execute.mockRejectedValue(error);
     httpProcessingChain.execute.mockImplementation(() => {
-      throw new PrivateProfileException({ request: { url: '' }, response: {} });
+      throw new PrivateProfileException({ request: { url }, response: {} });
     });
 
     await expect(service.getInventoryPage(props)).rejects.toThrow(
       PrivateProfileException,
     );
+    expect(httpProcessingChain.execute).toHaveBeenCalledWith({
+      request: { url },
+      error,
+      response: { data: null, headers: {}, statusCode: 0 },
+    });
   });
 });

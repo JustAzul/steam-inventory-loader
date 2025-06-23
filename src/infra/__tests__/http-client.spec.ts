@@ -4,7 +4,7 @@ import { StatusCode } from 'status-code-enum';
 import { container } from 'tsyringe';
 
 import { PROXY_ADDRESS } from '@infra/constants';
-import { ErrorPayload } from '@shared/errors';
+import HttpException from '@application/exceptions/http.exception';
 
 import { HttpClient } from '../http-client';
 
@@ -33,9 +33,9 @@ describe('Infra :: HttpClient', () => {
       status: StatusCode.SuccessOK,
     });
 
-    const [, result] = await client.execute({ url: 'http://test.com' });
+    const result = await client.execute({ url: 'http://test.com' });
 
-    expect(result?.data).toEqual(responseData);
+    expect(result.data).toEqual(responseData);
     expect(mockedAxios.get).toHaveBeenCalledWith(
       'http://test.com',
       expect.any(Object),
@@ -50,9 +50,9 @@ describe('Infra :: HttpClient', () => {
     };
     mockedAxios.get.mockRejectedValue(axiosError);
 
-    const [error] = await client.execute({ url: 'http://test.com' });
-
-    expect(error).toBeInstanceOf(ErrorPayload);
+    await expect(client.execute({ url: 'http://test.com' })).rejects.toThrow(
+      HttpException,
+    );
   });
 
   it('should handle proxy errors', async () => {
@@ -63,9 +63,9 @@ describe('Infra :: HttpClient', () => {
     };
     mockedAxios.get.mockRejectedValue(proxyError);
 
-    const [error] = await client.execute({ url: 'http://test.com' });
-
-    expect(error?.code).toEqual('PROXY_ERROR');
+    await expect(client.execute({ url: 'http://test.com' })).rejects.toThrow(
+      HttpException,
+    );
   });
 
   it('should set default headers for requests', async () => {
