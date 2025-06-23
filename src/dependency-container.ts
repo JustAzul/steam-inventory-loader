@@ -1,13 +1,14 @@
 import { DependencyContainer } from 'tsyringe';
 
 import IAzulSteamInventoryLoader from '@application/ports/azul-steam-inventory-loader.interface';
+import { IInventoryPageService } from '@application/ports/inventory-page-service.interface';
 
 import InventoryPageService from './application/services/inventory-page.service';
-import SteamInventoryService from './application/services/steam-inventory.service';
 import GetInventoryPageResultUseCase from './application/use-cases/get-inventory-page-result.use-case';
 import GetItemCacheExpirationUseCase from './application/use-cases/get-item-cache-expiration.use-case';
 import GetItemMarketFeeAppUseCase from './application/use-cases/get-item-market-fee-app.use-case';
 import GetPageUrlUseCase from './application/use-cases/get-page-url.use-case';
+import LoadInventoryUseCase from './application/use-cases/load-inventory.use-case';
 import { HttpExceptionHandler } from './application/use-cases/http-processing-chain/http-exception.handler';
 import { HttpResponseValidationHandler } from './application/use-cases/http-processing-chain/http-response-validation.handler';
 import { SteamBodyValidationHandler } from './application/use-cases/http-processing-chain/steam-body-validation.handler';
@@ -21,7 +22,10 @@ export function registerAllDependencies(c: DependencyContainer): void {
   c.register<IAzulSteamInventoryLoader>('IAzulSteamInventoryLoader', {
     useClass: AzulSteamInventoryLoader,
   });
-  c.register(SteamInventoryService, { useClass: SteamInventoryService });
+  c.register<IInventoryPageService>('IInventoryPageService', {
+    useClass: InventoryPageService,
+  });
+  c.register(LoadInventoryUseCase, { useClass: LoadInventoryUseCase });
   c.register(InventoryPageService, { useClass: InventoryPageService });
   c.register(GetInventoryPageResultUseCase, {
     useClass: GetInventoryPageResultUseCase,

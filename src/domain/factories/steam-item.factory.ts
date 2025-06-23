@@ -37,9 +37,9 @@ export default class SteamItemFactory {
           items.push(entity);
         } catch (error) {
           if (error instanceof DomainException) {
-            console.warn(
-              `Skipping item due to validation error: ${error.message}`,
-            );
+            // console.warn(
+            //   `Skipping item due to validation error: ${error.message}`,
+            // );
           }
         }
       }
@@ -68,9 +68,9 @@ export default class SteamItemFactory {
           acc.push(tagEntity);
         } catch (error) {
           if (error instanceof DomainException) {
-            console.warn(
-              `Skipping tag due to validation error: ${error.message}`,
-            );
+            // console.warn(
+            //   `Skipping tag due to validation error: ${error.message}`,
+            // );
           }
         }
         return acc;
