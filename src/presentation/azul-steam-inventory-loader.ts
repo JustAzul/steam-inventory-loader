@@ -1,5 +1,5 @@
 import LoadInventoryUseCase, {
-  LoadInventoryUseCaseProps,
+  LoadInventoryPageUseCaseProps,
 } from '@application/use-cases/load-inventory.use-case';
 import { inject, injectable } from 'tsyringe';
 
@@ -16,7 +16,7 @@ export class AzulSteamInventoryLoader extends IAzulSteamInventoryLoader {
   }
 
   public async load(
-    props: LoadInventoryUseCaseProps,
+    props: LoadInventoryPageUseCaseProps,
   ): Promise<SteamItemEntity[]> {
     return this.loadInventoryUseCase.execute(props);
   }

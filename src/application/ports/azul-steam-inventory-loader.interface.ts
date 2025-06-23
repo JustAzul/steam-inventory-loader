@@ -1,4 +1,4 @@
-import { LoadInventoryUseCaseProps } from '@application/use-cases/load-inventory.use-case';
+import { LoadInventoryPageUseCaseProps } from '@application/use-cases/load-inventory.use-case';
 
 import SteamItemEntity from '@domain/entities/steam-item.entity';
 
@@ -10,5 +10,5 @@ export default abstract class IAzulSteamInventoryLoader {
   /**
    * Loads a Steam inventory for the specified user and application
    */
-  abstract load(props: LoadInventoryUseCaseProps): Promise<SteamItemEntity[]>;
+  abstract load(props: LoadInventoryPageUseCaseProps): Promise<SteamItemEntity[]>;
 }
