@@ -1,5 +1,4 @@
 import { LoadInventoryPageUseCaseProps } from '@application/use-cases/load-inventory.use-case';
-
 import SteamItemEntity from '@domain/entities/steam-item.entity';
 
 /**

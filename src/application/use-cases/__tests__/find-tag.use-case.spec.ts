@@ -1,9 +1,7 @@
 import SteamItemTag from '@domain/entities/steam-item-tag.entity';
-import { rawTag } from '@domain/types/raw-tag.type';
-
-import FindTagUseCase, {
-  FindTagUseCaseProps,
-} from '../find-tag.use-case';
+import { SteamTag } from '@domain/types/steam-tag.type';
+import { Tag } from '@domain/types/tag.interface';
+import FindTagUseCase, { FindTagUseCaseProps } from '../find-tag.use-case';
 
 describe('Application :: UseCases :: FindTagUseCase', () => {
   let useCase: FindTagUseCase;
@@ -13,13 +11,15 @@ describe('Application :: UseCases :: FindTagUseCase', () => {
     useCase = new FindTagUseCase();
   });
 
-  const mockTags: rawTag[] = [
+  const mockTags: SteamTag[] = [
     {
       category: 'quality',
       category_name: 'Quality',
       color: 'FFD700',
       internal_name: 'unique',
       name: 'Unique',
+      localized_category_name: 'Quality',
+      localized_tag_name: 'Unique',
     },
     {
       category: 'rarity',
@@ -27,6 +27,8 @@ describe('Application :: UseCases :: FindTagUseCase', () => {
       color: 'B0C3D9',
       internal_name: 'common',
       name: 'Common',
+      localized_category_name: 'Rarity',
+      localized_tag_name: 'Common',
     },
     {
       category: 'type',
@@ -34,6 +36,8 @@ describe('Application :: UseCases :: FindTagUseCase', () => {
       color: 'B0C3D9',
       internal_name: 'weapon',
       name: 'Weapon',
+      localized_category_name: 'Type',
+      localized_tag_name: 'Weapon',
     },
   ];
 
@@ -58,15 +62,25 @@ describe('Application :: UseCases :: FindTagUseCase', () => {
     expect(result).toBeNull();
   });
 
+  it('should handle an array of SteamItemTag instances', () => {
+    const steamItemTags = mockTags.map((tag) => SteamItemTag.create(tag));
+    const result = execute({
+      categoryToFind: 'rarity',
+      tags: steamItemTags,
+    });
+    expect(result).toBeInstanceOf(SteamItemTag);
+    expect(result).toEqual(steamItemTags[1]);
+  });
+
   it('should return null when the tags array is null or undefined', () => {
     const result1 = execute({
       categoryToFind: 'rarity',
-      tags: null as unknown as Array<rawTag | SteamItemTag>,
+      tags: null as unknown as Tag[],
     });
     expect(result1).toBeNull();
     const result2 = execute({
       categoryToFind: 'rarity',
-      tags: undefined as unknown as Array<rawTag | SteamItemTag>,
+      tags: undefined as unknown as Tag[],
     });
     expect(result2).toBeNull();
   });

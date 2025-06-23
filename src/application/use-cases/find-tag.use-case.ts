@@ -1,12 +1,9 @@
-
 import { injectable } from 'tsyringe';
-
-import SteamItemTag from '@domain/entities/steam-item-tag.entity';
-import { rawTag } from '@domain/types/raw-tag.type';
+import { Tag } from '@domain/types/tag.interface';
 
 export type FindTagUseCaseProps = {
   categoryToFind: string;
-  tags: Array<rawTag | SteamItemTag>;
+  tags: Tag[];
 };
 
 @injectable()
@@ -14,11 +11,11 @@ export default class FindTagUseCase {
   public execute({
     tags,
     categoryToFind,
-  }: FindTagUseCaseProps): rawTag | SteamItemTag | null {
+  }: FindTagUseCaseProps): Tag | null {
     const hasAtLeastOneTag = Boolean(tags?.length);
     if (hasAtLeastOneTag === false) return null;
 
-    const tag: rawTag | SteamItemTag | undefined = tags.find(
+    const tag: Tag | undefined = tags.find(
       ({ category }) => category === categoryToFind,
     );
 
