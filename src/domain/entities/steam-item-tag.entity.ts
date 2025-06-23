@@ -1,11 +1,21 @@
- 
+import DomainException from '../exceptions/domain.exception';
 import { SteamTag } from '../types/steam-tag.type';
 
 export default class SteamItemTag {
   private tag: SteamTag;
 
-  public constructor(tag: SteamTag) {
+  private constructor(tag: SteamTag) {
     this.tag = tag;
+  }
+
+  public static create(tag: SteamTag) {
+    if (!tag.internal_name) {
+      throw new DomainException(`SteamItemTag`, `Tag internal_name cannot be empty`);
+    }
+    if (!tag.category) {
+      throw new DomainException(`SteamItemTag`, `Tag category cannot be empty`);
+    }
+    return new SteamItemTag(tag);
   }
 
   public get internal_name(): string {

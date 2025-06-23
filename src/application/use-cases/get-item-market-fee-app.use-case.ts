@@ -1,10 +1,11 @@
+import { injectable } from 'tsyringe';
+
 import {
   STEAM_APP_IDS,
   STEAM_CONTEXT_IDS,
   STEAM_MARKET_PATTERNS,
 } from '@domain/constants';
 import SteamItemEntity from '@domain/entities/steam-item.entity';
-import { injectable } from 'tsyringe';
 
 @injectable()
 export default class GetItemMarketFeeAppUseCase {

@@ -1,3 +1,5 @@
+import { StatusCode } from 'status-code-enum';
+
 import { DEFAULT_REQUEST_MAX_RETRIES } from '@application/constants';
 import { IFetcher } from '@application/ports/fetcher.port';
 import {
@@ -9,7 +11,6 @@ import { parseRetryAfter } from '@infra/helpers/parse-retry-after.helper';
 import sleep from '@infra/helpers/sleep.helper';
 import { ErrorPayload } from '@shared/errors';
 import { DataOrError } from '@shared/utils';
-import { StatusCode } from 'status-code-enum';
 
 export type ResilientHttpFetcherProps = {
   maxRetries?: number;

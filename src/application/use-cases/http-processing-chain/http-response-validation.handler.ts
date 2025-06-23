@@ -1,8 +1,9 @@
+import { StatusCode } from 'status-code-enum';
+import { injectable } from 'tsyringe';
+
 import BadStatusCodeException from '@application/exceptions/bad-status-code.exception';
 import EmptyHttpResponseException from '@application/exceptions/empty-http-response.exception';
 import { HttpResponse } from '@application/types/http-response.type';
-import { StatusCode } from 'status-code-enum';
-import { injectable } from 'tsyringe';
 
 import { AbstractHandler, HttpProcessingContext } from './handler';
 

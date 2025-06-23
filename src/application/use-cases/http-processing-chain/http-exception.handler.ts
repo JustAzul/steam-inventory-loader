@@ -1,3 +1,6 @@
+import { StatusCode } from 'status-code-enum';
+import { injectable } from 'tsyringe';
+
 import PrivateProfileException from '@application/exceptions/private-profile.exception';
 import RateLimitedException from '@application/exceptions/rate-limited.exception';
 import UseCaseException from '@application/exceptions/use-case.exception';
@@ -7,8 +10,6 @@ import {
   HttpErrorPayload,
 } from '@application/types/http-response.type';
 import { ErrorPayload } from '@shared/errors';
-import { StatusCode } from 'status-code-enum';
-import { injectable } from 'tsyringe';
 
 import { AbstractHandler, HttpProcessingContext } from './handler';
 

@@ -1,17 +1,6 @@
 import { IncomingHttpHeaders } from 'http';
 import { Agent as HttpsAgent } from 'https';
 
-import { DEFAULT_REQUEST_TIMEOUT } from '@application/constants';
-import { IFetcher } from '@application/ports/fetcher.port';
-import {
-  HttpClientErrorCodes,
-  HttpClientGetProps,
-  HttpClientResponse,
-  HttpErrorPayload,
-} from '@application/types/http-response.type';
-import { PROXY_ADDRESS } from '@infra/constants';
-import { ErrorPayload } from '@shared/errors';
-import { DataOrError, error, result } from '@shared/utils';
 import Axios, {
   AxiosInstance,
   AxiosRequestConfig,
@@ -21,8 +10,21 @@ import Axios, {
 import { HttpsProxyAgent } from 'hpagent';
 import { injectable, inject } from 'tsyringe';
 
+import { DEFAULT_REQUEST_TIMEOUT } from '@application/constants';
+import { IFetcher } from '@application/ports/fetcher.port';
+import { IHttpClient } from '@application/ports/http-client.port';
+import {
+  HttpClientErrorCodes,
+  HttpClientGetProps,
+  HttpClientResponse,
+  HttpErrorPayload,
+} from '@application/types/http-response.type';
+import { PROXY_ADDRESS } from '@infra/constants';
+import { ErrorPayload } from '@shared/errors';
+import { DataOrError, error, result } from '@shared/utils';
+
 @injectable()
-export class HttpClient implements IFetcher {
+export class HttpClient implements IFetcher, IHttpClient {
   private cookies?: string;
   private defaultHeaders?: IncomingHttpHeaders;
   private readonly client: AxiosInstance;

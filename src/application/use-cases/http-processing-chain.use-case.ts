@@ -1,5 +1,6 @@
-import { HttpResponse } from '@application/types/http-response.type';
 import { injectable } from 'tsyringe';
+
+import { HttpResponse } from '@application/types/http-response.type';
 
 import {
   HttpProcessingContext,

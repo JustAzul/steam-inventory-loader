@@ -1,7 +1,13 @@
 import 'reflect-metadata';
-import IAzulSteamInventoryLoader from '@application/ports/azul-steam-inventory-loader.interface';
-import { LoaderConfig } from '@domain/types/loader-config.type';
 import { container } from 'tsyringe';
+
+import { DEFAULT_REQUEST_MAX_RETRIES } from '@application/constants';
+import IAzulSteamInventoryLoader from '@application/ports/azul-steam-inventory-loader.interface';
+import { IFetcher } from '@application/ports/fetcher.port';
+import { LoaderConfig } from '@domain/types/loader-config.type';
+import { PROXY_ADDRESS } from '@infra/constants';
+import { HttpClient } from '@infra/http-client';
+import { ResilientHttpFetcher } from '@infra/ResilientHttpFetcher';
 
 import { registerAllDependencies } from './dependency-container';
 import { AzulSteamInventoryLoader } from './presentation/azul-steam-inventory-loader';
@@ -13,9 +19,23 @@ import { AzulSteamInventoryLoader } from './presentation/azul-steam-inventory-lo
 export function createInventoryLoader(
   config: LoaderConfig,
 ): IAzulSteamInventoryLoader {
-  // Register global dependencies once
-  registerAllDependencies(container);
-  return new AzulSteamInventoryLoader(config);
+  const requestContainer = container.createChildContainer();
+  registerAllDependencies(requestContainer);
+
+  requestContainer.register(PROXY_ADDRESS, {
+    useValue: config.proxyAddress || '',
+  });
+  requestContainer.register('AxiosInstance', {
+    useValue: undefined,
+  });
+  requestContainer.register<IFetcher>('IFetcher', {
+    useFactory: (c) =>
+      new ResilientHttpFetcher(c.resolve(HttpClient), {
+        maxRetries: config.maxRetries ?? DEFAULT_REQUEST_MAX_RETRIES,
+      }),
+  });
+
+  return requestContainer.resolve(AzulSteamInventoryLoader);
 }
 
 // Export key types and entities for consumers of the library

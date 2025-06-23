@@ -1,6 +1,7 @@
 import 'reflect-metadata';
-import InventoryPageService from '@application/services/inventory-page.service';
 import { jest } from '@jest/globals';
+
+import InventoryPageService from '@application/services/inventory-page.service';
 
 import GetInventoryPageResultUseCase from '../get-inventory-page-result.use-case';
 import GetPageUrlUseCase from '../get-page-url.use-case';

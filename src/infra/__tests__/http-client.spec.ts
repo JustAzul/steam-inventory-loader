@@ -1,9 +1,10 @@
 import 'reflect-metadata';
-import { PROXY_ADDRESS } from '@infra/constants';
-import { ErrorPayload } from '@shared/errors';
 import axios from 'axios';
 import { StatusCode } from 'status-code-enum';
 import { container } from 'tsyringe';
+
+import { PROXY_ADDRESS } from '@infra/constants';
+import { ErrorPayload } from '@shared/errors';
 
 import { HttpClient } from '../http-client';
 

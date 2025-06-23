@@ -1,7 +1,8 @@
+import { injectable } from 'tsyringe';
+
 import SteamBodyErrorException from '@application/exceptions/steam-body-error.exception';
 import { HttpResponse } from '@application/types/http-response.type';
 import { InventoryPageResult } from '@application/types/inventory-page-result.type';
-import { injectable } from 'tsyringe';
 
 import { AbstractHandler, HttpProcessingContext } from './handler';
 

@@ -1,9 +1,10 @@
+import { injectable } from 'tsyringe';
+
 import {
   PLACEHOLDER_APP_ID,
   PLACEHOLDER_CONTEXT_ID,
   PLACEHOLDER_STEAM_ID_64,
 } from '@domain/constants';
-import { injectable } from 'tsyringe';
 
 import UseCaseException from '../exceptions/use-case.exception';
 

@@ -1,10 +1,17 @@
- 
+import { STEAM_CDN_IMAGE_URL } from '../constants';
+import DomainException from '../exceptions/domain.exception';
+import { CardType } from '../types/card-type.type';
 import { InnerItemDescription } from '../types/inner-item-description.type';
 import { InventoryPageAsset } from '../types/inventory-page-asset.type';
 import { InventoryPageDescription } from '../types/inventory-page-description.type';
 import { ItemActions } from '../types/item-actions.type';
 
 import SteamItemTag from './steam-item-tag.entity';
+
+enum CardBorderInternalName {
+  Foil = 'cardborder_1',
+  Normal = 'cardborder_0',
+}
 
 export type SteamItemProps = {
   asset: InventoryPageAsset;
@@ -17,10 +24,33 @@ export default class SteamItemEntity {
   private readonly description: InventoryPageDescription;
   private readonly tagsInternal?: SteamItemTag[];
 
-  public constructor({ asset, description, tags }: SteamItemProps) {
+  private constructor({ asset, description, tags }: SteamItemProps) {
     this.asset = asset;
     this.description = description;
     this.tagsInternal = tags;
+  }
+
+  public static create({
+    asset,
+    description,
+    tags,
+  }: SteamItemProps): SteamItemEntity {
+    if (!asset.assetid) {
+      throw new DomainException('SteamItemEntity', 'assetid is required');
+    }
+    if (!asset.appid) {
+      throw new DomainException('SteamItemEntity', 'appid is required');
+    }
+    if (!asset.classid) {
+      throw new DomainException('SteamItemEntity', 'classid is required');
+    }
+    if (!description.market_hash_name) {
+      throw new DomainException(
+        'SteamItemEntity',
+        'market_hash_name is required',
+      );
+    }
+    return new SteamItemEntity({ asset, description, tags });
   }
 
   private get is_currency(): boolean {
@@ -153,5 +183,37 @@ export default class SteamItemEntity {
 
   public get tags(): SteamItemTag[] | undefined {
     return this.tagsInternal;
+  }
+
+  public findTag(categoryToFind: string): SteamItemTag | undefined {
+    return this.tagsInternal?.find(({ category }) => category === categoryToFind);
+  }
+
+  public getCardBorderType(): CardType | null {
+    const itemClass = this.findTag('item_class');
+
+    if (itemClass && itemClass.internal_name === 'item_class_2') {
+      const cardBorder = this.findTag('cardborder');
+
+      if (cardBorder) {
+        if (cardBorder.internal_name === CardBorderInternalName.Normal)
+          return 'Normal';
+
+        if (cardBorder.internal_name === CardBorderInternalName.Foil)
+          return 'Foil';
+      }
+    }
+
+    return null;
+  }
+
+  public getImageUrl(size?: 'normal' | 'large'): string {
+    const isLarge = size === 'large';
+
+    if (isLarge && this.icon_url_large) {
+      return `${STEAM_CDN_IMAGE_URL}/${this.icon_url_large}`;
+    }
+
+    return `${STEAM_CDN_IMAGE_URL}/${this.icon_url}`;
   }
 }

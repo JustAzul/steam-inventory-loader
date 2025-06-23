@@ -118,6 +118,7 @@ export const inventoryPageResultMock: {
         instanceid: '1',
         tradable: 1,
         name: 'Tradable Item',
+        market_hash_name: 'Tradable Item',
       },
       {
         ...baseDescription,
@@ -125,6 +126,7 @@ export const inventoryPageResultMock: {
         instanceid: '2',
         tradable: 0,
         name: 'Non-Tradable Item',
+        market_hash_name: 'Non-Tradable Item',
       },
     ],
     more_items: 0,
@@ -136,23 +138,23 @@ export const inventoryPageResultMock: {
 
 export const steamItemsMocks = {
   page1: [
-    new SteamItemEntity({
+    SteamItemEntity.create({
       asset: inventoryPageResultMock.page1.assets[0],
       description: inventoryPageResultMock.page1.descriptions[0],
     }),
   ],
   page2: [
-    new SteamItemEntity({
+    SteamItemEntity.create({
       asset: inventoryPageResultMock.page2.assets[0],
       description: inventoryPageResultMock.page2.descriptions[0],
     }),
   ],
   mixedTradablePage: [
-    new SteamItemEntity({
+    SteamItemEntity.create({
       asset: inventoryPageResultMock.mixedTradablePage.assets[0],
       description: inventoryPageResultMock.mixedTradablePage.descriptions[0],
     }),
-    new SteamItemEntity({
+    SteamItemEntity.create({
       asset: inventoryPageResultMock.mixedTradablePage.assets[1],
       description: inventoryPageResultMock.mixedTradablePage.descriptions[1],
     }),

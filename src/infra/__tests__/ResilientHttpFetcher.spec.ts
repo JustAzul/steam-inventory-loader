@@ -1,8 +1,9 @@
+import { StatusCode } from 'status-code-enum';
+
 import { IFetcher } from '@application/ports/fetcher.port';
 import * as sleepHelper from '@infra/helpers/sleep.helper';
 import { ErrorPayload } from '@shared/errors';
 import { DataOrError } from '@shared/utils';
-import { StatusCode } from 'status-code-enum';
 
 import {
   HttpClientErrorCodes,

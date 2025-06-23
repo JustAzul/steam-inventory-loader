@@ -1,7 +1,8 @@
+import { injectable, inject } from 'tsyringe';
+
 import { InventoryPageResult } from '@application/types/inventory-page-result.type';
 import { ErrorPayload } from '@shared/errors';
 import { DataOrError } from '@shared/utils';
-import { injectable, inject } from 'tsyringe';
 
 import { IFetcher } from '../ports/fetcher.port';
 import {

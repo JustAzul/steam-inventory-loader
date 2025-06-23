@@ -1,9 +1,10 @@
 import 'reflect-metadata';
+import { container } from 'tsyringe';
+
 import PrivateProfileException from '@application/exceptions/private-profile.exception';
 import { GetInventoryPageResultUseCaseProps } from '@application/types/get-inventory-page-result-use-case-props.type';
 import { HttpResponse } from '@application/types/http-response.type';
 import { InventoryPageResult } from '@application/types/inventory-page-result.type';
-import { container } from 'tsyringe';
 
 import { inventoryPageResultMock } from '../../use-cases/__tests__/mocks';
 import {
