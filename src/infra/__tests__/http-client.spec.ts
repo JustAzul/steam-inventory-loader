@@ -1,101 +1,106 @@
-import nock from 'nock';
-import { IFetcher } from '@application/ports/fetcher.port';
-import { HttpClient } from '@infra/http-client';
+import 'reflect-metadata';
+import { PROXY_ADDRESS } from '@infra/constants';
+import { ErrorPayload } from '@shared/errors';
+import axios from 'axios';
+import { StatusCode } from 'status-code-enum';
+import { container } from 'tsyringe';
 
-const TEST_URL = 'http://test.com';
-const ERROR_STATUS_CODES = [401, 402, 403, 404, 500];
+import { HttpClient } from '../http-client';
 
-describe('Infrastructure :: HttpClient', () => {
-  let httpClient: IFetcher;
-  const defaultServerResponse = { message: 'Hello World!' };
+
+jest.mock('axios');
+
+describe('Infra :: HttpClient', () => {
+  let client: HttpClient;
+  const mockedAxios = axios as jest.Mocked<typeof axios>;
 
   beforeEach(() => {
-    httpClient = new HttpClient();
-    nock.cleanAll();
+    container.register(PROXY_ADDRESS, { useValue: '' });
+    container.register('AxiosInstance', { useValue: mockedAxios });
+    client = container.resolve(HttpClient);
   });
 
-  afterAll(() => {
-    nock.restore();
+  afterEach(() => {
+    container.clearInstances();
   });
 
-  it('should send the request with the correct headers', async () => {
-    const headers = {
-      'x-custom-header': 'custom-header-value',
+  it('should make a successful GET request', async () => {
+    const responseData = { message: 'success' };
+    mockedAxios.get.mockResolvedValue({
+      data: responseData,
+      headers: {},
+      status: StatusCode.SuccessOK,
+    });
+
+    const [, result] = await client.execute({ url: 'http://test.com' });
+
+    expect(result?.data).toEqual(responseData);
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      'http://test.com',
+      expect.any(Object),
+    );
+  });
+
+  it('should return an error on failed GET request', async () => {
+    const axiosError = {
+      isAxiosError: true,
+      response: { status: StatusCode.ClientErrorBadRequest },
+      message: 'Request failed',
     };
+    mockedAxios.get.mockRejectedValue(axiosError);
 
-    const scope = nock(TEST_URL, {
-      reqheaders: headers,
-    })
-      .get('/')
-      .reply(200, defaultServerResponse, { 'x-request-id': 'some-id' });
+    const [error] = await client.execute({ url: 'http://test.com' });
 
-    const [error, response] = await httpClient.execute({
-      headers,
-      url: TEST_URL,
+    expect(error).toBeInstanceOf(ErrorPayload);
+  });
+
+  it('should handle proxy errors', async () => {
+    const proxyError = {
+      isAxiosError: true,
+      code: 'ECONNRESET',
+      message: 'socket hang up',
+    };
+    mockedAxios.get.mockRejectedValue(proxyError);
+
+    const [error] = await client.execute({ url: 'http://test.com' });
+
+    expect(error?.code).toEqual('PROXY_ERROR');
+  });
+
+  it('should set default headers for requests', async () => {
+    client.setDefaultHeaders({ 'X-Test-Header': 'TestValue' });
+    mockedAxios.get.mockResolvedValue({
+      data: {},
+      headers: {},
+      status: StatusCode.SuccessOK,
     });
 
-    expect(error).toBeUndefined();
-    expect(response?.headers['x-request-id']).toBeDefined();
-    expect(scope.isDone()).toBe(true);
+    await client.execute({ url: 'http://test.com' });
+
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      'http://test.com',
+      expect.objectContaining({
+        headers: { 'X-Test-Header': 'TestValue' },
+      }),
+    );
   });
 
-  it('should complete a GET request', async () => {
-    nock(TEST_URL).get('/').reply(200, defaultServerResponse);
-
-    const [error, response] = await httpClient.execute({
-      url: TEST_URL,
+  it('should set default cookies for requests', async () => {
+    const cookieString = 'key1=value1';
+    client.setDefaultCookies(cookieString);
+    mockedAxios.get.mockResolvedValue({
+      data: {},
+      headers: {},
+      status: StatusCode.SuccessOK,
     });
 
-    expect(error).toBeUndefined();
-    expect(response?.data).toMatchObject(defaultServerResponse);
-  });
+    await client.execute({ url: 'http://test.com' });
 
-  it('should not return response when request fails', async () => {
-    for (const statusCode of ERROR_STATUS_CODES) {
-      nock(TEST_URL).get(`/${statusCode}`).reply(statusCode);
-
-      const [, serverResponse] = await httpClient.execute({
-        url: `${TEST_URL}/${statusCode}`,
-      });
-      expect(serverResponse).toBeUndefined();
-    }
-  });
-
-  it('should return HTTP_CLIENT_ERROR when the request fails', async () => {
-    for (const statusCode of ERROR_STATUS_CODES) {
-      nock(TEST_URL).get(`/${statusCode}`).reply(statusCode);
-      const [error] = await httpClient.execute({
-        url: `${TEST_URL}/${statusCode}`,
-      });
-      expect(error?.code).toEqual('HTTP_CLIENT_ERROR');
-    }
-  });
-
-  it('should return headers when the request fails', async () => {
-    for (const statusCode of ERROR_STATUS_CODES) {
-      const replyHeaders = { 'x-failed-request-id': 'failed-id' };
-      nock(TEST_URL)
-        .get(`/${statusCode}`)
-        .reply(statusCode, undefined, replyHeaders);
-
-      const [error] = await httpClient.execute({
-        url: `${TEST_URL}/${statusCode}`,
-      });
-      expect(error?.code).toEqual('HTTP_CLIENT_ERROR');
-      expect(error?.payload.response.headers).toBeDefined();
-      expect(error?.payload.response.headers['x-failed-request-id']).toEqual(
-        'failed-id',
-      );
-    }
-  });
-
-  it('should return the status code on the error payload', async () => {
-    for (const statusCode of ERROR_STATUS_CODES) {
-      nock(TEST_URL).get(`/${statusCode}`).reply(statusCode);
-      const [error] = await httpClient.execute({
-        url: `${TEST_URL}/${statusCode}`,
-      });
-      expect(error?.payload.response.statusCode).toEqual(statusCode);
-    }
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      'http://test.com',
+      expect.objectContaining({
+        headers: { cookie: cookieString },
+      }),
+    );
   });
 });

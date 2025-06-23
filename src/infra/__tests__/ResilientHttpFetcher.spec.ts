@@ -1,16 +1,20 @@
 import { ErrorPayload } from '@shared/errors';
-import { IFetcher } from '../../application/ports/fetcher.port';
+import * as sleepHelper from '@infra/helpers/sleep.helper';
+import { DataOrError } from '@shared/utils';
+import { StatusCode } from 'status-code-enum';
+
+import { IFetcher } from '@application/ports/fetcher.port';
 import {
   HttpClientErrorCodes,
   HttpClientGetProps,
   HttpClientResponse,
 } from '../../application/types/http-response.type';
 import { ResilientHttpFetcher } from '../ResilientHttpFetcher';
-import * as sleepHelper from '@shared/helpers/sleep.helper';
-import { StatusCode } from 'status-code-enum';
-import { DataOrError } from '@shared/utils';
 
-jest.mock('@shared/helpers/sleep.helper');
+jest.mock('@infra/helpers/sleep.helper');
+jest.mock('@application/ports/fetcher.port');
+
+const sleepMock = jest.spyOn(sleepHelper, 'default');
 
 describe('Infrastructure :: ResilientHttpFetcher', () => {
   let mockFetcher: jest.Mocked<IFetcher>;
@@ -24,12 +28,15 @@ describe('Infrastructure :: ResilientHttpFetcher', () => {
   });
 
   it('should return data on the first successful attempt', async () => {
-    const successResponse: HttpClientResponse<any> = {
+    const successResponse: HttpClientResponse<{ message: string }> = {
       data: { message: 'success' },
       headers: {},
       statusCode: 200,
     };
-    const successResult: DataOrError<any, any> = [undefined, successResponse];
+    const successResult: DataOrError<
+      ErrorPayload<HttpClientErrorCodes>,
+      HttpClientResponse<{ message: string }>
+    > = [undefined, successResponse];
     mockFetcher.execute.mockResolvedValueOnce(successResult);
 
     const fetcher = new ResilientHttpFetcher(mockFetcher);
@@ -45,13 +52,19 @@ describe('Infrastructure :: ResilientHttpFetcher', () => {
       code: 'HTTP_CLIENT_ERROR',
       payload: { message: 'failed' },
     });
-    const errorResult: DataOrError<any, any> = [errorResponse];
-    const successResponse: HttpClientResponse<any> = {
+    const errorResult: DataOrError<
+      ErrorPayload<HttpClientErrorCodes>,
+      never
+    > = [errorResponse];
+    const successResponse: HttpClientResponse<{ message: string }> = {
       data: { message: 'success' },
       headers: {},
       statusCode: 200,
     };
-    const successResult: DataOrError<any, any> = [undefined, successResponse];
+    const successResult: DataOrError<
+      ErrorPayload<HttpClientErrorCodes>,
+      HttpClientResponse<{ message: string }>
+    > = [undefined, successResponse];
     mockFetcher.execute
       .mockResolvedValueOnce(errorResult)
       .mockResolvedValueOnce(successResult);
@@ -70,7 +83,10 @@ describe('Infrastructure :: ResilientHttpFetcher', () => {
       code: 'HTTP_CLIENT_ERROR',
       payload: { message: 'failed' },
     });
-    const errorResult: DataOrError<any, any> = [errorResponse];
+    const errorResult: DataOrError<
+      ErrorPayload<HttpClientErrorCodes>,
+      never
+    > = [errorResponse];
     mockFetcher.execute.mockResolvedValue(errorResult);
 
     const fetcher = new ResilientHttpFetcher(mockFetcher, { maxRetries: 2 });
@@ -87,18 +103,24 @@ describe('Infrastructure :: ResilientHttpFetcher', () => {
       code: 'HTTP_CLIENT_ERROR',
       payload: {
         response: {
-          statusCode: StatusCode.ClientErrorTooManyRequests,
           headers: { 'retry-after': '3' },
+          statusCode: StatusCode.ClientErrorTooManyRequests,
         },
       },
     });
-    const errorResult: DataOrError<any, any> = [errorResponse];
-    const successResponse: HttpClientResponse<any> = {
+    const errorResult: DataOrError<
+      ErrorPayload<HttpClientErrorCodes>,
+      never
+    > = [errorResponse];
+    const successResponse: HttpClientResponse<{ message: string }> = {
       data: { message: 'success' },
       headers: {},
       statusCode: 200,
     };
-    const successResult: DataOrError<any, any> = [undefined, successResponse];
+    const successResult: DataOrError<
+      ErrorPayload<HttpClientErrorCodes>,
+      HttpClientResponse<{ message: string }>
+    > = [undefined, successResponse];
     mockFetcher.execute
       .mockResolvedValueOnce(errorResult)
       .mockResolvedValueOnce(successResult);
@@ -110,4 +132,4 @@ describe('Infrastructure :: ResilientHttpFetcher', () => {
     expect(sleepHelper.default).toHaveBeenCalledTimes(1);
     expect(sleepHelper.default).toHaveBeenCalledWith(3000);
   });
-}); 
+});

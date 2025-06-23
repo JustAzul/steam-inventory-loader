@@ -16,4 +16,4 @@ export interface IFetcher {
       HttpClientResponse<FetchUrlResult>
     >
   >;
-} 
+}

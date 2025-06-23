@@ -1,12 +1,17 @@
-import { injectable } from 'tsyringe';
 import { IncomingHttpHeaders } from 'http';
+import { Agent as HttpsAgent } from 'https';
 
 import { IFetcher } from '@application/ports/fetcher.port';
-import { HttpClientGetProps } from '@application/types/http-response.type';
-import { DEFAULT_REQUEST_TIMEOUT } from '@shared/constants';
+import {
+  HttpClientErrorCodes,
+  HttpClientGetProps,
+  HttpClientResponse,
+  HttpErrorPayload,
+} from '@application/types/http-response.type';
+import { PROXY_ADDRESS } from '@infra/constants';
+import { DEFAULT_REQUEST_TIMEOUT } from '@application/constants';
 import { ErrorPayload } from '@shared/errors';
-import { error, result } from '@shared/utils';
-import { HttpsAgent } from 'agentkeepalive';
+import { DataOrError, error, result } from '@shared/utils';
 import Axios, {
   AxiosInstance,
   AxiosRequestConfig,
@@ -14,6 +19,7 @@ import Axios, {
   CreateAxiosDefaults,
 } from 'axios';
 import { HttpsProxyAgent } from 'hpagent';
+import { injectable, inject } from 'tsyringe';
 
 @injectable()
 export class HttpClient implements IFetcher {
@@ -23,15 +29,20 @@ export class HttpClient implements IFetcher {
   private readonly proxyAgent?: HttpsProxyAgent;
   private static readonly defaultHttpsAgent: HttpsAgent = new HttpsAgent();
 
-  constructor(proxyAddress?: string) {
-    if (proxyAddress) {
+  constructor(
+    @inject(PROXY_ADDRESS)
+    private readonly proxyAddress: string,
+    @inject('AxiosInstance')
+    client: AxiosInstance,
+  ) {
+    if (this.proxyAddress) {
       this.proxyAgent = new HttpsProxyAgent({
         keepAlive: true,
-        proxy: proxyAddress,
+        proxy: this.proxyAddress,
       });
     }
 
-    this.client = Axios.create(this.getClientConstructor());
+    this.client = client || Axios.create(this.getClientConstructor());
   }
 
   private getClientConstructor(): CreateAxiosDefaults {
@@ -63,7 +74,9 @@ export class HttpClient implements IFetcher {
     return this;
   }
 
-  public async execute<T>(props: HttpClientGetProps) {
+  public async execute<T>(
+    props: HttpClientGetProps,
+  ): Promise<DataOrError<ErrorPayload<HttpClientErrorCodes>, HttpClientResponse<T>>> {
     const { url, headers: propsHeaders, params } = props;
 
     const requestHeaders = { ...this.defaultHeaders, ...propsHeaders };
@@ -85,20 +98,35 @@ export class HttpClient implements IFetcher {
         data,
         headers: incomingHeaders,
         status,
-      } = await this.client.get<T, AxiosResponse<T, never>, never>(
-        url,
-        options,
-      );
+      } = await this.client.get<T, AxiosResponse<T, never>, never>(url, options);
 
       return result({
         data,
         headers: incomingHeaders as IncomingHttpHeaders,
         statusCode: status,
       });
-    } catch (e) {
-      if (Axios.isAxiosError(e)) {
+    } catch (e: unknown) {
+      if (
+        e &&
+        typeof e === 'object' &&
+        'code' in e &&
+        (e.code === 'ECONNRESET' || e.code === 'ECONNABORTED')
+      ) {
         return error(
           new ErrorPayload({
+            code: 'PROXY_ERROR',
+            payload: {
+              message:
+                e instanceof Error ? e.message : 'Proxy connection error',
+              request: props,
+            },
+          }),
+        );
+      }
+
+      if (Axios.isAxiosError(e)) {
+        return error(
+          new ErrorPayload<HttpClientErrorCodes, HttpErrorPayload>({
             code: 'HTTP_CLIENT_ERROR',
             payload: {
               message: e.message,
@@ -117,10 +145,7 @@ export class HttpClient implements IFetcher {
         return error(
           new ErrorPayload({
             code: 'INTERNAL_ERROR',
-            payload: {
-              message: e.message,
-              request: props,
-            },
+            payload: { message: e.message, request: props },
           }),
         );
       }
@@ -128,10 +153,7 @@ export class HttpClient implements IFetcher {
       return error(
         new ErrorPayload({
           code: 'UNKNOWN_ERROR',
-          payload: {
-            error: e,
-            request: props,
-          },
+          payload: { error: e, request: props },
         }),
       );
     }
