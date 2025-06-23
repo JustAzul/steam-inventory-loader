@@ -1,8 +1,8 @@
-import { injectable } from 'tsyringe';
-import SteamItemFactory from '@domain/factories/steam-item.factory';
 import SteamItemEntity from '@domain/entities/steam-item.entity';
+import SteamItemFactory from '@domain/factories/steam-item.factory';
 import { InventoryPageAsset } from '@domain/types/inventory-page-asset.type';
 import { InventoryPageDescription } from '@domain/types/inventory-page-description.type';
+import { injectable } from 'tsyringe';
 
 export interface MapAssetsToSteamItemsUseCaseProps {
   assets: InventoryPageAsset[];
@@ -21,4 +21,4 @@ export default class MapAssetsToSteamItemsUseCase {
 
     return SteamItemFactory.createFromInventoryPage(assets, descriptions);
   }
-} 
+}

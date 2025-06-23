@@ -1,7 +1,7 @@
 import { injectable } from 'tsyringe';
+
 import { InputWithIconURL } from '../../domain/types/input-with-icon-url.type';
-/* eslint-disable camelcase */
-import { STEAM_CDN_IMAGE_URL } from '../../shared/constants';
+import { STEAM_CDN_IMAGE_URL } from '@domain/constants';
 
 type GetImageUrlUseCaseProps = {
   input: InputWithIconURL;
@@ -10,10 +10,7 @@ type GetImageUrlUseCaseProps = {
 
 @injectable()
 export default class GetImageUrlUseCase {
-  public execute({
-    input,
-    size,
-  }: GetImageUrlUseCaseProps): string {
+  public execute({ input, size }: GetImageUrlUseCaseProps): string {
     const isLarge = size === 'large';
 
     if (isLarge) {

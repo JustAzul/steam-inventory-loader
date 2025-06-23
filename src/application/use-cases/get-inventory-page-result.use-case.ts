@@ -1,46 +1,28 @@
-import {
-  DEFAULT_REQUEST_ITEM_COUNT,
-  DEFAULT_REQUEST_LANGUAGE,
-} from '../../shared/constants';
-import {
-  HttpClientGetProps,
-  HttpClientResponse,
-} from '../types/http-response.type';
-import { InventoryPageResult } from '../types/inventory-page-result.type';
+import { InventoryPageResult } from '@application/types/inventory-page-result.type';
+import { ErrorPayload } from '@shared/errors';
+import { DataOrError } from '@shared/utils';
 import { injectable, inject } from 'tsyringe';
 
-import GetHttpResponseWithExceptionUseCase from './get-http-response-with-exception.use-case';
-import GetPageUrlUseCase from './get-page-url.use-case';
-
-export type GetInventoryPageResultProps = {
-  appID: string;
-  contextID: string;
-  count: number;
-  language: string;
-  steamID64: string;
-  lastAssetID?: string;
-};
+import { IFetcher } from '../ports/fetcher.port';
+import {
+  HttpClientErrorCodes,
+  HttpClientResponse,
+} from '../types/http-response.type';
 
 @injectable()
 export default class GetInventoryPageResultUseCase {
-  public constructor(
-    private readonly getHttpResponseUseCase: GetHttpResponseWithExceptionUseCase,
-    private readonly getPageUrlUseCase: GetPageUrlUseCase,
+  constructor(
+    @inject('IFetcher')
+    private readonly fetcher: IFetcher,
   ) {}
-
-  public async execute(
-    props: GetInventoryPageResultProps,
-  ): Promise<InventoryPageResult> {
-    const { url, params } = this.getPageUrlUseCase.execute(props);
-
-    const httpClientProps: HttpClientGetProps = {
-      url,
-      params,
-    };
-
-    const { data }: HttpClientResponse<InventoryPageResult> =
-      await this.getHttpResponseUseCase.execute(httpClientProps);
-
-    return data as InventoryPageResult;
+  public execute(
+    url: string,
+  ): Promise<
+    DataOrError<
+      ErrorPayload<HttpClientErrorCodes>,
+      HttpClientResponse<InventoryPageResult>
+    >
+  > {
+    return this.fetcher.execute<InventoryPageResult>({ url });
   }
 }

@@ -1,9 +1,10 @@
 import { injectable } from 'tsyringe';
+
 import {
   PLACEHOLDER_APP_ID,
   PLACEHOLDER_CONTEXT_ID,
   PLACEHOLDER_STEAM_ID_64,
-} from '../../shared/constants';
+} from '@domain/constants';
 import UseCaseException from '../exceptions/use-case.exception';
 
 const PROTOCOL_HTTP = 'http://';
@@ -33,4 +34,4 @@ export default class ValidateEndpointUseCase {
       );
     }
   }
-} 
+}

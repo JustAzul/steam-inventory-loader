@@ -1,5 +1,7 @@
 import SteamItemEntity from '@domain/entities/steam-item.entity';
+
 import MapAssetsToSteamItemsUseCase from '../map-assets-to-steam-items.use-case';
+
 import { inventoryPageResultMock } from './mocks';
 
 describe('Application :: UseCases :: MapAssetsToSteamItemsUseCase', () => {
@@ -12,9 +14,7 @@ describe('Application :: UseCases :: MapAssetsToSteamItemsUseCase', () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toBeInstanceOf(SteamItemEntity);
     expect(result[0].assetid).toBe('1');
-    expect(result[0].market_hash_name).toBe(
-      'Operation Breakout Weapon Case',
-    );
+    expect(result[0].market_hash_name).toBe('Operation Breakout Weapon Case');
     expect(result[0].tradable).toBe(true);
   });
 
@@ -30,4 +30,4 @@ describe('Application :: UseCases :: MapAssetsToSteamItemsUseCase', () => {
     });
     expect(result2).toEqual([]);
   });
-}); 
+});

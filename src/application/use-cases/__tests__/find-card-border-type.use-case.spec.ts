@@ -1,6 +1,7 @@
+import { rawTag } from '@domain/types/raw-tag.type';
+
 import FindCardBorderTypeUseCase from '../find-card-border-type.use-case';
 import FindTagUseCase from '../find-tag.use-case';
-import { rawTag } from '@domain/types/raw-tag.type';
 
 describe('Application :: UseCases :: FindCardBorderTypeUseCase', () => {
   let useCase: FindCardBorderTypeUseCase;
@@ -12,22 +13,64 @@ describe('Application :: UseCases :: FindCardBorderTypeUseCase', () => {
   });
 
   const normalCardTags: rawTag[] = [
-    { category: 'item_class', internal_name: 'item_class_2', category_name: 'Item Class', name: 'Trading Card', color: '' },
-    { category: 'cardborder', internal_name: 'cardborder_0', category_name: 'Card Border', name: 'Normal', color: '' },
+    {
+      category: 'item_class',
+      category_name: 'Item Class',
+      color: '',
+      internal_name: 'item_class_2',
+      name: 'Trading Card',
+    },
+    {
+      category: 'cardborder',
+      category_name: 'Card Border',
+      color: '',
+      internal_name: 'cardborder_0',
+      name: 'Normal',
+    },
   ];
 
   const foilCardTags: rawTag[] = [
-    { category: 'item_class', internal_name: 'item_class_2', category_name: 'Item Class', name: 'Trading Card', color: '' },
-    { category: 'cardborder', internal_name: 'cardborder_1', category_name: 'Card Border', name: 'Foil', color: '' },
+    {
+      category: 'item_class',
+      category_name: 'Item Class',
+      color: '',
+      internal_name: 'item_class_2',
+      name: 'Trading Card',
+    },
+    {
+      category: 'cardborder',
+      category_name: 'Card Border',
+      color: '',
+      internal_name: 'cardborder_1',
+      name: 'Foil',
+    },
   ];
 
   const nonCardTags: rawTag[] = [
-    { category: 'item_class', internal_name: 'item_class_3', category_name: 'Item Class', name: 'Profile Background', color: '' },
-    { category: 'cardborder', internal_name: 'cardborder_0', category_name: 'Card Border', name: 'Normal', color: '' },
+    {
+      category: 'item_class',
+      category_name: 'Item Class',
+      color: '',
+      internal_name: 'item_class_3',
+      name: 'Profile Background',
+    },
+    {
+      category: 'cardborder',
+      category_name: 'Card Border',
+      color: '',
+      internal_name: 'cardborder_0',
+      name: 'Normal',
+    },
   ];
 
   const missingBorderTag: rawTag[] = [
-    { category: 'item_class', internal_name: 'item_class_2', category_name: 'Item Class', name: 'Trading Card', color: '' },
+    {
+      category: 'item_class',
+      category_name: 'Item Class',
+      color: '',
+      internal_name: 'item_class_2',
+      name: 'Trading Card',
+    },
   ];
 
   it('should return "Normal" for a normal trading card', () => {
@@ -54,4 +97,4 @@ describe('Application :: UseCases :: FindCardBorderTypeUseCase', () => {
     const result = useCase.execute({ tags: [] });
     expect(result).toBeNull();
   });
-}); 
+});

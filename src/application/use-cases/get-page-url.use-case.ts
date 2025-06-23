@@ -1,10 +1,11 @@
 import { injectable, inject } from 'tsyringe';
+
 import {
   DEFAULT_REQUEST_URL,
   PLACEHOLDER_APP_ID,
   PLACEHOLDER_CONTEXT_ID,
   PLACEHOLDER_STEAM_ID_64,
-} from '../../shared/constants';
+} from '@domain/constants';
 
 import ValidateEndpointUseCase from './validate-endpoint.use-case';
 
@@ -19,8 +20,8 @@ export type GetPageUrlProps = {
 };
 
 export type GetPageUrlResult = {
-  url: string;
   params: Record<string, string | number>;
+  url: string;
 };
 
 @injectable()
@@ -73,6 +74,6 @@ export default class GetPageUrlUseCase {
       params.start_assetid = lastAssetID;
     }
 
-    return { url, params };
+    return { params, url };
   }
 }

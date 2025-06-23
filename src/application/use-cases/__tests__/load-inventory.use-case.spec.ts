@@ -1,110 +1,113 @@
-import SteamItemEntity from '@domain/entities/steam-item.entity';
+import 'reflect-metadata';
+import PrivateProfileException from '@application/exceptions/private-profile.exception';
+import { InventoryPageAsset } from '@domain/types/inventory-page-asset.type';
 import { CookieJar } from 'tough-cookie';
+import { container } from 'tsyringe';
+
+import InventoryPageService from '../../services/inventory-page.service';
 import LoadInventoryUseCase, {
   LoadInventoryUseCaseProps,
 } from '../load-inventory.use-case';
-import { inventoryPageResultMock } from './mocks';
-import PrivateProfileException from '@application/exceptions/private-profile.exception';
-import {
-  createGetInventoryPageMock,
-  createMapAssetsToSteamItemsMock,
-} from './use-case.mocks';
-import GetInventoryPageResultUseCase from '../get-inventory-page-result.use-case';
 import MapAssetsToSteamItemsUseCase from '../map-assets-to-steam-items.use-case';
 
-describe('Application :: UseCases :: LoadInventoryUseCase', () => {
-  let getInventoryPageMock: jest.Mocked<GetInventoryPageResultUseCase>;
-  let mapAssetsToSteamItemsMock: jest.Mocked<MapAssetsToSteamItemsUseCase>;
+import { inventoryPageResultMock, steamItemsMocks } from './mocks';
+import {
+  createInventoryPageServiceMock,
+  createMapAssetsToSteamItemsMock,
+} from './use-case.mocks';
 
-  const useCaseProps: LoadInventoryUseCaseProps = {
-    steamID64: '76561197994150794',
+
+describe('Application :: UseCases :: LoadInventoryUseCase', () => {
+  let useCase: LoadInventoryUseCase;
+  let inventoryService: jest.Mocked<InventoryPageService>;
+  let mapAssetsToSteamItems: jest.Mocked<MapAssetsToSteamItemsUseCase>;
+
+  const baseProps: LoadInventoryUseCaseProps = {
     appID: '730',
     contextID: '2',
+    steamID64: '123456789',
     config: {
       SteamCommunity_Jar: new CookieJar(),
-      Language: 'english',
-      itemsPerPage: 1,
       tradableOnly: false,
     },
   };
 
-  it('should process and return a full inventory, respecting pagination', async () => {
-    getInventoryPageMock = createGetInventoryPageMock();
-    mapAssetsToSteamItemsMock = createMapAssetsToSteamItemsMock();
+  beforeEach(() => {
+    jest.clearAllMocks();
+    inventoryService = createInventoryPageServiceMock();
+    mapAssetsToSteamItems = createMapAssetsToSteamItemsMock();
 
-    const useCase = new LoadInventoryUseCase(
-      getInventoryPageMock,
-      mapAssetsToSteamItemsMock,
+    container.registerInstance(InventoryPageService, inventoryService);
+    container.registerInstance(
+      MapAssetsToSteamItemsUseCase,
+      mapAssetsToSteamItems,
     );
-
-    const inventory = await useCase.execute(useCaseProps);
-
-    expect(inventory).toHaveLength(2);
-    expect(inventory[0]).toBeInstanceOf(SteamItemEntity);
-    expect(inventory[1]).toBeInstanceOf(SteamItemEntity);
-    expect(getInventoryPageMock.execute).toHaveBeenCalledTimes(2);
-
-    const { config, ...expectedProps } = useCaseProps;
-
-    expect(getInventoryPageMock.execute).toHaveBeenCalledWith({
-      ...expectedProps,
-      count: 1,
-      language: 'english',
-      lastAssetID: undefined,
-    });
-    expect(getInventoryPageMock.execute).toHaveBeenCalledWith({
-      ...expectedProps,
-      count: 1,
-      language: 'english',
-      lastAssetID: '1',
-    });
-    expect(mapAssetsToSteamItemsMock.execute).toHaveBeenCalledTimes(2);
+    useCase = container.resolve(LoadInventoryUseCase);
   });
 
-  it('should filter for tradable items only', async () => {
-    getInventoryPageMock = createGetInventoryPageMock();
-    mapAssetsToSteamItemsMock = createMapAssetsToSteamItemsMock();
+  it('should load multiple pages and map results correctly', async () => {
+    // Arrange
+    inventoryService.getInventoryPage
+      .mockResolvedValueOnce(inventoryPageResultMock.page1)
+      .mockResolvedValueOnce(inventoryPageResultMock.page2)
+      .mockResolvedValueOnce(inventoryPageResultMock.emptyPage);
+    mapAssetsToSteamItems.execute
+      .mockReturnValueOnce(steamItemsMocks.page1)
+      .mockReturnValueOnce(steamItemsMocks.page2)
+      .mockReturnValueOnce([]);
 
-    const propsWithTradableFilter: LoadInventoryUseCaseProps = {
-      ...useCaseProps,
-      config: {
-        ...useCaseProps.config,
-        tradableOnly: true,
-      },
+    // Act
+    const result = await useCase.execute(baseProps);
+
+    // Assert
+    expect(inventoryService.getInventoryPage).toHaveBeenCalledTimes(3);
+    expect(mapAssetsToSteamItems.execute).toHaveBeenCalledTimes(3);
+    expect(result).toEqual([
+      ...steamItemsMocks.page1,
+      ...steamItemsMocks.page2,
+    ]);
+    expect(result.length).toBe(2);
+  });
+
+  it('should filter for tradable items only when tradableOnly is true', async () => {
+    // Arrange
+    const props = {
+      ...baseProps,
+      config: { ...baseProps.config, tradableOnly: true },
     };
-
-    const useCase = new LoadInventoryUseCase(
-      getInventoryPageMock,
-      mapAssetsToSteamItemsMock,
+    inventoryService.getInventoryPage.mockResolvedValueOnce(
+      inventoryPageResultMock.mixedTradablePage,
+    );
+    mapAssetsToSteamItems.execute.mockReturnValueOnce(
+      steamItemsMocks.mixedTradablePage.filter((item) => item.tradable),
     );
 
-    const inventory = await useCase.execute(propsWithTradableFilter);
+    // Act
+    const result = await useCase.execute(props);
 
-    expect(inventory).toHaveLength(1);
-    expect(inventory[0].tradable).toBe(true);
+    // Assert
+    expect(mapAssetsToSteamItems.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        assets: inventoryPageResultMock.mixedTradablePage.assets.filter(
+          (a: InventoryPageAsset) =>
+            inventoryPageResultMock.mixedTradablePage.descriptions.find(
+              (d) => d.classid === a.classid && d.instanceid === a.instanceid,
+            )?.tradable === 1,
+        ),
+      }),
+    );
+    expect(result.length).toBe(1); // Only the tradable item should be left
   });
 
-  it('should throw a private profile exception', async () => {
-    getInventoryPageMock = {
-      execute: jest.fn().mockRejectedValue(
-        new PrivateProfileException({
-          request: { url: 'http://test.com' },
-          response: {},
-        }),
-      ),
-    } as unknown as jest.Mocked<GetInventoryPageResultUseCase>;
-
-    mapAssetsToSteamItemsMock = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<MapAssetsToSteamItemsUseCase>;
-
-    const useCase = new LoadInventoryUseCase(
-      getInventoryPageMock,
-      mapAssetsToSteamItemsMock,
+  it('should throw a PrivateProfileException when the inventory service fails', async () => {
+    // Arrange
+    inventoryService.getInventoryPage.mockRejectedValue(
+      new PrivateProfileException({ request: { url: '' }, response: {} }),
     );
 
-    await expect(useCase.execute(useCaseProps)).rejects.toThrow(
+    // Act & Assert
+    await expect(useCase.execute(baseProps)).rejects.toThrow(
       PrivateProfileException,
     );
   });
-}); 
+});

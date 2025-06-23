@@ -1,25 +1,26 @@
-import { injectable, inject } from 'tsyringe';
-import SteamItemEntity from '@domain/entities/steam-item.entity';
 import SteamItemTag from '@domain/entities/steam-item-tag.entity';
+import SteamItemEntity from '@domain/entities/steam-item.entity';
 import { CardType } from '@domain/types/card-type.type';
 import { InputWithIconURL } from '@domain/types/input-with-icon-url.type';
 import { LoaderConfig } from '@domain/types/loader-config.type';
 import { rawTag } from '@domain/types/raw-tag.type';
+import { injectable, inject } from 'tsyringe';
+
 import FindCardBorderTypeUseCase from '../use-cases/find-card-border-type.use-case';
 import FindTagUseCase from '../use-cases/find-tag.use-case';
 import GetImageUrlUseCase from '../use-cases/get-image-url.use-case';
 import LoadInventoryUseCase from '../use-cases/load-inventory.use-case';
 
 export interface LoadInventoryParams {
-  steamID64: string;
   appID: string;
-  contextID: string;
   config: LoaderConfig;
+  contextID: string;
+  steamID64: string;
 }
 
 export interface FindTagParams {
-  tags: Array<rawTag | SteamItemTag>;
   categoryToFind: string;
+  tags: Array<rawTag | SteamItemTag>;
 }
 
 export interface GetImageUrlParams {
@@ -53,7 +54,9 @@ export default class SteamInventoryService {
    * @param params - Parameters for loading inventory
    * @returns Promise resolving to array of Steam items
    */
-  public async loadInventory(params: LoadInventoryParams): Promise<SteamItemEntity[]> {
+  public async loadInventory(
+    params: LoadInventoryParams,
+  ): Promise<SteamItemEntity[]> {
     return this.loadInventoryUseCase.execute(params);
   }
 
@@ -83,4 +86,4 @@ export default class SteamInventoryService {
   public findCardBorderType(params: FindCardBorderTypeParams): CardType | null {
     return this.findCardBorderTypeUseCase.execute(params);
   }
-} 
+}

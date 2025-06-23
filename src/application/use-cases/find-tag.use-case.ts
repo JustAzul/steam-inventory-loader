@@ -1,6 +1,7 @@
+
+import SteamItemTag from '@domain/entities/steam-item-tag.entity';
+import { rawTag } from '@domain/types/raw-tag.type';
 import { injectable } from 'tsyringe';
-import SteamItemTag from '../../domain/entities/steam-item-tag.entity';
-import { rawTag } from '../../domain/types/raw-tag.type';
 
 export type FindTagUseCaseProps = {
   categoryToFind: string;

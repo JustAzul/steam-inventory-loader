@@ -1,32 +1,34 @@
-import GetInventoryPageResultUseCase from '../get-inventory-page-result.use-case';
-import MapAssetsToSteamItemsUseCase from '../map-assets-to-steam-items.use-case';
-import SteamItemEntity from '@domain/entities/steam-item.entity';
-import { inventoryPageResultMock } from './mocks';
+import 'reflect-metadata';
+import { jest } from '@jest/globals';
+import InventoryPageService from '@application/services/inventory-page.service';
 
-export const createGetInventoryPageMock = (): jest.Mocked<GetInventoryPageResultUseCase> => {
+import GetInventoryPageResultUseCase from '../get-inventory-page-result.use-case';
+import GetPageUrlUseCase from '../get-page-url.use-case';
+import MapAssetsToSteamItemsUseCase from '../map-assets-to-steam-items.use-case';
+
+export const createGetInventoryPageMock =
+  (): jest.Mocked<GetInventoryPageResultUseCase> => {
+    return {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetInventoryPageResultUseCase>;
+  };
+
+export const createGetPageUrlMock = (): jest.Mocked<GetPageUrlUseCase> => {
   return {
-    execute: jest
-      .fn()
-      .mockResolvedValueOnce(inventoryPageResultMock.page1)
-      .mockResolvedValueOnce(inventoryPageResultMock.page2),
-  } as unknown as jest.Mocked<GetInventoryPageResultUseCase>;
+    execute: jest.fn(),
+  } as unknown as jest.Mocked<GetPageUrlUseCase>;
 };
 
-export const createMapAssetsToSteamItemsMock = (): jest.Mocked<MapAssetsToSteamItemsUseCase> => {
-  return {
-    execute: jest
-      .fn()
-      .mockImplementationOnce(() => [
-        new SteamItemEntity({
-          asset: inventoryPageResultMock.page1.assets[0],
-          description: inventoryPageResultMock.page1.descriptions[0],
-        }),
-      ])
-      .mockImplementationOnce(() => [
-        new SteamItemEntity({
-          asset: inventoryPageResultMock.page2.assets[0],
-          description: inventoryPageResultMock.page2.descriptions[0],
-        }),
-      ]),
-  } as unknown as jest.Mocked<MapAssetsToSteamItemsUseCase>;
-}; 
+export const createMapAssetsToSteamItemsMock =
+  (): jest.Mocked<MapAssetsToSteamItemsUseCase> => {
+    return {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<MapAssetsToSteamItemsUseCase>;
+  };
+
+export const createInventoryPageServiceMock =
+  (): jest.Mocked<InventoryPageService> => {
+    return {
+      getInventoryPage: jest.fn(),
+    } as unknown as jest.Mocked<InventoryPageService>;
+  };

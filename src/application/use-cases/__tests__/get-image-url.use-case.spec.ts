@@ -1,5 +1,6 @@
+import { STEAM_CDN_IMAGE_URL } from '@domain/constants';
+
 import GetImageUrlUseCase from '../get-image-url.use-case';
-import { STEAM_CDN_IMAGE_URL } from '@shared/constants';
 
 describe('Application :: UseCases :: GetImageUrlUseCase', () => {
   let useCase: GetImageUrlUseCase;
@@ -38,4 +39,4 @@ describe('Application :: UseCases :: GetImageUrlUseCase', () => {
     const result = useCase.execute({ input, size: 'large' });
     expect(result).toBe(expectedUrl);
   });
-}); 
+});

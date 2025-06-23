@@ -1,4 +1,4 @@
-/* eslint-disable camelcase */
+ 
 import { InventoryPageAsset } from '../../domain/types/inventory-page-asset.type';
 import { InventoryPageDescription } from '../../domain/types/inventory-page-description.type';
 
