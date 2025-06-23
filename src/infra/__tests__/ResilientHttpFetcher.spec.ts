@@ -1,13 +1,12 @@
+import 'reflect-metadata';
 import { StatusCode } from 'status-code-enum';
 
 import { IFetcher } from '@application/ports/fetcher.port';
-import HttpException from '@application/exceptions/http.exception';
+import { HttpException } from '@domain/exceptions';
+import { HttpClientGetProps } from '@domain/types/http-response.type';
+import { InventoryPageResult } from '@domain/types/inventory-page-result.type';
 import * as sleepHelper from '@infra/helpers/sleep.helper';
 
-import {
-  HttpClientGetProps,
-  HttpClientResponse,
-} from '../../application/types/http-response.type';
 import { ResilientHttpFetcher } from '../ResilientHttpFetcher';
 
 jest.mock('@infra/helpers/sleep.helper');
@@ -16,6 +15,13 @@ jest.mock('@infra/helpers/sleep.helper');
 describe('Infrastructure :: ResilientHttpFetcher', () => {
   let mockFetcher: jest.Mocked<IFetcher>;
   const props: HttpClientGetProps = { url: 'http://test.com' };
+  const successResponse: InventoryPageResult = {
+    assets: [],
+    descriptions: [],
+    total_inventory_count: 0,
+    success: 1,
+    rwgrsn: -2,
+  };
 
   beforeEach(() => {
     mockFetcher = {
@@ -25,11 +31,6 @@ describe('Infrastructure :: ResilientHttpFetcher', () => {
   });
 
   it('should return data on the first successful attempt', async () => {
-    const successResponse: HttpClientResponse<{ message: string }> = {
-      data: { message: 'success' },
-      headers: {},
-      statusCode: StatusCode.SuccessOK,
-    };
     mockFetcher.execute.mockResolvedValueOnce(successResponse);
 
     const fetcher = new ResilientHttpFetcher(mockFetcher);
@@ -47,11 +48,6 @@ describe('Infrastructure :: ResilientHttpFetcher', () => {
         statusCode: StatusCode.ServerErrorInternal,
       },
     });
-    const successResponse: HttpClientResponse<{ message: string }> = {
-      data: { message: 'success' },
-      headers: {},
-      statusCode: StatusCode.SuccessOK,
-    };
     mockFetcher.execute
       .mockRejectedValueOnce(errorResponse)
       .mockResolvedValueOnce(successResponse);
@@ -90,10 +86,12 @@ describe('Infrastructure :: ResilientHttpFetcher', () => {
         statusCode: StatusCode.ClientErrorTooManyRequests,
       },
     });
-    const successResponse: HttpClientResponse<{ message: string }> = {
-      data: { message: 'success' },
-      headers: {},
-      statusCode: StatusCode.SuccessOK,
+    const successResponse: InventoryPageResult = {
+      assets: [],
+      descriptions: [],
+      total_inventory_count: 0,
+      success: 1,
+      rwgrsn: -2,
     };
     mockFetcher.execute
       .mockRejectedValueOnce(errorResponse)

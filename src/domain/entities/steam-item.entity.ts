@@ -1,5 +1,6 @@
 import { STEAM_CDN_IMAGE_URL } from '../constants';
 import DomainException from '../exceptions/domain.exception';
+import { IAppSpecificLogic } from '../strategies/app-specific/IAppSpecificLogic';
 import { CardType } from '../types/card-type.type';
 import { InnerItemDescription } from '../types/inner-item-description.type';
 import { InventoryPageAsset } from '../types/inventory-page-asset.type';
@@ -16,23 +17,32 @@ enum CardBorderInternalName {
 export type SteamItemProps = {
   asset: InventoryPageAsset;
   description: InventoryPageDescription;
+  strategy: IAppSpecificLogic;
   tags?: SteamItemTag[];
 };
 
 export default class SteamItemEntity {
-  private readonly asset: InventoryPageAsset;
-  private readonly description: InventoryPageDescription;
+  public readonly asset: InventoryPageAsset;
+  public readonly description: InventoryPageDescription;
+  private readonly strategy: IAppSpecificLogic;
   private readonly tagsInternal?: SteamItemTag[];
 
-  private constructor({ asset, description, tags }: SteamItemProps) {
+  private constructor({
+    asset,
+    description,
+    strategy,
+    tags,
+  }: SteamItemProps) {
     this.asset = asset;
     this.description = description;
+    this.strategy = strategy;
     this.tagsInternal = tags;
   }
 
   public static create({
     asset,
     description,
+    strategy,
     tags,
   }: SteamItemProps): SteamItemEntity {
     if (!asset.assetid) {
@@ -50,7 +60,7 @@ export default class SteamItemEntity {
         'market_hash_name is required',
       );
     }
-    return new SteamItemEntity({ asset, description, tags });
+    return new SteamItemEntity({ asset, description, strategy, tags });
   }
 
   private get is_currency(): boolean {
@@ -59,10 +69,6 @@ export default class SteamItemEntity {
       Boolean(this.asset.currency) ||
       typeof this.asset.currencyid !== 'undefined'
     );
-  }
-
-  private get listingKey(): string {
-    return `${this.asset.classid}_${this.asset.instanceid}`;
   }
 
   public get id(): string {
@@ -189,6 +195,10 @@ export default class SteamItemEntity {
     return this.tagsInternal?.find(({ category }) => category === categoryToFind);
   }
 
+  public getCacheExpiration(): string | undefined {
+    return this.strategy.getCacheExpiration(this);
+  }
+
   public getCardBorderType(): CardType | null {
     const itemClass = this.findTag('item_class');
 
@@ -215,5 +225,9 @@ export default class SteamItemEntity {
     }
 
     return `${STEAM_CDN_IMAGE_URL}/${this.icon_url}`;
+  }
+
+  public getMarketFeeApp(): number | undefined {
+    return this.strategy.getMarketFeeApp(this);
   }
 }

@@ -48,13 +48,6 @@ export default class CookieParserService {
     return `${key}=${cookieValue.value}`;
   }
 
-  public buildSteamInventoryContextCookie(
-    appID: string,
-    contextID: string,
-  ): string {
-    return `strInventoryLastContext=${appID}_${contextID}`;
-  }
-
   public getSteamCommunityCookies(
     toughCookieJar: ToughCookieJar,
   ): Promise<Cookie[]> {

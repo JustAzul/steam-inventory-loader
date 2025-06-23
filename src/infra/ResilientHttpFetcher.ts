@@ -1,12 +1,12 @@
 import { StatusCode } from 'status-code-enum';
 
 import { DEFAULT_REQUEST_MAX_RETRIES } from '@application/constants';
-import HttpException from '@application/exceptions/http.exception';
 import { IFetcher } from '@application/ports/fetcher.port';
+import { HttpException } from '@domain/exceptions/http.exception';
 import {
   HttpClientGetProps,
-  HttpClientResponse,
-} from '@application/types/http-response.type';
+} from '@domain/types/http-response.type';
+import { InventoryPageResult } from '@domain/types/inventory-page-result.type';
 import { parseRetryAfter } from '@infra/helpers/parse-retry-after.helper';
 import sleep from '@infra/helpers/sleep.helper';
 
@@ -30,16 +30,16 @@ export class ResilientHttpFetcher implements IFetcher {
     return this.decoratedFetcher;
   }
 
-  public execute<T>(props: HttpClientGetProps): Promise<HttpClientResponse<T>> {
+  public execute(props: HttpClientGetProps): Promise<InventoryPageResult> {
     return this.tryExecute(props, 0);
   }
 
-  private async tryExecute<T>(
+  private async tryExecute(
     props: HttpClientGetProps,
     attempt: number,
-  ): Promise<HttpClientResponse<T>> {
+  ): Promise<InventoryPageResult> {
     try {
-      const result = await this.decoratedFetcher.execute<T>(props);
+      const result = await this.decoratedFetcher.execute(props);
       return result;
     } catch (error) {
       const maxRetries = this.props.maxRetries ?? DEFAULT_REQUEST_MAX_RETRIES;

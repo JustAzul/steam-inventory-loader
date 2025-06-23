@@ -46,13 +46,6 @@ describe('Infra :: Services :: CookieParserService', () => {
     });
   });
 
-  describe('buildSteamInventoryContextCookie', () => {
-    it('should create the correct context cookie for Steam inventory requests', () => {
-      const cookie = service.buildSteamInventoryContextCookie('730', '2');
-      expect(cookie).toBe('strInventoryLastContext=730_2');
-    });
-  });
-
   describe('getSteamCommunityCookies', () => {
     it('should extract and parse cookies from a tough-cookie jar for the steamcommunity.com domain', async () => {
       const jar = new ToughCookieJar();

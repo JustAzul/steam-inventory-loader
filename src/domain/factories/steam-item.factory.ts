@@ -1,6 +1,7 @@
 import SteamItemTag from '../entities/steam-item-tag.entity';
 import SteamItemEntity from '../entities/steam-item.entity';
 import DomainException from '../exceptions/domain.exception';
+import { AppSpecificLogicFactory } from '../strategies/app-specific.factory';
 import { InventoryPageAsset } from '../types/inventory-page-asset.type';
 import { InventoryPageDescription } from '../types/inventory-page-description.type';
 
@@ -29,9 +30,11 @@ export default class SteamItemFactory {
             description,
           );
           const tags = this.createTags(processedDescription);
+          const strategy = AppSpecificLogicFactory.create(asset.appid);
           const entity = SteamItemEntity.create({
             asset,
             description: processedDescription,
+            strategy,
             tags,
           });
           items.push(entity);

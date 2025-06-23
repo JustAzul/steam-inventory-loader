@@ -11,18 +11,17 @@ import { HttpsProxyAgent } from 'hpagent';
 import { injectable, inject } from 'tsyringe';
 
 import { DEFAULT_REQUEST_TIMEOUT } from '@application/constants';
-import HttpException from '@application/exceptions/http.exception';
 import { IFetcher } from '@application/ports/fetcher.port';
 import { IHttpClient } from '@application/ports/http-client.port';
+import { HttpException } from '@domain/exceptions/http.exception';
 import {
-  HttpClientErrorCodes,
   HttpClientGetProps,
   HttpClientResponse,
-  HttpErrorPayload,
-} from '@application/types/http-response.type';
+} from '@domain/types/http-response.type';
+import { InventoryPageResult } from '@domain/types/inventory-page-result.type';
 import { PROXY_ADDRESS } from '@infra/constants';
-import { ErrorPayload } from '@shared/errors';
-import { DataOrError, error, result } from '@shared/utils';
+
+import { HttpResponseProcessor } from './http-processing/http-response-processor';
 
 @injectable()
 export class HttpClient implements IFetcher, IHttpClient {
@@ -37,6 +36,7 @@ export class HttpClient implements IFetcher, IHttpClient {
     private readonly proxyAddress: string,
     @inject('AxiosInstance')
     client: AxiosInstance,
+    private readonly httpResponseProcessor: HttpResponseProcessor,
   ) {
     if (this.proxyAddress) {
       this.proxyAgent = new HttpsProxyAgent({
@@ -77,9 +77,9 @@ export class HttpClient implements IFetcher, IHttpClient {
     return this;
   }
 
-  public async execute<T>(
+  public async execute(
     props: HttpClientGetProps,
-  ): Promise<HttpClientResponse<T>> {
+  ): Promise<InventoryPageResult> {
     const { url, headers: propsHeaders, params } = props;
 
     const requestHeaders = { ...this.defaultHeaders, ...propsHeaders };
@@ -101,13 +101,21 @@ export class HttpClient implements IFetcher, IHttpClient {
         data,
         headers: incomingHeaders,
         status,
-      } = await this.client.get<T, AxiosResponse<T, never>, never>(url, options);
+      } = await this.client.get<
+        InventoryPageResult,
+        AxiosResponse<InventoryPageResult, never>,
+        never
+      >(url, options);
 
-      return {
+      const response: HttpClientResponse<InventoryPageResult> = {
         data,
         headers: incomingHeaders as IncomingHttpHeaders,
         statusCode: status,
       };
+      return this.httpResponseProcessor.execute({
+        response,
+        request: { url, headers: requestHeaders, params },
+      });
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'An unknown error occurred';
       let response: Partial<HttpClientResponse<unknown>> = {};
@@ -120,10 +128,16 @@ export class HttpClient implements IFetcher, IHttpClient {
         };
       }
 
-      throw new HttpException({
+      const error = new HttpException({
         message,
         request: { url, headers: requestHeaders, params },
         response,
+      });
+
+      return this.httpResponseProcessor.execute({
+        error,
+        request: { url, headers: requestHeaders, params },
+        response: response as HttpClientResponse<InventoryPageResult>,
       });
     }
   }

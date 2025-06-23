@@ -3,7 +3,7 @@ import EventEmitter from 'events';
 
 import { AsyncQueueParams, IAsyncQueue } from '@application/ports/async-queue';
 import { IRepository } from '@application/ports/repository.interface';
-import { RepositoryException } from '@application/exceptions/repository.exception';
+import { RepositoryException } from '@domain/exceptions/repository.exception';
 
 export interface AsyncQueueProps {
   eventHandler?: EventEmitter;
