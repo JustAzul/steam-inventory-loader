@@ -1,15 +1,15 @@
-import SteamItemEntity from '@domain/entities/steam-item.entity';
-import { LoaderConfig } from '@domain/types/loader-config.type';
 import {
-  DEFAULT_LANGUAGE,
   DEFAULT_REQUEST_ITEM_COUNT,
   DEFAULT_REQUEST_LANGUAGE,
 } from '@application/constants';
+import SteamItemEntity from '@domain/entities/steam-item.entity';
+import SteamItemFactory from '@domain/factories/steam-item.factory';
+import { LoaderConfig } from '@domain/types/loader-config.type';
 import { injectable } from 'tsyringe';
 
 import InventoryPageService from '../services/inventory-page.service';
 
-import MapAssetsToSteamItemsUseCase from './map-assets-to-steam-items.use-case';
+
 
 export interface LoadInventoryUseCaseProps {
   appID: string;
@@ -22,7 +22,6 @@ export interface LoadInventoryUseCaseProps {
 export default class LoadInventoryUseCase {
   public constructor(
     private readonly inventoryService: InventoryPageService,
-    private readonly mapAssetsToSteamItems: MapAssetsToSteamItemsUseCase,
   ) {}
 
   public async execute(
@@ -54,10 +53,10 @@ export default class LoadInventoryUseCase {
           descriptions = tradableDescriptions;
         }
 
-        const items = this.mapAssetsToSteamItems.execute({
+        const items = SteamItemFactory.createFromInventoryPage(
           assets,
           descriptions,
-        });
+        );
         allItems.push(...items);
       }
 

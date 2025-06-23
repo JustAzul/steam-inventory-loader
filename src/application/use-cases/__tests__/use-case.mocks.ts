@@ -1,10 +1,9 @@
 import 'reflect-metadata';
-import { jest } from '@jest/globals';
 import InventoryPageService from '@application/services/inventory-page.service';
+import { jest } from '@jest/globals';
 
 import GetInventoryPageResultUseCase from '../get-inventory-page-result.use-case';
 import GetPageUrlUseCase from '../get-page-url.use-case';
-import MapAssetsToSteamItemsUseCase from '../map-assets-to-steam-items.use-case';
 
 export const createGetInventoryPageMock =
   (): jest.Mocked<GetInventoryPageResultUseCase> => {
@@ -18,13 +17,6 @@ export const createGetPageUrlMock = (): jest.Mocked<GetPageUrlUseCase> => {
     execute: jest.fn(),
   } as unknown as jest.Mocked<GetPageUrlUseCase>;
 };
-
-export const createMapAssetsToSteamItemsMock =
-  (): jest.Mocked<MapAssetsToSteamItemsUseCase> => {
-    return {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<MapAssetsToSteamItemsUseCase>;
-  };
 
 export const createInventoryPageServiceMock =
   (): jest.Mocked<InventoryPageService> => {
