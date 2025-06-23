@@ -1,9 +1,10 @@
-import { Cookie } from '@domain/types/cookie.type';
 import {
   Cookie as ToughCookie,
   CookieJar as ToughCookieJar,
 } from 'tough-cookie';
 import { injectable } from 'tsyringe';
+
+import { Cookie } from '@domain/types/cookie.type';
 
 export type CookieJar = Record<string, { value: string }>;
 

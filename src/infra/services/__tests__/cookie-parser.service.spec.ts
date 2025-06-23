@@ -1,13 +1,14 @@
 import 'reflect-metadata';
-import { Cookie } from '@domain/types/cookie.type';
 import {
   CookieJar as ToughCookieJar,
   Cookie as ToughCookie,
 } from 'tough-cookie';
 
+import { Cookie } from '@domain/types/cookie.type';
+
 import CookieParserService, { CookieJar } from '../cookie-parser.service';
 
-describe('Domain :: Services :: CookieParserService', () => {
+describe('Infra :: Services :: CookieParserService', () => {
   let service: CookieParserService;
 
   beforeEach(() => {
@@ -88,4 +89,4 @@ describe('Domain :: Services :: CookieParserService', () => {
       );
     });
   });
-});
+}); 
