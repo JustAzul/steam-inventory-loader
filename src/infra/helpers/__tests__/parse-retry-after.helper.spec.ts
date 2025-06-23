@@ -1,5 +1,6 @@
+import { DEFAULT_REQUEST_RETRY_DELAY } from '@application/constants';
+
 import { parseRetryAfter } from '../parse-retry-after.helper';
-import { DEFAULT_REQUEST_RETRY_DELAY } from '@shared/constants';
 
 describe('Shared :: Helpers :: parseRetryAfter', () => {
   it('should parse a delay-seconds string', () => {
@@ -34,4 +35,4 @@ describe('Shared :: Helpers :: parseRetryAfter', () => {
     const delay = parseRetryAfter(['some-value']);
     expect(delay).toBe(DEFAULT_REQUEST_RETRY_DELAY);
   });
-}); 
+});

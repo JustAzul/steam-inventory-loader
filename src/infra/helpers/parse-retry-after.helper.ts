@@ -1,4 +1,4 @@
-import { DEFAULT_REQUEST_RETRY_DELAY } from '@shared/constants';
+import { DEFAULT_REQUEST_RETRY_DELAY } from '@application/constants';
 
 export function parseRetryAfter(
   retryAfter: string | number | string[] | undefined,
@@ -23,4 +23,4 @@ export function parseRetryAfter(
   }
 
   return DEFAULT_REQUEST_RETRY_DELAY;
-} 
+}
