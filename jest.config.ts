@@ -16,6 +16,16 @@ const config: Config.InitialOptions = {
   testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
   roots: ['<rootDir>/src'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.spec.ts',
+    '!src/**/__tests__/**',
+    '!src/**/types/**',
+    '!src/dependency-container.ts',
+    '!src/main.ts',
+  ],
 };
 
 export default config;

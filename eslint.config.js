@@ -50,12 +50,12 @@ module.exports = [
           pattern: 'src/presentation',
         },
         {
-          type: 'shared',
-          pattern: 'src/shared',
+          type: 'shared-test',
+          pattern: 'src/shared/test',
         },
         {
-          type: 'main',
-          pattern: 'src',
+          type: 'shared',
+          pattern: 'src/shared',
         },
       ],
     },
@@ -72,39 +72,31 @@ module.exports = [
             // Domain can't import from anywhere
             {
               from: ['domain'],
-              allow: ['domain', 'shared'],
+              allow: ['domain', 'shared', 'shared-test'],
             },
             // Application can import from domain
             {
               from: ['application'],
-              allow: ['domain', 'application', 'shared'],
+              allow: ['domain', 'application', 'shared', 'shared-test'],
             },
-            // Infra can import from application and domain
+            // Infra can import from domain and application
             {
               from: ['infra'],
-              allow: ['application', 'domain', 'infra', 'shared'],
+              allow: ['domain', 'application', 'infra', 'shared'],
             },
             // Presentation can import from application
             {
               from: ['presentation'],
-              allow: ['application', 'presentation', 'shared', 'domain'],
+              allow: ['application', 'domain', 'presentation', 'shared'],
             },
             // Shared can't import from anywhere
             {
               from: ['shared'],
               allow: ['shared'],
             },
-            // Main can import from anywhere
             {
-              from: ['main'],
-              allow: [
-                'domain',
-                'application',
-                'infra',
-                'presentation',
-                'shared',
-                'main',
-              ],
+              from: ['shared-test'],
+              allow: ['domain', 'shared-test', 'shared'],
             },
           ],
         },
