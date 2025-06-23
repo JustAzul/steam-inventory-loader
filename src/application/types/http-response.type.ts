@@ -25,5 +25,5 @@ export type HttpResponse<T = InventoryPageResult> = HttpClientResponse<T>;
 export type HttpErrorPayload = {
   message: string;
   request: HttpClientGetProps;
-  response?: Partial<HttpClientResponse<any>>;
+  response?: Partial<HttpClientResponse<unknown>>;
 };

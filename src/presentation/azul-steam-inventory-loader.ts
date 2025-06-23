@@ -1,3 +1,5 @@
+import { DEFAULT_REQUEST_MAX_RETRIES } from '@application/constants';
+import { PROXY_ADDRESS } from '@infra/constants';
 import { container } from 'tsyringe';
 
 import IAzulSteamInventoryLoader from '../application/ports/azul-steam-inventory-loader.interface';
@@ -15,10 +17,6 @@ import { LoaderConfig } from '../domain/types/loader-config.type';
 import { rawTag } from '../domain/types/raw-tag.type';
 import { HttpClient } from '../infra/http-client';
 import { ResilientHttpFetcher } from '../infra/ResilientHttpFetcher';
-import {
-  DEFAULT_REQUEST_MAX_RETRIES,
-  PROXY_ADDRESS,
-} from '../shared/constants';
 
 export class AzulSteamInventoryLoader extends IAzulSteamInventoryLoader {
   private requestConfig: Partial<LoaderConfig> | null = null;

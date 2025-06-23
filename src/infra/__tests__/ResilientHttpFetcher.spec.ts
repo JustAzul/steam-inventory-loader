@@ -1,9 +1,9 @@
-import { ErrorPayload } from '@shared/errors';
+import { IFetcher } from '@application/ports/fetcher.port';
 import * as sleepHelper from '@infra/helpers/sleep.helper';
+import { ErrorPayload } from '@shared/errors';
 import { DataOrError } from '@shared/utils';
 import { StatusCode } from 'status-code-enum';
 
-import { IFetcher } from '@application/ports/fetcher.port';
 import {
   HttpClientErrorCodes,
   HttpClientGetProps,
@@ -13,8 +13,6 @@ import { ResilientHttpFetcher } from '../ResilientHttpFetcher';
 
 jest.mock('@infra/helpers/sleep.helper');
 jest.mock('@application/ports/fetcher.port');
-
-const sleepMock = jest.spyOn(sleepHelper, 'default');
 
 describe('Infrastructure :: ResilientHttpFetcher', () => {
   let mockFetcher: jest.Mocked<IFetcher>;

@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import SteamItemEntity from '@domain/entities/steam-item.entity';
 import { STEAM_APP_IDS, STEAM_CONTEXT_IDS } from '@domain/constants';
+import SteamItemEntity from '@domain/entities/steam-item.entity';
 
 import GetItemCacheExpirationUseCase from '../get-item-cache-expiration.use-case';
 

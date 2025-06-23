@@ -1,5 +1,5 @@
-import { injectable } from 'tsyringe';
 import { HttpResponse } from '@application/types/http-response.type';
+import { injectable } from 'tsyringe';
 
 import {
   HttpProcessingContext,
@@ -24,6 +24,6 @@ export class HttpProcessingChainUseCase {
   }
 
   public execute(context: HttpProcessingContext): HttpResponse {
-    return this.chain.handle(context);
+    return this.chain.handle(context) as HttpResponse;
   }
 } 

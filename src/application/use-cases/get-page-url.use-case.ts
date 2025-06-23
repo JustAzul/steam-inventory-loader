@@ -1,11 +1,11 @@
-import { injectable, inject } from 'tsyringe';
-
 import {
   DEFAULT_REQUEST_URL,
   PLACEHOLDER_APP_ID,
   PLACEHOLDER_CONTEXT_ID,
   PLACEHOLDER_STEAM_ID_64,
 } from '@domain/constants';
+import { injectable, inject } from 'tsyringe';
+
 
 import ValidateEndpointUseCase from './validate-endpoint.use-case';
 

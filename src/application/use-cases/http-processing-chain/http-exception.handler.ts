@@ -1,6 +1,3 @@
-import { StatusCode } from 'status-code-enum';
-import { injectable } from 'tsyringe';
-
 import PrivateProfileException from '@application/exceptions/private-profile.exception';
 import RateLimitedException from '@application/exceptions/rate-limited.exception';
 import UseCaseException from '@application/exceptions/use-case.exception';
@@ -10,12 +7,14 @@ import {
   HttpErrorPayload,
 } from '@application/types/http-response.type';
 import { ErrorPayload } from '@shared/errors';
+import { StatusCode } from 'status-code-enum';
+import { injectable } from 'tsyringe';
 
 import { AbstractHandler, HttpProcessingContext } from './handler';
 
 @injectable()
-export class HttpExceptionHandler extends AbstractHandler<any> {
-  public handle(context: HttpProcessingContext<any>): HttpClientResponse<any> {
+export class HttpExceptionHandler extends AbstractHandler<unknown> {
+  public handle(context: HttpProcessingContext<unknown>): HttpClientResponse<unknown> {
     const { error } = context;
     if (error) {
       this.processError(context);
@@ -23,7 +22,7 @@ export class HttpExceptionHandler extends AbstractHandler<any> {
     return super.handle(context);
   }
 
-  private processError(context: HttpProcessingContext<any>): void {
+  private processError(context: HttpProcessingContext<unknown>): void {
     const { request, response, error } = context;
     const payloadError = error as ErrorPayload<
       HttpClientErrorCodes,

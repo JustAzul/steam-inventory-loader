@@ -1,6 +1,7 @@
 import { IncomingHttpHeaders } from 'http';
 import { Agent as HttpsAgent } from 'https';
 
+import { DEFAULT_REQUEST_TIMEOUT } from '@application/constants';
 import { IFetcher } from '@application/ports/fetcher.port';
 import {
   HttpClientErrorCodes,
@@ -9,7 +10,6 @@ import {
   HttpErrorPayload,
 } from '@application/types/http-response.type';
 import { PROXY_ADDRESS } from '@infra/constants';
-import { DEFAULT_REQUEST_TIMEOUT } from '@application/constants';
 import { ErrorPayload } from '@shared/errors';
 import { DataOrError, error, result } from '@shared/utils';
 import Axios, {

@@ -1,16 +1,13 @@
+import { DEFAULT_REQUEST_MAX_RETRIES } from '@application/constants';
 import { IFetcher } from '@application/ports/fetcher.port';
 import {
   HttpClientErrorCodes,
   HttpClientGetProps,
   HttpClientResponse,
 } from '@application/types/http-response.type';
-import {
-  DEFAULT_REQUEST_MAX_RETRIES,
-  DEFAULT_REQUEST_RETRY_DELAY,
-} from '@application/constants';
-import { ErrorPayload } from '@shared/errors';
 import { parseRetryAfter } from '@infra/helpers/parse-retry-after.helper';
 import sleep from '@infra/helpers/sleep.helper';
+import { ErrorPayload } from '@shared/errors';
 import { DataOrError } from '@shared/utils';
 import { StatusCode } from 'status-code-enum';
 
@@ -69,7 +66,6 @@ export class ResilientHttpFetcher implements IFetcher {
       return [error];
     }
 
-    // Check for specific retryable conditions
     const payload = error.payload as HttpErrorPayload;
     const statusCode = payload?.response?.statusCode;
     if (statusCode === StatusCode.ClientErrorTooManyRequests) {
@@ -79,7 +75,6 @@ export class ResilientHttpFetcher implements IFetcher {
       return this.tryExecute(props, attempt + 1);
     }
 
-    // Default exponential backoff with jitter
     const jitter = Math.floor(Math.random() * 1000);
     const delay = 2 ** attempt * 1000 + jitter;
     await sleep(delay);

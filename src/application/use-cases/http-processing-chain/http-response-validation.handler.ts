@@ -1,13 +1,15 @@
-import { injectable } from 'tsyringe';
-import { StatusCode } from 'status-code-enum';
-
-import { AbstractHandler, HttpProcessingContext } from './handler';
 import BadStatusCodeException from '@application/exceptions/bad-status-code.exception';
 import EmptyHttpResponseException from '@application/exceptions/empty-http-response.exception';
+import { HttpResponse } from '@application/types/http-response.type';
+import { StatusCode } from 'status-code-enum';
+import { injectable } from 'tsyringe';
+
+import { AbstractHandler, HttpProcessingContext } from './handler';
+
 
 @injectable()
-export class HttpResponseValidationHandler extends AbstractHandler {
-  public handle(context: HttpProcessingContext): any {
+export class HttpResponseValidationHandler extends AbstractHandler<unknown> {
+  public handle(context: HttpProcessingContext<unknown>): HttpResponse<unknown> {
     const { request, response } = context;
 
     if (!response) {

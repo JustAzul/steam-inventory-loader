@@ -1,19 +1,19 @@
 import 'reflect-metadata';
+import PrivateProfileException from '@application/exceptions/private-profile.exception';
 import { GetInventoryPageResultUseCaseProps } from '@application/types/get-inventory-page-result-use-case-props.type';
 import { HttpResponse } from '@application/types/http-response.type';
 import { InventoryPageResult } from '@application/types/inventory-page-result.type';
 import { container } from 'tsyringe';
-import { inventoryPageResultMock } from '../../use-cases/__tests__/mocks';
 
-import InventoryPageService from '../inventory-page.service';
-import GetInventoryPageResultUseCase from '../../use-cases/get-inventory-page-result.use-case';
-import GetPageUrlUseCase from '../../use-cases/get-page-url.use-case';
+import { inventoryPageResultMock } from '../../use-cases/__tests__/mocks';
 import {
   createGetInventoryPageMock,
   createGetPageUrlMock,
 } from '../../use-cases/__tests__/use-case.mocks';
+import GetInventoryPageResultUseCase from '../../use-cases/get-inventory-page-result.use-case';
+import GetPageUrlUseCase from '../../use-cases/get-page-url.use-case';
 import { HttpProcessingChainUseCase } from '../../use-cases/http-processing-chain.use-case';
-import PrivateProfileException from '@application/exceptions/private-profile.exception';
+import InventoryPageService from '../inventory-page.service';
 
 describe('Application :: Services :: InventoryPageService', () => {
   let service: InventoryPageService;

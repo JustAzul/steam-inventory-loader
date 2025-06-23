@@ -1,14 +1,16 @@
+import SteamBodyErrorException from '@application/exceptions/steam-body-error.exception';
+import { HttpResponse } from '@application/types/http-response.type';
+import { InventoryPageResult } from '@application/types/inventory-page-result.type';
 import { injectable } from 'tsyringe';
 
-import { InventoryPageResult } from '@application/types/inventory-page-result.type';
 import { AbstractHandler, HttpProcessingContext } from './handler';
-import SteamBodyErrorException from '@application/exceptions/steam-body-error.exception';
+
 
 @injectable()
 export class SteamBodyValidationHandler extends AbstractHandler<InventoryPageResult> {
   public handle(
     context: HttpProcessingContext<InventoryPageResult>,
-  ): any {
+  ): HttpResponse<InventoryPageResult> {
     const { request, response } = context;
 
     if (!response) {

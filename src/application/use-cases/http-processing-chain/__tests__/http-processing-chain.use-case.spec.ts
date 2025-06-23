@@ -1,6 +1,8 @@
 import 'reflect-metadata';
 import { container } from 'tsyringe';
+
 import { HttpProcessingChainUseCase } from '../../http-processing-chain.use-case';
+import { HttpProcessingContext } from '../handler';
 import { HttpExceptionHandler } from '../http-exception.handler';
 import { HttpResponseValidationHandler } from '../http-response-validation.handler';
 import { SteamBodyValidationHandler } from '../steam-body-validation.handler';
@@ -55,7 +57,7 @@ describe('Application :: UseCases :: HttpProcessingChainUseCase', () => {
   });
 
   it('should execute the chain starting with the first handler', () => {
-    const context = {} as any;
+    const context: HttpProcessingContext = { request: { url: 'test' } };
     useCase.execute(context);
     expect(httpExceptionHandler.handle).toHaveBeenCalledWith(context);
   });

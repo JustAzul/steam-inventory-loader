@@ -1,7 +1,7 @@
+import { STEAM_CDN_IMAGE_URL } from '@domain/constants';
 import { injectable } from 'tsyringe';
 
 import { InputWithIconURL } from '../../domain/types/input-with-icon-url.type';
-import { STEAM_CDN_IMAGE_URL } from '@domain/constants';
 
 type GetImageUrlUseCaseProps = {
   input: InputWithIconURL;
