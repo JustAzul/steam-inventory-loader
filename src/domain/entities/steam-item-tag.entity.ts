@@ -1,4 +1,4 @@
-/* eslint-disable camelcase */
+ 
 import { SteamTag } from '../types/steam-tag.type';
 
 export default class SteamItemTag {

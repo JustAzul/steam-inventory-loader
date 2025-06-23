@@ -1,4 +1,4 @@
-/* eslint-disable camelcase */
+ 
 import type { InnerItemDescription } from './inner-item-description.type';
 import type { ItemActions } from './item-actions.type';
 import type { SteamTag as SteamTagType } from './steam-tag.type';

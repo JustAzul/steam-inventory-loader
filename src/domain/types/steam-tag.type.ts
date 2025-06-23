@@ -1,4 +1,4 @@
-/* eslint-disable camelcase */
+ 
 export type SteamTag = {
   category: string;
   category_name: string;

@@ -1,9 +1,9 @@
-/* eslint-disable camelcase */
+ 
 import type { CookieJar } from 'tough-cookie';
 
 export type LoaderConfig = {
-  SteamCommunity_Jar: CookieJar;
   Language?: string;
+  SteamCommunity_Jar: CookieJar;
   customEndpoint?: string;
   itemsPerPage?: number;
   maxRetries?: number;

@@ -1,8 +1,8 @@
-/* eslint-disable camelcase */
-import { InventoryPageAsset } from '../types/inventory-page-asset.type';
-import { InventoryPageDescription } from '../types/inventory-page-description.type';
+ 
 import SteamItemTag from '../entities/steam-item-tag.entity';
 import SteamItemEntity from '../entities/steam-item.entity';
+import { InventoryPageAsset } from '../types/inventory-page-asset.type';
+import { InventoryPageDescription } from '../types/inventory-page-description.type';
 
 export default class SteamItemFactory {
   public static createFromInventoryPage(
@@ -58,4 +58,4 @@ export default class SteamItemFactory {
     }
     return undefined;
   }
-} 
+}

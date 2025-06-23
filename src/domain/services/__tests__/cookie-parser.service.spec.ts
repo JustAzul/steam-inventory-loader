@@ -1,7 +1,11 @@
 import 'reflect-metadata';
-import { CookieJar } from 'tough-cookie';
-import CookieParserService from '../cookie-parser.service';
 import { Cookie } from '@domain/types/cookie.type';
+import {
+  CookieJar as ToughCookieJar,
+  Cookie as ToughCookie,
+} from 'tough-cookie';
+
+import CookieParserService, { CookieJar } from '../cookie-parser.service';
 
 describe('Domain :: Services :: CookieParserService', () => {
   let service: CookieParserService;
@@ -10,108 +14,78 @@ describe('Domain :: Services :: CookieParserService', () => {
     service = new CookieParserService();
   });
 
-  describe('parseCookies', () => {
-    it('should return empty array when jar is undefined', () => {
-      const result = service.parseCookies();
-      expect(result).toEqual([]);
+  describe('parseCookie', () => {
+    it('should correctly parse a valid cookie string into a CookieJar', () => {
+      const cookieString = 'key1=value1; key2=value2';
+      const expectedJar: CookieJar = {
+        key1: { value: 'value1' },
+        key2: { value: 'value2' },
+      };
+      expect(service.parseCookie(cookieString)).toEqual(expectedJar);
     });
 
-    it('should return empty array when jar is null', () => {
-      const result = service.parseCookies(null as any);
-      expect(result).toEqual([]);
-    });
-
-    it('should handle nested jar structure', () => {
-      const mockNestedJar = {
-        _jar: {
-          serializeSync: () => ({
-            cookies: [
-              { domain: 'steamcommunity.com', key: 'sessionid', value: 'test123' },
-              { domain: 'steamcommunity.com', key: 'steamLoginSecure', value: 'secure456' },
-            ] as Cookie[],
-          }),
-        },
-      } as any;
-
-      const result = service.parseCookies(mockNestedJar);
-      expect(result).toEqual(['sessionid=test123', 'steamLoginSecure=secure456']);
-    });
-
-    it('should filter cookies by steamcommunity.com domain', () => {
-      const mockJar = {
-        serializeSync: () => ({
-          cookies: [
-            { domain: 'steamcommunity.com', key: 'sessionid', value: 'test123' },
-            { domain: 'store.steampowered.com', key: 'storeid', value: 'store456' },
-            { domain: 'steamcommunity.com', key: 'steamLoginSecure', value: 'secure789' },
-          ] as Cookie[],
-        }),
-      } as any;
-
-      const result = service.parseCookies(mockJar);
-      expect(result).toEqual(['sessionid=test123', 'steamLoginSecure=secure789']);
-    });
-
-    it('should format cookies correctly', () => {
-      const mockJar = {
-        serializeSync: () => ({
-          cookies: [
-            { domain: 'steamcommunity.com', key: 'sessionid', value: 'abc123' },
-          ] as Cookie[],
-        }),
-      } as any;
-
-      const result = service.parseCookies(mockJar);
-      expect(result).toEqual(['sessionid=abc123']);
+    it('should return an empty jar for an empty or undefined cookie string', () => {
+      expect(service.parseCookie('')).toEqual({});
+      expect(service.parseCookie(undefined)).toEqual({});
     });
   });
 
-  describe('buildCookieString', () => {
-    it('should return empty string when no parameters provided', () => {
-      const result = service.buildCookieString();
-      expect(result).toBe('');
+  describe('formatCookie', () => {
+    it('should format a CookieJar into a cookie string', () => {
+      const jar: CookieJar = {
+        key1: { value: 'value1' },
+        key2: { value: 'value2' },
+      };
+      expect(service.formatCookie(jar)).toBe('key1=value1; key2=value2');
     });
 
-    it('should include inventory context cookie when appID and contextID provided', () => {
-      const result = service.buildCookieString(undefined, '730', '2');
-      expect(result).toBe('strInventoryLastContext=730_2');
-    });
-
-    it('should include Steam community cookies when jar provided', () => {
-      const mockJar = {
-        serializeSync: () => ({
-          cookies: [
-            { domain: 'steamcommunity.com', key: 'sessionid', value: 'test123' },
-          ] as Cookie[],
-        }),
-      } as any;
-
-      const result = service.buildCookieString(mockJar);
-      expect(result).toBe('sessionid=test123');
-    });
-
-    it('should combine inventory context and Steam community cookies', () => {
-      const mockJar = {
-        serializeSync: () => ({
-          cookies: [
-            { domain: 'steamcommunity.com', key: 'sessionid', value: 'test123' },
-            { domain: 'steamcommunity.com', key: 'steamLoginSecure', value: 'secure456' },
-          ] as Cookie[],
-        }),
-      } as any;
-
-      const result = service.buildCookieString(mockJar, '730', '2');
-      expect(result).toBe('strInventoryLastContext=730_2; sessionid=test123; steamLoginSecure=secure456');
-    });
-
-    it('should handle missing appID but present contextID', () => {
-      const result = service.buildCookieString(undefined, undefined, '2');
-      expect(result).toBe('');
-    });
-
-    it('should handle missing contextID but present appID', () => {
-      const result = service.buildCookieString(undefined, '730', undefined);
-      expect(result).toBe('');
+    it('should format a single Cookie entity into a string', () => {
+      const cookie: Partial<Cookie> = { key: 'myKey', value: 'myValue' };
+      expect(service.formatCookie(cookie as Cookie)).toBe('myKey=myValue');
     });
   });
-}); 
+
+  describe('buildSteamInventoryContextCookie', () => {
+    it('should create the correct context cookie for Steam inventory requests', () => {
+      const cookie = service.buildSteamInventoryContextCookie('730', '2');
+      expect(cookie).toBe('strInventoryLastContext=730_2');
+    });
+  });
+
+  describe('getSteamCommunityCookies', () => {
+    it('should extract and parse cookies from a tough-cookie jar for the steamcommunity.com domain', async () => {
+      const jar = new ToughCookieJar();
+      const cookie = new ToughCookie({
+        domain: 'steamcommunity.com',
+        key: 'steamLoginSecure',
+        value: 'testValue',
+      });
+      await jar.setCookie(cookie, 'https://steamcommunity.com');
+
+      const result = await service.getSteamCommunityCookies(jar);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        key: 'steamLoginSecure',
+        value: 'testValue',
+      });
+    });
+
+    it('should reject with an error if the cookie jar fails', async () => {
+      const jar = new ToughCookieJar();
+      const testError = new Error('Cookie jar error');
+      jest
+        .spyOn(jar, 'getCookies')
+        .mockImplementation((_url, callback) =>
+          (callback as (err: Error | null, cookies: ToughCookie[]) => void)(
+            testError,
+            [],
+          ),
+        );
+
+      await expect(service.getSteamCommunityCookies(jar)).rejects.toThrow(
+        testError,
+      );
+    });
+  });
+});

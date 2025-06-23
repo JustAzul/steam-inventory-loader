@@ -1,49 +1,92 @@
+import { Cookie } from '@domain/types/cookie.type';
+import {
+  Cookie as ToughCookie,
+  CookieJar as ToughCookieJar,
+} from 'tough-cookie';
 import { injectable } from 'tsyringe';
-import { CookieJar } from 'tough-cookie';
-import { Cookie } from '../types/cookie.type';
+
+export type CookieJar = Record<string, { value: string }>;
 
 @injectable()
 export default class CookieParserService {
-  /**
-   * Parses cookies from a CookieJar for steamcommunity.com domain
-   * @param jar - The CookieJar instance containing cookies
-   * @returns Array of formatted cookie strings
-   */
-  public parseCookies(jar?: CookieJar): string[] {
-    if (!jar) return [];
-    
-    // Handle nested jar structure (some CookieJar implementations wrap the actual jar)
-    if ('_jar' in jar) {
-      return this.parseCookies((jar as any)._jar);
+  public parseCookie(cookie: string | undefined): CookieJar {
+    const jar: CookieJar = {};
+    if (!cookie) {
+      return jar;
     }
-    
-    const result = (jar.serializeSync().cookies as Cookie[])
-      .filter(({ domain }) => domain === 'steamcommunity.com')
-      .map(({ key, value }) => `${key}=${value}`);
-    
-    return result;
+    const cookies = cookie.split('; ');
+    for (const currentCookie of cookies) {
+      const [key, value] = currentCookie.split(/=(.*)/s) as [string, string];
+      if (key && value) {
+        jar[key] = { value };
+      }
+    }
+    return jar;
   }
-  
-  /**
-   * Builds the complete cookie string for HTTP requests
-   * @param jar - The CookieJar instance
-   * @param appID - Steam application ID
-   * @param contextID - Steam context ID
-   * @returns Complete cookie string for HTTP headers
-   */
-  public buildCookieString(jar?: CookieJar, appID?: string, contextID?: string): string {
-    const cookies: string[] = [];
-    
-    // Add inventory context cookie if provided
-    if (appID && contextID) {
-      cookies.push(`strInventoryLastContext=${appID}_${contextID}`);
+
+  public formatCookie(cookie: Cookie | CookieJar): string {
+    if (this.isCookieJar(cookie)) {
+      return Object.entries(cookie)
+        .map(
+          ([key, cookieValue]) =>
+            `${key}=${(cookieValue as { value: string }).value}`,
+        )
+        .join('; ');
     }
-    
-    // Add Steam community cookies
-    if (jar) {
-      cookies.push(...this.parseCookies(jar));
-    }
-    
-    return cookies.join('; ');
+    return this.formatSingleCookie(cookie.key, cookie);
+  }
+
+  private isCookieJar(cookie: Cookie | CookieJar): cookie is CookieJar {
+    return !Object.prototype.hasOwnProperty.call(cookie, 'key');
+  }
+
+  private formatSingleCookie(
+    key: string,
+    cookieValue: { value: string },
+  ): string {
+    return `${key}=${cookieValue.value}`;
+  }
+
+  public buildSteamInventoryContextCookie(
+    appID: string,
+    contextID: string,
+  ): string {
+    return `strInventoryLastContext=${appID}_${contextID}`;
+  }
+
+  public getSteamCommunityCookies(
+    toughCookieJar: ToughCookieJar,
+  ): Promise<Cookie[]> {
+    return new Promise((resolve, reject) => {
+      toughCookieJar.getCookies(
+        'https://steamcommunity.com',
+        (err, cookies) => {
+          if (err) {
+            return reject(err);
+          }
+          if (!cookies) {
+            return resolve([]);
+          }
+          const parsedCookies = cookies.map((cookie) =>
+            this.parseToughCookie(cookie),
+          );
+          resolve(parsedCookies);
+        },
+      );
+    });
+  }
+
+  private parseToughCookie(cookie: ToughCookie): Cookie {
+    return {
+      creation: cookie.creation,
+      domain: cookie.domain,
+      expires: cookie.expires,
+      hostOnly: cookie.hostOnly,
+      key: cookie.key,
+      lastAccessed: cookie.lastAccessed,
+      path: cookie.path,
+      pathIsDefault: true,
+      value: cookie.value,
+    };
   }
 } 
