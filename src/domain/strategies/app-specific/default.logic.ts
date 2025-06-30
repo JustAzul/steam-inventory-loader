@@ -10,4 +10,4 @@ export class DefaultLogic implements IAppSpecificLogic {
   public getMarketFeeApp(): number | undefined {
     return undefined;
   }
-} 
+}

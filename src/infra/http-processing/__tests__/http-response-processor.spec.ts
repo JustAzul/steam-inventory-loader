@@ -15,18 +15,18 @@ describe('Infra :: HttpProcessing :: HttpResponseProcessor', () => {
 
   beforeEach(() => {
     httpExceptionHandler = {
-      setNext: jest.fn().mockReturnThis(),
       handle: jest.fn(),
+      setNext: jest.fn().mockReturnThis(),
     } as unknown as jest.Mocked<HttpExceptionHandler>;
 
     httpResponseValidationHandler = {
-      setNext: jest.fn().mockReturnThis(),
       handle: jest.fn(),
+      setNext: jest.fn().mockReturnThis(),
     } as unknown as jest.Mocked<HttpResponseValidationHandler>;
 
     steamBodyValidationHandler = {
-      setNext: jest.fn().mockReturnThis(),
       handle: jest.fn(),
+      setNext: jest.fn().mockReturnThis(),
     } as unknown as jest.Mocked<SteamBodyValidationHandler>;
 
     httpExceptionHandler.setNext.mockReturnValue(httpResponseValidationHandler);
@@ -61,4 +61,4 @@ describe('Infra :: HttpProcessing :: HttpResponseProcessor', () => {
     processor.execute(context);
     expect(httpExceptionHandler.handle).toHaveBeenCalledWith(context);
   });
-}); 
+});

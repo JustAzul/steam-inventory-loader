@@ -16,7 +16,7 @@ describe('AzulSteamInventoryLoader', () => {
 
   beforeEach(() => {
     mockCookieJar = new CookieJar();
-    
+
     mockLoadInventoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<LoadInventoryUseCase>;
@@ -31,15 +31,15 @@ describe('AzulSteamInventoryLoader', () => {
     it('should delegate to LoadInventoryUseCase.execute and return the result', async () => {
       // Arrange
       const props: LoadInventoryPageUseCaseProps = {
-        steamID64: '76561198000000000',
         appID: 730,
-        contextID: '2',
         config: {
-          Language: 'en',
           itemsPerPage: 50,
+          language: 'en',
+          steamCommunityJar: mockCookieJar,
           tradableOnly: false,
-          SteamCommunity_Jar: mockCookieJar,
         },
+        contextID: '2',
+        steamID64: '76561198000000000',
       };
 
       const mockItems: SteamItemEntity[] = [];
@@ -57,15 +57,15 @@ describe('AzulSteamInventoryLoader', () => {
     it('should propagate errors from LoadInventoryUseCase', async () => {
       // Arrange
       const props: LoadInventoryPageUseCaseProps = {
-        steamID64: '76561198000000000',
         appID: 730,
-        contextID: '2',
         config: {
-          Language: 'en',
           itemsPerPage: 50,
+          language: 'en',
+          steamCommunityJar: mockCookieJar,
           tradableOnly: false,
-          SteamCommunity_Jar: mockCookieJar,
         },
+        contextID: '2',
+        steamID64: '76561198000000000',
       };
 
       const error = new Error('Use case error');
@@ -79,15 +79,15 @@ describe('AzulSteamInventoryLoader', () => {
     it('should handle empty inventory response', async () => {
       // Arrange
       const props: LoadInventoryPageUseCaseProps = {
-        steamID64: '76561198000000000',
         appID: 730,
-        contextID: '2',
         config: {
-          Language: 'en',
           itemsPerPage: 50,
+          language: 'en',
+          steamCommunityJar: mockCookieJar,
           tradableOnly: false,
-          SteamCommunity_Jar: mockCookieJar,
         },
+        contextID: '2',
+        steamID64: '76561198000000000',
       };
 
       const emptyItems: SteamItemEntity[] = [];
@@ -100,6 +100,81 @@ describe('AzulSteamInventoryLoader', () => {
       expect(result).toEqual([]);
       expect(result).toHaveLength(0);
     });
+
+    it('should handle tradableOnly true', async () => {
+      // Arrange
+      const props: LoadInventoryPageUseCaseProps = {
+        appID: 730,
+        config: {
+          itemsPerPage: 50,
+          language: 'en',
+          steamCommunityJar: mockCookieJar,
+          tradableOnly: true,
+        },
+        contextID: '2',
+        steamID64: '123',
+      };
+
+      const expectedItems: SteamItemEntity[] = [];
+      mockLoadInventoryUseCase.execute.mockResolvedValue(expectedItems);
+
+      // Act
+      const result = await loader.load(props);
+
+      // Assert
+      expect(mockLoadInventoryUseCase.execute).toHaveBeenCalledWith(props);
+      expect(result).toEqual(expectedItems);
+    });
+
+    it('should handle tradableOnly false', async () => {
+      // Arrange
+      const props: LoadInventoryPageUseCaseProps = {
+        appID: 730,
+        config: {
+          itemsPerPage: 50,
+          language: 'en',
+          steamCommunityJar: mockCookieJar,
+          tradableOnly: false,
+        },
+        contextID: '2',
+        steamID64: '123',
+      };
+
+      const expectedItems: SteamItemEntity[] = [];
+      mockLoadInventoryUseCase.execute.mockResolvedValue(expectedItems);
+
+      // Act
+      const result = await loader.load(props);
+
+      // Assert
+      expect(mockLoadInventoryUseCase.execute).toHaveBeenCalledWith(props);
+      expect(result).toEqual(expectedItems);
+    });
+
+    it('should handle empty inventory response with tradableOnly', async () => {
+      // Arrange
+      const props: LoadInventoryPageUseCaseProps = {
+        appID: 730,
+        config: {
+          itemsPerPage: 50,
+          language: 'en',
+          steamCommunityJar: mockCookieJar,
+          tradableOnly: true,
+        },
+        contextID: '2',
+        steamID64: '123',
+      };
+
+      const expectedItems: SteamItemEntity[] = [];
+      mockLoadInventoryUseCase.execute.mockResolvedValue(expectedItems);
+
+      // Act
+      const result = await loader.load(props);
+
+      // Assert
+      expect(mockLoadInventoryUseCase.execute).toHaveBeenCalledWith(props);
+      expect(result).toEqual(expectedItems);
+    });
   });
 
   describe('inheritance', () => {
@@ -109,4 +184,4 @@ describe('AzulSteamInventoryLoader', () => {
       expect(typeof loader.load).toBe('function');
     });
   });
-}); 
+});

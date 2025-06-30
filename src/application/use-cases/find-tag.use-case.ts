@@ -9,10 +9,7 @@ export type FindTagUseCaseProps = {
 
 @injectable()
 export default class FindTagUseCase {
-  public execute({
-    tags,
-    categoryToFind,
-  }: FindTagUseCaseProps): Tag | null {
+  public execute({ tags, categoryToFind }: FindTagUseCaseProps): Tag | null {
     const hasAtLeastOneTag = Boolean(tags?.length);
     if (hasAtLeastOneTag === false) return null;
 

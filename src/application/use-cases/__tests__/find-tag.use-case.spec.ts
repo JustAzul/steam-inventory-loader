@@ -6,9 +6,10 @@ import FindTagUseCase, { FindTagUseCaseProps } from '../find-tag.use-case';
 
 describe('Application :: UseCases :: FindTagUseCase', () => {
   let useCase: FindTagUseCase;
-  const execute = (props: FindTagUseCaseProps) => useCase.execute(props);
+  const execute = (props: FindTagUseCaseProps): Tag | null =>
+    useCase.execute(props);
 
-  beforeEach(() => {
+  beforeEach((): void => {
     useCase = new FindTagUseCase();
   });
 
@@ -18,31 +19,31 @@ describe('Application :: UseCases :: FindTagUseCase', () => {
       category_name: 'Quality',
       color: 'FFD700',
       internal_name: 'unique',
-      name: 'Unique',
       localized_category_name: 'Quality',
       localized_tag_name: 'Unique',
+      name: 'Unique',
     },
     {
       category: 'rarity',
       category_name: 'Rarity',
       color: 'B0C3D9',
       internal_name: 'common',
-      name: 'Common',
       localized_category_name: 'Rarity',
       localized_tag_name: 'Common',
+      name: 'Common',
     },
     {
       category: 'type',
       category_name: 'Type',
       color: 'B0C3D9',
       internal_name: 'weapon',
-      name: 'Weapon',
       localized_category_name: 'Type',
       localized_tag_name: 'Weapon',
+      name: 'Weapon',
     },
   ];
 
-  it('should find and return a tag when the category exists', () => {
+  it('should find and return a tag when the category exists', (): void => {
     const result = execute({
       categoryToFind: 'rarity',
       tags: mockTags,
@@ -50,7 +51,7 @@ describe('Application :: UseCases :: FindTagUseCase', () => {
     expect(result).toEqual(mockTags[1]);
   });
 
-  it('should return null when the category does not exist', () => {
+  it('should return null when the category does not exist', (): void => {
     const result = execute({
       categoryToFind: 'nonexistent',
       tags: mockTags,
@@ -58,12 +59,12 @@ describe('Application :: UseCases :: FindTagUseCase', () => {
     expect(result).toBeNull();
   });
 
-  it('should return null when the tags array is empty', () => {
+  it('should return null when the tags array is empty', (): void => {
     const result = execute({ categoryToFind: 'rarity', tags: [] });
     expect(result).toBeNull();
   });
 
-  it('should handle an array of SteamItemTag instances', () => {
+  it('should handle an array of SteamItemTag instances', (): void => {
     const steamItemTags = mockTags.map((tag) => SteamItemTag.create(tag));
     const result = execute({
       categoryToFind: 'rarity',
@@ -73,7 +74,7 @@ describe('Application :: UseCases :: FindTagUseCase', () => {
     expect(result).toEqual(steamItemTags[1]);
   });
 
-  it('should return null when the tags array is null or undefined', () => {
+  it('should return null when the tags array is null or undefined', (): void => {
     const result1 = execute({
       categoryToFind: 'rarity',
       tags: null as unknown as Tag[],

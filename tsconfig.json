@@ -25,6 +25,9 @@
       "@infra/*": [
         "src/infra/*"
       ],
+      "@presentation/*": [
+        "src/presentation/*"
+      ],
       "@shared/*": [
         "src/shared/*"
       ],
@@ -46,7 +49,6 @@
   },
   "exclude": [
     ".wakatime-project",
-    "**/__mocks__/*",
     "**/@old",
     "**/*.test.*",
     "dist",

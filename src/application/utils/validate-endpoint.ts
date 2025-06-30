@@ -1,10 +1,9 @@
+import { UseCaseException } from '@application/exceptions';
 import {
   PLACEHOLDER_APP_ID,
   PLACEHOLDER_CONTEXT_ID,
   PLACEHOLDER_STEAM_ID_64,
 } from '@domain/constants';
-import { UseCaseException } from '@domain/exceptions';
-
 
 const PROTOCOL_HTTP = 'http://';
 const PROTOCOL_HTTPS = 'https://';
@@ -30,4 +29,4 @@ export const validateEndpoint = (endpoint: string): void => {
       `The endpoint must contain the protocol ${PROTOCOL_HTTP} or ${PROTOCOL_HTTPS}`,
     );
   }
-}; 
+};

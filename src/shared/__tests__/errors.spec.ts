@@ -41,7 +41,10 @@ describe('Shared Errors Module', () => {
   describe('ErrorPayload', () => {
     it('should create an error payload with correct properties', () => {
       // Arrange
-      const props: ErrorPayloadProps<string, { message: string; status: number }> = {
+      const props: ErrorPayloadProps<
+        string,
+        { message: string; status: number }
+      > = {
         code: 'VALIDATION_ERROR',
         payload: {
           message: 'Invalid input provided',
@@ -90,13 +93,14 @@ describe('Shared Errors Module', () => {
 
     it('should create correct string representation', () => {
       // Arrange
-      const props: ErrorPayloadProps<string, { field: string; value: number }> = {
-        code: 'FIELD_ERROR',
-        payload: {
-          field: 'email',
-          value: 123,
-        },
-      };
+      const props: ErrorPayloadProps<string, { field: string; value: number }> =
+        {
+          code: 'FIELD_ERROR',
+          payload: {
+            field: 'email',
+            value: 123,
+          },
+        };
       const errorPayload = new ErrorPayload(props);
 
       // Act
@@ -113,14 +117,17 @@ describe('Shared Errors Module', () => {
 
     it('should handle complex nested payload in toString', () => {
       // Arrange
-      const props: ErrorPayloadProps<string, { user: { id: number; details: { name: string } } }> = {
+      const props: ErrorPayloadProps<
+        string,
+        { user: { id: number; details: { name: string } } }
+      > = {
         code: 'USER_ERROR',
         payload: {
           user: {
-            id: 1,
             details: {
               name: 'John Doe',
             },
+            id: 1,
           },
         },
       };
@@ -146,8 +153,8 @@ describe('Shared Errors Module', () => {
 
       const code: SpecificErrorCode = 'AUTH_FAILED';
       const payload: SpecificPayload = {
-        userId: 123,
         resource: 'user_profile',
+        userId: 123,
       };
 
       // Act
@@ -163,7 +170,7 @@ describe('Shared Errors Module', () => {
       // Arrange
       type HttpStatusCode = 400 | 401 | 403 | 404 | 500;
       const code: HttpStatusCode = 404;
-      const payload = { url: '/api/users/999', method: 'GET' };
+      const payload = { method: 'GET', url: '/api/users/999' };
 
       // Act
       const errorPayload = new ErrorPayload({ code, payload });
@@ -187,4 +194,4 @@ describe('Shared Errors Module', () => {
       expect(validProps.payload.message).toBe('Test message');
     });
   });
-}); 
+});

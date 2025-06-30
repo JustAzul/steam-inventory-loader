@@ -1,86 +1,30 @@
-import {
-  Cookie as ToughCookie,
-  CookieJar as ToughCookieJar,
-} from 'tough-cookie';
-import { injectable } from 'tsyringe';
+import 'reflect-metadata';
+import * as cookie from 'cookie';
+import { injectable } from 'inversify';
+import { Cookie as ToughCookie } from 'tough-cookie';
 
-import { Cookie } from '@domain/types/cookie.type';
-
-export type CookieJar = Record<string, { value: string }>;
+import { ICookieParser } from '@application/ports/cookie-parser.port';
 
 @injectable()
-export default class CookieParserService {
-  public parseCookie(cookie: string | undefined): CookieJar {
-    const jar: CookieJar = {};
-    if (!cookie) {
-      return jar;
+export class CookieParserService implements ICookieParser {
+  parse(cookieString: string): { [key: string]: string } {
+    if (!cookieString) {
+      return {};
     }
-    const cookies = cookie.split('; ');
-    for (const currentCookie of cookies) {
-      const [key, value] = currentCookie.split(/=(.*)/s) as [string, string];
-      if (key && value) {
-        jar[key] = { value };
-      }
-    }
-    return jar;
+    const parsed = cookie.parse(cookieString.trim());
+    // Filter out undefined values if any
+    return Object.entries(parsed).reduce(
+      (acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      },
+      {} as { [key: string]: string },
+    );
   }
 
-  public formatCookie(cookie: Cookie | CookieJar): string {
-    if (this.isCookieJar(cookie)) {
-      return Object.entries(cookie)
-        .map(
-          ([key, cookieValue]) =>
-            `${key}=${(cookieValue as { value: string }).value}`,
-        )
-        .join('; ');
-    }
-    return this.formatSingleCookie(cookie.key, cookie);
+  fromTough(cookies: ToughCookie[]): string {
+    return cookies.map((c) => c.cookieString()).join('; ');
   }
-
-  private isCookieJar(cookie: Cookie | CookieJar): cookie is CookieJar {
-    return !Object.prototype.hasOwnProperty.call(cookie, 'key');
-  }
-
-  private formatSingleCookie(
-    key: string,
-    cookieValue: { value: string },
-  ): string {
-    return `${key}=${cookieValue.value}`;
-  }
-
-  public getSteamCommunityCookies(
-    toughCookieJar: ToughCookieJar,
-  ): Promise<Cookie[]> {
-    return new Promise((resolve, reject) => {
-      toughCookieJar.getCookies(
-        'https://steamcommunity.com',
-        (err, cookies) => {
-          if (err) {
-            return reject(err);
-          }
-          if (!cookies) {
-            return resolve([]);
-          }
-          const parsedCookies = cookies.map((cookie) =>
-            this.parseToughCookie(cookie),
-          );
-          resolve(parsedCookies);
-        },
-      );
-    });
-  }
-
-  private parseToughCookie(cookie: ToughCookie): Cookie {
-    return {
-      creation: cookie.creation,
-      domain: cookie.domain,
-      expires: cookie.expires,
-      hostOnly: cookie.hostOnly,
-      key: cookie.key,
-      lastAccessed: cookie.lastAccessed,
-      path: cookie.path,
-      pathIsDefault: true,
-      value: cookie.value,
-    };
-  }
-} 
+}

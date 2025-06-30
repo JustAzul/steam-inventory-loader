@@ -2,16 +2,14 @@ import { injectable } from 'tsyringe';
 
 import { InventoryPageResult } from '@domain/types/inventory-page-result.type';
 
-import {
-  HttpProcessingContext,
-} from './chain/handler';
+import { HttpProcessingContext } from './chain/handler';
 import { HttpExceptionHandler } from './chain/http-exception.handler';
 import { HttpResponseValidationHandler } from './chain/http-response-validation.handler';
 import { SteamBodyValidationHandler } from './chain/steam-body-validation.handler';
 
 @injectable()
 export class HttpResponseProcessor {
-  private chain: HttpExceptionHandler;
+  private readonly chain: HttpExceptionHandler;
 
   constructor(
     private readonly httpExceptionHandler: HttpExceptionHandler,
@@ -27,4 +25,4 @@ export class HttpResponseProcessor {
   public execute(context: HttpProcessingContext): InventoryPageResult {
     return this.chain.handle(context);
   }
-} 
+}

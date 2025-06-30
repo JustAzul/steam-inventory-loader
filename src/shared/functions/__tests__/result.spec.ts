@@ -16,7 +16,7 @@ describe('Result Functions', () => {
 
     it('should create a successful result with complex object', () => {
       // Arrange
-      const value = { id: 1, name: 'test', items: [1, 2, 3] };
+      const value = { id: 1, items: [1, 2, 3], name: 'test' };
 
       // Act
       const [err, res] = result(value);
@@ -24,8 +24,10 @@ describe('Result Functions', () => {
       // Assert
       expect(err).toBeUndefined();
       expect(res).toEqual(value);
-      expect(res.id).toBe(1);
-      expect(res.items).toHaveLength(3);
+      if (res) {
+        expect(res.id).toBe(1);
+        expect(res.items).toHaveLength(3);
+      }
     });
 
     it('should create a successful result with null value', () => {
@@ -81,6 +83,18 @@ describe('Result Functions', () => {
       expect(err2).toBeUndefined();
       expect(res2).toEqual({});
     });
+
+    it('should return a success result with a value', () => {
+      const [err, res] = result('test-result');
+      expect(err).toBeUndefined();
+      expect(res).toBe('test-result');
+    });
+
+    it('should return a success result with no value', () => {
+      const [err, res] = result();
+      expect(err).toBeUndefined();
+      expect(res).toBeUndefined();
+    });
   });
 
   describe('error', () => {
@@ -111,8 +125,8 @@ describe('Result Functions', () => {
       // Arrange
       const errorObj = {
         code: 'VALIDATION_ERROR',
-        message: 'Invalid input',
         details: { field: 'email', value: 'invalid-email' },
+        message: 'Invalid input',
       };
 
       // Act
@@ -134,6 +148,12 @@ describe('Result Functions', () => {
       expect(numErr).toBe(404);
       expect(boolErr).toBe(true);
       expect(nullErr).toBeNull();
+    });
+
+    it('should return a failure result', () => {
+      const [err, res] = error('test-error');
+      expect(err).toBe('test-error');
+      expect(res).toBeUndefined();
     });
   });
 
@@ -184,7 +204,7 @@ describe('Result Functions', () => {
     it('should handle const assertions correctly', () => {
       // Arrange
       const specificError = 'SPECIFIC_ERROR' as const;
-      const specificResult = { type: 'user', id: 123 } as const;
+      const specificResult = { id: 123, type: 'user' } as const;
 
       // Act
       const [err] = error(specificError);
@@ -213,14 +233,16 @@ describe('Result Functions', () => {
       // Act & Assert - Just verify the function structure works
       const mockResult = processResult('test');
       expect(typeof mockResult).toBe('string');
-      expect(mockResult.startsWith('Success:') || mockResult.startsWith('Error:')).toBe(true);
+      expect(
+        mockResult.startsWith('Success:') || mockResult.startsWith('Error:'),
+      ).toBe(true);
     });
 
     it('should support chaining and transformation patterns', () => {
       // Arrange
       const values = [1, 2, 3];
-      const results = values.map(v => result(v * 2));
-      const errors = ['err1', 'err2'].map(e => error(e));
+      const results = values.map((v) => result(v * 2));
+      const errors = ['err1', 'err2'].map((e) => error(e));
 
       // Act
       const successValues = results.map(([, res]) => res);
@@ -231,4 +253,29 @@ describe('Result Functions', () => {
       expect(errorValues).toEqual(['err1', 'err2']);
     });
   });
-}); 
+
+  describe('Usage', () => {
+    function mightFail(shouldFail: boolean): any {
+      if (shouldFail) {
+        return error('it-failed');
+      }
+      return result({ data: 'it-worked' });
+    }
+
+    it('should handle success', () => {
+      const [err, res] = mightFail(false);
+      if (err !== undefined) {
+        fail('should not have failed');
+      }
+      expect(res?.data).toBe('it-worked');
+    });
+
+    it('should handle failure', () => {
+      const [err, res] = mightFail(true);
+      if (res !== undefined) {
+        fail('should not have succeeded');
+      }
+      expect(err).toBe('it-failed');
+    });
+  });
+});

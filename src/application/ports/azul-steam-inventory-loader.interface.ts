@@ -9,5 +9,7 @@ export default abstract class IAzulSteamInventoryLoader {
   /**
    * Loads a Steam inventory for the specified user and application
    */
-  abstract load(props: LoadInventoryPageUseCaseProps): Promise<SteamItemEntity[]>;
+  abstract load(
+    props: LoadInventoryPageUseCaseProps,
+  ): Promise<SteamItemEntity[]>;
 }

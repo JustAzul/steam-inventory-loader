@@ -1,7 +1,4 @@
-import {
-  HttpException,
-  HttpExceptionProps,
-} from './http.exception';
+import { HttpException, HttpExceptionProps } from './http.exception';
 
 type SteamBodyErrorExceptionProps = Omit<HttpExceptionProps, 'message'>;
 
@@ -13,4 +10,4 @@ export class SteamBodyErrorException extends HttpException {
       response: props.response,
     });
   }
-} 
+}

@@ -1,8 +1,9 @@
 import 'reflect-metadata';
+
 import SteamItemTag from '@domain/entities/steam-item-tag.entity';
+import { inventoryPageResultMock } from '@domain/test/__mocks__';
 import { InventoryPageAsset } from '@domain/types/inventory-page-asset.type';
 import { InventoryPageDescription } from '@domain/types/inventory-page-description.type';
-import { inventoryPageResultMock } from '@shared/test/__mocks__';
 
 import SteamItemFactory from '../steam-item.factory';
 
@@ -14,9 +15,7 @@ describe('SteamItemFactory', () => {
       descriptions as InventoryPageDescription[],
     );
     expect(items).toHaveLength(1);
-    expect(items[0].market_hash_name).toBe(
-      'Operation Breakout Weapon Case',
-    );
+    expect(items[0].market_hash_name).toBe('Operation Breakout Weapon Case');
   });
 
   it('should handle descriptions with listing keys', () => {
@@ -40,17 +39,17 @@ describe('SteamItemFactory', () => {
   });
 
   it('should create tags for an item', () => {
-    const assets = inventoryPageResultMock.page1.assets;
+    const { assets } = inventoryPageResultMock.page1;
     const descriptions = [
       {
         ...inventoryPageResultMock.page1.descriptions[0],
         tags: [
           {
-            internal_name: 'test_tag',
-            name: 'Test Tag',
             category: 'Test Category',
             category_name: 'Test Category Name',
+            internal_name: 'test_tag',
             localized_tag_name: 'Test Tag',
+            name: 'Test Tag',
           },
         ],
       },
@@ -59,7 +58,7 @@ describe('SteamItemFactory', () => {
       assets as InventoryPageAsset[],
       descriptions as InventoryPageDescription[],
     );
-    const tags = items[0].tags;
+    const { tags } = items[0];
     expect(tags).toBeDefined();
     expect(tags).toHaveLength(1);
     expect(tags![0]).toBeInstanceOf(SteamItemTag);
@@ -67,11 +66,11 @@ describe('SteamItemFactory', () => {
   });
 
   it('should not create item if description is missing', () => {
-    const assets = inventoryPageResultMock.page1.assets;
+    const { assets } = inventoryPageResultMock.page1;
     const items = SteamItemFactory.createFromInventoryPage(
       assets as InventoryPageAsset[],
       [],
     );
     expect(items).toHaveLength(0);
   });
-}); 
+});

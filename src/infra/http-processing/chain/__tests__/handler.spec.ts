@@ -1,13 +1,16 @@
-import { HttpException } from '@domain/exceptions/http.exception';
 import { HttpRequest } from '@domain/types/http-request.type';
-import { HttpResponse } from '@domain/types/http-response.type';
+import { InventoryPageAsset } from '@domain/types/inventory-page-asset.type';
 import { InventoryPageResult } from '@domain/types/inventory-page-result.type';
+import { HttpException } from '@infra/exceptions';
 
-import { AbstractHandler, HttpProcessingContext, IHandler } from '../handler';
+import { AbstractHandler, HttpProcessingContext } from '../handler';
 
 // Concrete test implementation of AbstractHandler
 class TestHandler extends AbstractHandler {
-  constructor(private shouldHandle: boolean = false, private resultToReturn?: InventoryPageResult) {
+  constructor(
+    private readonly shouldHandle: boolean = false,
+    private readonly resultToReturn?: InventoryPageResult,
+  ) {
     super();
   }
 
@@ -21,11 +24,11 @@ class TestHandler extends AbstractHandler {
 
 // Another test handler for chaining
 class SecondTestHandler extends AbstractHandler {
-  constructor(private resultToReturn: InventoryPageResult) {
+  constructor(private readonly resultToReturn: InventoryPageResult) {
     super();
   }
 
-  public handle(context: HttpProcessingContext): InventoryPageResult {
+  public handle(): InventoryPageResult {
     return this.resultToReturn;
   }
 }
@@ -34,9 +37,9 @@ describe('AbstractHandler', () => {
   let handler: TestHandler;
   let context: HttpProcessingContext;
   const mockRequest: HttpRequest = {
-    url: 'https://test.com',
     headers: {},
     params: {},
+    url: 'https://test.com',
   };
 
   beforeEach(() => {
@@ -56,13 +59,13 @@ describe('AbstractHandler', () => {
   describe('setNext', () => {
     it('should set next handler and return it', () => {
       const mockResult: InventoryPageResult = {
-        success: 1,
         assets: [],
         descriptions: [],
-        more_items: 0,
         last_assetid: '',
-        total_inventory_count: 0,
+        more_items: 0,
         rwgrsn: 1,
+        success: 1,
+        total_inventory_count: 0,
       };
       const nextHandler = new SecondTestHandler(mockResult);
 
@@ -73,13 +76,13 @@ describe('AbstractHandler', () => {
 
     it('should chain multiple handlers correctly', () => {
       const mockResult: InventoryPageResult = {
-        success: 1,
         assets: [],
         descriptions: [],
-        more_items: 0,
         last_assetid: '',
-        total_inventory_count: 0,
+        more_items: 0,
         rwgrsn: 1,
+        success: 1,
+        total_inventory_count: 0,
       };
 
       const secondHandler = new SecondTestHandler(mockResult);
@@ -96,13 +99,13 @@ describe('AbstractHandler', () => {
   describe('handle', () => {
     it('should call next handler when one is set', () => {
       const mockResult: InventoryPageResult = {
-        success: 1,
         assets: [],
         descriptions: [],
-        more_items: 0,
         last_assetid: '',
-        total_inventory_count: 0,
+        more_items: 0,
         rwgrsn: 1,
+        success: 1,
+        total_inventory_count: 0,
       };
 
       const nextHandler = new SecondTestHandler(mockResult);
@@ -114,24 +117,26 @@ describe('AbstractHandler', () => {
     });
 
     it('should throw error when no next handler is set', () => {
-      expect(() => handler.handle(context)).toThrow(
-        'HttpProcessingChain ended without a valid response.'
+      const throwingFunction = (): InventoryPageResult =>
+        handler.handle(context);
+      expect(throwingFunction).toThrow(
+        'HttpProcessingChain ended without a valid response.',
       );
     });
 
     it('should handle when current handler processes the request', () => {
       const mockResult: InventoryPageResult = {
-        success: 1,
         assets: [],
         descriptions: [],
-        more_items: 0,
         last_assetid: '',
-        total_inventory_count: 0,
+        more_items: 0,
         rwgrsn: 1,
+        success: 1,
+        total_inventory_count: 0,
       };
 
       const handlerThatProcesses = new TestHandler(true, mockResult);
-      
+
       const result = handlerThatProcesses.handle(context);
       expect(result).toBe(mockResult);
     });
@@ -147,13 +152,13 @@ describe('AbstractHandler', () => {
       };
 
       const mockResult: InventoryPageResult = {
-        success: 1,
         assets: [],
         descriptions: [],
-        more_items: 0,
         last_assetid: '',
-        total_inventory_count: 0,
+        more_items: 0,
         rwgrsn: 1,
+        success: 1,
+        total_inventory_count: 0,
       };
 
       const nextHandler = new SecondTestHandler(mockResult);
@@ -165,22 +170,22 @@ describe('AbstractHandler', () => {
 
     it('should handle context with error', () => {
       const contextWithError: HttpProcessingContext = {
-        request: mockRequest,
         error: new HttpException({
           message: 'Test error',
           request: mockRequest,
           response: {},
         }),
+        request: mockRequest,
       };
 
       const mockResult: InventoryPageResult = {
-        success: 0,
         assets: [],
         descriptions: [],
-        more_items: 0,
         last_assetid: '',
-        total_inventory_count: 0,
+        more_items: 0,
         rwgrsn: 1,
+        success: 0,
+        total_inventory_count: 0,
       };
 
       const nextHandler = new SecondTestHandler(mockResult);
@@ -194,13 +199,13 @@ describe('AbstractHandler', () => {
   describe('Chain behavior', () => {
     it('should process through multiple handlers in order', () => {
       const mockResult: InventoryPageResult = {
-        success: 1,
         assets: [],
         descriptions: [],
-        more_items: 0,
         last_assetid: '',
-        total_inventory_count: 0,
+        more_items: 0,
         rwgrsn: 1,
+        success: 1,
+        total_inventory_count: 0,
       };
 
       // Create a chain: handler1 -> handler2 -> handler3
@@ -216,23 +221,41 @@ describe('AbstractHandler', () => {
 
     it('should stop at first handler that processes the request', () => {
       const firstResult: InventoryPageResult = {
-        success: 1,
-        assets: [{ assetid: 'first', appid: 1, classid: '1', instanceid: '0', contextid: '2', amount: '1' }] as any,
+        assets: [
+          {
+            amount: '1',
+            appid: 1,
+            assetid: 'first',
+            classid: '1',
+            contextid: '2',
+            instanceid: '0',
+          },
+        ] as InventoryPageAsset[],
         descriptions: [],
-        more_items: 0,
         last_assetid: '',
-        total_inventory_count: 0,
+        more_items: 0,
         rwgrsn: 1,
+        success: 1,
+        total_inventory_count: 0,
       };
 
       const secondResult: InventoryPageResult = {
-        success: 1,
-        assets: [{ assetid: 'second', appid: 1, classid: '2', instanceid: '0', contextid: '2', amount: '1' }] as any,
+        assets: [
+          {
+            amount: '1',
+            appid: 1,
+            assetid: 'second',
+            classid: '2',
+            contextid: '2',
+            instanceid: '0',
+          },
+        ] as InventoryPageAsset[],
         descriptions: [],
-        more_items: 0,
         last_assetid: '',
-        total_inventory_count: 0,
+        more_items: 0,
         rwgrsn: 1,
+        success: 1,
+        total_inventory_count: 0,
       };
 
       // Create a chain where first handler processes the request
@@ -246,4 +269,4 @@ describe('AbstractHandler', () => {
       expect(result.assets[0].assetid).toBe('first');
     });
   });
-}); 
+});

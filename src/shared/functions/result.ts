@@ -1,7 +1,9 @@
-export function error<const T>(error: T) {
-  return [error] as [T];
+export function error<const E>(err: E): [E, undefined] {
+  return [err, undefined];
 }
 
-export function result<const T = undefined>(result?: T) {
-  return [undefined, result] as [undefined, T];
-} 
+export function result<const T = undefined>(
+  res?: T,
+): [undefined, T | undefined] {
+  return [undefined, res];
+}

@@ -10,4 +10,4 @@ describe('Application :: Utils :: buildSteamInventoryContextCookie', () => {
 
     expect(result).toBe(expectedCookie);
   });
-}); 
+});

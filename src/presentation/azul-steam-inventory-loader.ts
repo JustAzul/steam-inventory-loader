@@ -18,6 +18,6 @@ export class AzulSteamInventoryLoader extends IAzulSteamInventoryLoader {
   public async load(
     props: LoadInventoryPageUseCaseProps,
   ): Promise<SteamItemEntity[]> {
-    return this.loadInventoryUseCase.execute(props);
+    return await this.loadInventoryUseCase.execute(props);
   }
-} 
+}

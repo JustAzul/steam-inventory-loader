@@ -1,13 +1,13 @@
 import { StatusCode } from 'status-code-enum';
 import { injectable } from 'tsyringe';
 
-import { BadStatusCodeException } from '@domain/exceptions/bad-status-code.exception';
-import { EmptyHttpResponseException } from '@domain/exceptions/empty-http-response.exception';
 import { InventoryPageResult } from '@domain/types/inventory-page-result.type';
-
+import {
+  BadStatusCodeException,
+  EmptyHttpResponseException,
+} from '@infra/exceptions';
 
 import { AbstractHandler, HttpProcessingContext } from './handler';
-
 
 @injectable()
 export class HttpResponseValidationHandler extends AbstractHandler<unknown> {
@@ -15,7 +15,9 @@ export class HttpResponseValidationHandler extends AbstractHandler<unknown> {
     const { request, response } = context;
 
     if (!response) {
-      throw new Error('HttpResponseValidationHandler received an empty response.');
+      throw new Error(
+        'HttpResponseValidationHandler received an empty response.',
+      );
     }
 
     const { statusCode, data } = response;
@@ -24,7 +26,7 @@ export class HttpResponseValidationHandler extends AbstractHandler<unknown> {
       throw new BadStatusCodeException({ request, response });
     }
 
-    if (!data) {
+    if (data === null || data === undefined) {
       throw new EmptyHttpResponseException({
         request,
         response,
@@ -33,4 +35,4 @@ export class HttpResponseValidationHandler extends AbstractHandler<unknown> {
 
     return super.handle(context);
   }
-} 
+}

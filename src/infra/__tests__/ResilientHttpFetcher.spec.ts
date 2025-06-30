@@ -2,9 +2,9 @@ import 'reflect-metadata';
 import { StatusCode } from 'status-code-enum';
 
 import { IFetcher } from '@application/ports/fetcher.port';
-import { HttpException } from '@domain/exceptions';
 import { HttpClientGetProps } from '@domain/types/http-response.type';
 import { InventoryPageResult } from '@domain/types/inventory-page-result.type';
+import { HttpException } from '@infra/exceptions';
 import * as sleepHelper from '@infra/helpers/sleep.helper';
 
 import { ResilientHttpFetcher } from '../ResilientHttpFetcher';
@@ -18,9 +18,9 @@ describe('Infrastructure :: ResilientHttpFetcher', () => {
   const successResponse: InventoryPageResult = {
     assets: [],
     descriptions: [],
-    total_inventory_count: 0,
-    success: 1,
     rwgrsn: -2,
+    success: 1,
+    total_inventory_count: 0,
   };
 
   beforeEach(() => {
@@ -78,24 +78,27 @@ describe('Infrastructure :: ResilientHttpFetcher', () => {
   });
 
   it('should respect Retry-After header for 429 errors', async () => {
-    const errorResponse = new HttpException({
-      message: 'Too Many Requests',
-      request: props,
-      response: {
-        headers: { 'retry-after': '3' },
-        statusCode: StatusCode.ClientErrorTooManyRequests,
-      },
-    });
-    const successResponse: InventoryPageResult = {
-      assets: [],
-      descriptions: [],
-      total_inventory_count: 0,
-      success: 1,
-      rwgrsn: -2,
-    };
+    const retryAfterDate = '3';
+
     mockFetcher.execute
-      .mockRejectedValueOnce(errorResponse)
-      .mockResolvedValueOnce(successResponse);
+      .mockRejectedValueOnce(
+        new HttpException({
+          message: 'Too Many Requests',
+          request: props,
+          response: {
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            headers: { 'retry-after': retryAfterDate },
+            statusCode: StatusCode.ClientErrorTooManyRequests,
+          },
+        }),
+      )
+      .mockResolvedValueOnce({
+        assets: [],
+        descriptions: [],
+        rwgrsn: -2,
+        success: 1,
+        total_inventory_count: 0,
+      });
 
     const fetcher = new ResilientHttpFetcher(mockFetcher);
     await fetcher.execute(props);

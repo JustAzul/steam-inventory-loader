@@ -1,4 +1,3 @@
-import { STEAM_CDN_IMAGE_URL } from '@domain/constants';
 import SteamItemTag from '@domain/entities/steam-item-tag.entity';
 import SteamItemEntity from '@domain/entities/steam-item.entity';
 import { IAppSpecificLogic } from '@domain/strategies/app-specific/IAppSpecificLogic';
@@ -13,34 +12,34 @@ const mockStrategy: IAppSpecificLogic = {
 
 describe('Domain :: Entities :: SteamItemEntity', () => {
   const mockAsset: InventoryPageAsset = {
+    amount: '1',
     appid: 730,
-    contextid: '2',
     assetid: '12345',
     classid: '54321',
+    contextid: '2',
     instanceid: '1',
-    amount: '1',
   };
 
   const mockDescription: Omit<InventoryPageDescription, 'tags'> = {
-    appid: 730,
-    classid: '54321',
-    instanceid: '1',
-    currency: 0,
-    background_color: '',
-    descriptions: [],
-    tradable: 1,
     actions: [],
-    name: 'Test Item',
-    type: 'Base',
-    market_name: 'Test Item',
-    market_hash_name: 'Test Item',
+    appid: 730,
+    background_color: '',
+    classid: '54321',
     commodity: 0,
-    market_tradable_restriction: 0,
-    market_marketable_restriction: 0,
-    marketable: 1,
-    market_fee_app: 730,
+    currency: 0,
+    descriptions: [],
     icon_url: 'normal_icon.jpg',
     icon_url_large: 'large_icon.jpg',
+    instanceid: '1',
+    market_fee_app: 730,
+    market_hash_name: 'Test Item',
+    market_marketable_restriction: 0,
+    market_name: 'Test Item',
+    market_tradable_restriction: 0,
+    marketable: 1,
+    name: 'Test Item',
+    tradable: 1,
+    type: 'Base',
   };
 
   const createEntityWithTags = (tags: SteamTag[]): SteamItemEntity => {
@@ -56,188 +55,47 @@ describe('Domain :: Entities :: SteamItemEntity', () => {
   const normalCardTags: SteamTag[] = [
     {
       category: 'item_class',
-      internal_name: 'item_class_2',
-      name: 'Trading Card',
       category_name: 'Item Class',
       color: '',
+      internal_name: 'item_class_2',
       localized_tag_name: 'Trading Card',
+      name: 'Trading Card',
     },
     {
       category: 'cardborder',
+      category_name: 'Card Border',
+      color: '',
       internal_name: 'cardborder_0',
-      name: 'Normal',
-      category_name: 'Card Border',
-      color: '',
       localized_tag_name: 'Normal',
-    },
-  ];
-
-  const foilCardTags: SteamTag[] = [
-    {
-      category: 'item_class',
-      internal_name: 'item_class_2',
-      name: 'Trading Card',
-      category_name: 'Item Class',
-      color: '',
-      localized_tag_name: 'Trading Card',
-    },
-    {
-      category: 'cardborder',
-      internal_name: 'cardborder_1',
-      name: 'Foil',
-      category_name: 'Card Border',
-      color: '',
-      localized_tag_name: 'Foil',
-    },
-  ];
-
-  const nonCardTags: SteamTag[] = [
-    {
-      category: 'item_class',
-      internal_name: 'item_class_3',
-      name: 'Profile Background',
-      category_name: 'Item Class',
-      color: '',
-      localized_tag_name: 'Profile Background',
-    },
-    {
-      category: 'cardborder',
-      internal_name: 'cardborder_0',
       name: 'Normal',
-      category_name: 'Card Border',
-      color: '',
-      localized_tag_name: 'Normal',
     },
   ];
 
-  const missingBorderTag: SteamTag[] = [
-    {
-      category: 'item_class',
-      internal_name: 'item_class_2',
-      name: 'Trading Card',
-      category_name: 'Item Class',
-      color: '',
-      localized_tag_name: 'Trading Card',
-    },
-  ];
-
-  describe('getCardBorderType', () => {
-    it('should return "Normal" for a normal trading card', () => {
+  describe('findTag', () => {
+    it('should find a tag by its category name', () => {
       const entity = createEntityWithTags(normalCardTags);
-      expect(entity.getCardBorderType()).toBe('Normal');
+      const tag = entity.findTag('item_class');
+      expect(tag).toBeDefined();
+      expect(tag?.category).toBe('item_class');
     });
 
-    it('should return "Foil" for a foil trading card', () => {
-      const entity = createEntityWithTags(foilCardTags);
-      expect(entity.getCardBorderType()).toBe('Foil');
+    it('should return undefined if the tag is not found', () => {
+      const entity = createEntityWithTags(normalCardTags);
+      const tag = entity.findTag('non_existent_category');
+      expect(tag).toBeUndefined();
     });
 
-    it('should return null if it is not a trading card (wrong item_class)', () => {
-      const entity = createEntityWithTags(nonCardTags);
-      expect(entity.getCardBorderType()).toBeNull();
-    });
-
-    it('should return null if it is a trading card but has no border tag', () => {
-      const entity = createEntityWithTags(missingBorderTag);
-      expect(entity.getCardBorderType()).toBeNull();
-    });
-
-    it('should return null for an empty tags array', () => {
+    it('should return undefined for an empty tags array', () => {
       const entity = createEntityWithTags([]);
-      expect(entity.getCardBorderType()).toBeNull();
-    });
-
-    it('should return null for a trading card with an unknown border type', () => {
-      const unknownBorderTags: SteamTag[] = [
-        {
-          category: 'item_class',
-          internal_name: 'item_class_2',
-          name: 'Trading Card',
-          category_name: 'Item Class',
-          color: '',
-          localized_tag_name: 'Trading Card',
-        },
-        {
-          category: 'cardborder',
-          internal_name: 'cardborder_2',
-          name: 'Unknown',
-          category_name: 'Card Border',
-          color: '',
-          localized_tag_name: 'Unknown',
-        },
-      ];
-      const entity = createEntityWithTags(unknownBorderTags);
-      expect(entity.getCardBorderType()).toBeNull();
+      const tag = entity.findTag('item_class');
+      expect(tag).toBeUndefined();
     });
   });
 
-  describe('getImageUrl', () => {
-    const entity = SteamItemEntity.create({
-      asset: mockAsset,
-      description: { ...mockDescription, tags: [] },
-      strategy: mockStrategy,
-    });
-
-    it('should return the normal icon_url when size is not specified', () => {
-      const expectedUrl = `${STEAM_CDN_IMAGE_URL}/normal_icon.jpg`;
-      expect(entity.getImageUrl()).toBe(expectedUrl);
-    });
-
-    it('should return the normal icon_url when size is "normal"', () => {
-      const expectedUrl = `${STEAM_CDN_IMAGE_URL}/normal_icon.jpg`;
-      expect(entity.getImageUrl('normal')).toBe(expectedUrl);
-    });
-
-    it('should return the large icon_url when size is "large"', () => {
-      const expectedUrl = `${STEAM_CDN_IMAGE_URL}/large_icon.jpg`;
-      expect(entity.getImageUrl('large')).toBe(expectedUrl);
-    });
-
-    it('should fall back to normal icon_url when size is "large" but icon_url_large is missing', () => {
-      const descriptionWithoutLargeIcon = { ...mockDescription, tags: [], icon_url_large: '' };
-      const entityWithoutLargeIcon = SteamItemEntity.create({
-        asset: mockAsset,
-        description: descriptionWithoutLargeIcon,
-        strategy: mockStrategy,
-      });
-      const expectedUrl = `${STEAM_CDN_IMAGE_URL}/normal_icon.jpg`;
-      expect(entityWithoutLargeIcon.getImageUrl('large')).toBe(expectedUrl);
-    });
-  });
-
-  describe('getCacheExpiration', () => {
-    it('should delegate the call to the injected strategy', () => {
-      const entity = SteamItemEntity.create({
-        asset: mockAsset,
-        description: { ...mockDescription, tags: [] },
-        strategy: mockStrategy,
-      });
-      const expectedDate = new Date().toISOString();
-      (mockStrategy.getCacheExpiration as jest.Mock).mockReturnValueOnce(
-        expectedDate,
-      );
-
-      const result = entity.getCacheExpiration();
-
-      expect(mockStrategy.getCacheExpiration).toHaveBeenCalledWith(entity);
-      expect(result).toBe(expectedDate);
-    });
-  });
-
-  describe('getMarketFeeApp', () => {
-    it('should delegate the call to the injected strategy', () => {
-      const entity = SteamItemEntity.create({
-        asset: mockAsset,
-        description: { ...mockDescription, tags: [] },
-        strategy: mockStrategy,
-      });
-      const expectedFee = 123;
-      (mockStrategy.getMarketFeeApp as jest.Mock).mockReturnValueOnce(expectedFee);
-
-      const result = entity.getMarketFeeApp();
-
-      expect(mockStrategy.getMarketFeeApp).toHaveBeenCalledWith(entity);
-      expect(result).toBe(expectedFee);
+  describe('getStrategy', () => {
+    it('should return the strategy object', () => {
+      const entity = createEntityWithTags([]);
+      expect(entity.getStrategy()).toBe(mockStrategy);
     });
   });
 
@@ -339,7 +197,7 @@ describe('Domain :: Entities :: SteamItemEntity', () => {
       expect(entity.owner).toEqual(owner);
     });
   });
-  
+
   describe('getters with default values', () => {
     it('should handle missing optional description fields', () => {
       const partialDescription: Partial<typeof mockDescription> = {
@@ -350,7 +208,7 @@ describe('Domain :: Entities :: SteamItemEntity', () => {
       delete partialDescription.fraudwarnings;
       delete partialDescription.descriptions;
       delete partialDescription.actions;
-      
+
       const entity = SteamItemEntity.create({
         asset: mockAsset,
         description: {
@@ -403,4 +261,4 @@ describe('Domain :: Entities :: SteamItemEntity', () => {
       expect(entity.tags).toEqual([]);
     });
   });
-}); 
+});

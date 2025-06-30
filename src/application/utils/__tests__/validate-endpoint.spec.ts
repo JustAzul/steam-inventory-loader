@@ -1,10 +1,9 @@
+import { UseCaseException } from '@application/exceptions';
 import {
   PLACEHOLDER_APP_ID,
   PLACEHOLDER_CONTEXT_ID,
   PLACEHOLDER_STEAM_ID_64,
 } from '@domain/constants';
-import { UseCaseException } from '@domain/exceptions';
-
 
 import { validateEndpoint } from '../validate-endpoint';
 
@@ -34,4 +33,4 @@ describe('validateEndpoint', () => {
     const validEndpoint = `https://test.com/${PLACEHOLDER_STEAM_ID_64}/${PLACEHOLDER_APP_ID}/${PLACEHOLDER_CONTEXT_ID}`;
     expect(() => validateEndpoint(validEndpoint)).not.toThrow();
   });
-}); 
+});

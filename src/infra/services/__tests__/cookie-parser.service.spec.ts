@@ -1,12 +1,7 @@
 import 'reflect-metadata';
-import {
-  CookieJar as ToughCookieJar,
-  Cookie as ToughCookie,
-} from 'tough-cookie';
+import { Cookie as ToughCookie } from 'tough-cookie';
 
-import { Cookie } from '@domain/types/cookie.type';
-
-import CookieParserService, { CookieJar } from '../cookie-parser.service';
+import { CookieParserService } from '../cookie-parser.service';
 
 describe('Infra :: Services :: CookieParserService', () => {
   let service: CookieParserService;
@@ -15,71 +10,34 @@ describe('Infra :: Services :: CookieParserService', () => {
     service = new CookieParserService();
   });
 
-  describe('parseCookie', () => {
-    it('should correctly parse a valid cookie string into a CookieJar', () => {
+  describe('parse', () => {
+    it('should correctly parse a valid cookie string', () => {
       const cookieString = 'key1=value1; key2=value2';
-      const expectedJar: CookieJar = {
-        key1: { value: 'value1' },
-        key2: { value: 'value2' },
+      const expected = {
+        key1: 'value1',
+        key2: 'value2',
       };
-      expect(service.parseCookie(cookieString)).toEqual(expectedJar);
+      expect(service.parse(cookieString)).toEqual(expected);
     });
 
-    it('should return an empty jar for an empty or undefined cookie string', () => {
-      expect(service.parseCookie('')).toEqual({});
-      expect(service.parseCookie(undefined)).toEqual({});
-    });
-  });
-
-  describe('formatCookie', () => {
-    it('should format a CookieJar into a cookie string', () => {
-      const jar: CookieJar = {
-        key1: { value: 'value1' },
-        key2: { value: 'value2' },
-      };
-      expect(service.formatCookie(jar)).toBe('key1=value1; key2=value2');
-    });
-
-    it('should format a single Cookie entity into a string', () => {
-      const cookie: Partial<Cookie> = { key: 'myKey', value: 'myValue' };
-      expect(service.formatCookie(cookie as Cookie)).toBe('myKey=myValue');
+    it('should return an empty object for an empty or undefined cookie string', () => {
+      expect(service.parse('')).toEqual({});
+      expect(service.parse(undefined as any)).toEqual({});
     });
   });
 
-  describe('getSteamCommunityCookies', () => {
-    it('should extract and parse cookies from a tough-cookie jar for the steamcommunity.com domain', async () => {
-      const jar = new ToughCookieJar();
-      const cookie = new ToughCookie({
-        domain: 'steamcommunity.com',
-        key: 'steamLoginSecure',
-        value: 'testValue',
-      });
-      await jar.setCookie(cookie, 'https://steamcommunity.com');
-
-      const result = await service.getSteamCommunityCookies(jar);
-
-      expect(result).toHaveLength(1);
-      expect(result[0]).toMatchObject({
-        key: 'steamLoginSecure',
-        value: 'testValue',
-      });
+  describe('fromTough', () => {
+    it('should format an array of ToughCookie objects into a string', () => {
+      const cookies = [
+        new ToughCookie({ key: 'key1', value: 'value1' }),
+        new ToughCookie({ key: 'key2', value: 'value2' }),
+      ];
+      const expectedString = 'key1=value1; key2=value2';
+      expect(service.fromTough(cookies)).toBe(expectedString);
     });
 
-    it('should reject with an error if the cookie jar fails', async () => {
-      const jar = new ToughCookieJar();
-      const testError = new Error('Cookie jar error');
-      jest
-        .spyOn(jar, 'getCookies')
-        .mockImplementation((_url, callback) =>
-          (callback as (err: Error | null, cookies: ToughCookie[]) => void)(
-            testError,
-            [],
-          ),
-        );
-
-      await expect(service.getSteamCommunityCookies(jar)).rejects.toThrow(
-        testError,
-      );
+    it('should return an empty string for an empty array', () => {
+      expect(service.fromTough([])).toBe('');
     });
   });
-}); 
+});

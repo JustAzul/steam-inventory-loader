@@ -1,12 +1,10 @@
-export class SteamErrorResultException extends Error {
+import DomainException from './domain.exception';
+
+export class SteamErrorResultException extends DomainException {
   public readonly eresult: number;
 
-  public readonly message: string;
-
   public constructor(eresult: string | number, message: string) {
-    super(message);
-
+    super('Steam', message);
     this.eresult = Number(eresult);
-    this.message = message;
   }
 }

@@ -1,4 +1,4 @@
-import { ItemDetails } from '../../domain/types/item-details.type';
+import { ItemDetails } from './item-details.type';
 
 export type LoaderResponse = {
   count: number;

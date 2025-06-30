@@ -3,4 +3,4 @@ export const buildSteamInventoryContextCookie = (
   contextID: string,
 ): string => {
   return `strInventoryLastContext=${appID}_${contextID}`;
-}; 
+};

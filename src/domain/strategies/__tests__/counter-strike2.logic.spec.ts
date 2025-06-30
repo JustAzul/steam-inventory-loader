@@ -1,6 +1,7 @@
 import 'reflect-metadata';
+
 import SteamItemEntity from '@domain/entities/steam-item.entity';
-import { steamItemsMocks } from '@shared/test/__mocks__';
+import { steamItemsMocks } from '@domain/test/__mocks__';
 
 import { CounterStrike2Logic } from '../app-specific/counter-strike2.logic';
 
@@ -37,9 +38,9 @@ describe('CounterStrike2Logic', () => {
       ...baseDescription,
       owner_descriptions: [
         {
-          value: 'Tradable after Jan 01, 2025 (00:00:00) GMT',
-          type: 'text',
           color: 'z',
+          type: 'text',
+          value: 'Tradable after Jan 01, 2025 (00:00:00) GMT',
         },
       ],
     };
@@ -75,9 +76,9 @@ describe('CounterStrike2Logic', () => {
       ...baseDescription,
       owner_descriptions: [
         {
-          value: 'Tradable after an invalid date',
-          type: 'text',
           color: 'z',
+          type: 'text',
+          value: 'Tradable after an invalid date',
         },
       ],
     };
@@ -90,4 +91,4 @@ describe('CounterStrike2Logic', () => {
     const expiration = logic.getCacheExpiration(item);
     expect(expiration).toBeUndefined();
   });
-}); 
+});

@@ -16,14 +16,17 @@ describe('getPageUrl', () => {
 
   it('should construct a basic URL correctly', () => {
     const { url, params } = getPageUrl(baseProps);
-    expect(url).toBe('https://steamcommunity.com/inventory/76561198000000000/730/2');
+    expect(url).toBe(
+      'https://steamcommunity.com/inventory/76561198000000000/730/2',
+    );
     expect(params).toEqual({});
   });
 
   it('should use a custom endpoint if provided', () => {
     const props = {
       ...baseProps,
-      customEndpoint: 'http://myproxy.com/inventory/{steamID64}/{appID}/{contextID}',
+      customEndpoint:
+        'http://myproxy.com/inventory/{steamID64}/{appID}/{contextID}',
     };
     const { url } = getPageUrl(props);
     expect(url).toBe('http://myproxy.com/inventory/76561198000000000/730/2');
@@ -66,4 +69,4 @@ describe('getPageUrl', () => {
     getPageUrl(baseProps);
     expect(validateEndpoint).toHaveBeenCalledWith(DEFAULT_REQUEST_URL);
   });
-}); 
+});

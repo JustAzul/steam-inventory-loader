@@ -2,11 +2,9 @@ import 'reflect-metadata';
 import { CookieJar } from 'tough-cookie';
 
 import { IFetcher } from '@application/ports/fetcher.port';
-import { inventoryPageResultMock } from '@shared/test/__mocks__';
+import { inventoryPageResultMock } from '@domain/test/__mocks__';
 
 import LoadInventoryUseCase from '../load-inventory.use-case';
-
-
 
 describe('LoadInventoryUseCase', () => {
   let useCase: LoadInventoryUseCase;
@@ -23,40 +21,48 @@ describe('LoadInventoryUseCase', () => {
 
   it('should load all items from inventory', async () => {
     fetcherMock.execute
-      .mockResolvedValueOnce(inventoryPageResultMock.page1)
-      .mockResolvedValueOnce(inventoryPageResultMock.page2)
-      .mockResolvedValueOnce(inventoryPageResultMock.emptyPage);
+      .mockResolvedValueOnce({
+        ...inventoryPageResultMock.page1,
+        total_inventory_count: 2,
+      })
+      .mockResolvedValueOnce({
+        ...inventoryPageResultMock.page2,
+        last_assetid: undefined,
+        total_inventory_count: 2,
+      });
 
     const result = await useCase.execute({
-      steamID64: '123',
       appID: 730,
-      contextID: '2',
       config: {
-        SteamCommunity_Jar: cookieJarMock,
         itemsPerPage: 1,
-        Language: 'en',
+        language: 'en',
+        steamCommunityJar: cookieJarMock,
         tradableOnly: false,
       },
+      contextID: '2',
+      steamID64: '123',
     });
     expect(result).toHaveLength(2);
-    expect(fetcherMock.execute).toHaveBeenCalledTimes(3);
+    expect(fetcherMock.execute).toHaveBeenCalledTimes(2);
   });
 
   it('should load only tradable items when tradableOnly is true', async () => {
-    fetcherMock.execute.mockResolvedValueOnce(
-      inventoryPageResultMock.mixedTradablePage,
-    );
+    fetcherMock.execute.mockResolvedValueOnce({
+      ...inventoryPageResultMock.mixedTradablePage,
+      last_assetid: undefined,
+      total_inventory_count: 1,
+    });
 
     const result = await useCase.execute({
-      steamID64: '123',
       appID: 730,
-      contextID: '2',
       config: {
-        SteamCommunity_Jar: cookieJarMock,
         itemsPerPage: 2,
-        Language: 'en',
+        language: 'en',
+        steamCommunityJar: cookieJarMock,
         tradableOnly: true,
       },
+      contextID: '2',
+      steamID64: '123',
     });
 
     expect(result).toHaveLength(1);
@@ -65,21 +71,23 @@ describe('LoadInventoryUseCase', () => {
   });
 
   it('should return an empty array if inventory is empty', async () => {
-    fetcherMock.execute.mockResolvedValueOnce(inventoryPageResultMock.emptyPage);
+    fetcherMock.execute.mockResolvedValueOnce(
+      inventoryPageResultMock.emptyPage,
+    );
 
     const result = await useCase.execute({
-      steamID64: '123',
       appID: 730,
-      contextID: '2',
       config: {
-        SteamCommunity_Jar: cookieJarMock,
         itemsPerPage: 1,
-        Language: 'en',
+        language: 'en',
+        steamCommunityJar: cookieJarMock,
         tradableOnly: false,
       },
+      contextID: '2',
+      steamID64: '123',
     });
 
     expect(result).toHaveLength(0);
     expect(fetcherMock.execute).toHaveBeenCalledTimes(1);
   });
-}); 
+});

@@ -25,4 +25,4 @@ export const STEAM_MARKET_PATTERNS = {
   COMMUNITY_ITEM_PREFIX: /^(\d+)-/,
   STEAM_ERROR_FORMAT: /^(.+) \((\d+)\)$/,
   TRADABLE_AFTER: /^Tradable after:? /i,
-} as const; 
+} as const;

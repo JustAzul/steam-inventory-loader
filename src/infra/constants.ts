@@ -1,1 +1,1 @@
-export const PROXY_ADDRESS = Symbol('proxyAddress'); 
+export const PROXY_ADDRESS = Symbol('proxyAddress');

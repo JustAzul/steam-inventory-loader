@@ -1,6 +1,5 @@
- 
-import { InventoryPageAsset } from '../../domain/types/inventory-page-asset.type';
-import { InventoryPageDescription } from '../../domain/types/inventory-page-description.type';
+import { InventoryPageAsset } from './inventory-page-asset.type';
+import { InventoryPageDescription } from './inventory-page-description.type';
 
 export type InventoryPageResult = {
   Error?: string;

@@ -1,144 +1,109 @@
-import { IncomingHttpHeaders } from 'http';
-import { Agent as HttpsAgent } from 'https';
+import 'reflect-metadata';
+import axios, { AxiosInstance, AxiosRequestConfig, isAxiosError } from 'axios';
+import { injectable, inject } from 'inversify';
+import { SocksProxyAgent } from 'socks-proxy-agent';
+import { CookieJar } from 'tough-cookie';
 
-import Axios, {
-  AxiosInstance,
-  AxiosRequestConfig,
-  AxiosResponse,
-  CreateAxiosDefaults,
-} from 'axios';
-import { HttpsProxyAgent } from 'hpagent';
-import { injectable, inject } from 'tsyringe';
-
-import { DEFAULT_REQUEST_TIMEOUT } from '@application/constants';
-import { IFetcher } from '@application/ports/fetcher.port';
 import { IHttpClient } from '@application/ports/http-client.port';
-import { HttpException } from '@domain/exceptions/http.exception';
+import { HttpRequest } from '@domain/types/http-request.type';
 import {
   HttpClientGetProps,
-  HttpClientResponse,
+  HttpResponse,
 } from '@domain/types/http-response.type';
 import { InventoryPageResult } from '@domain/types/inventory-page-result.type';
 import { PROXY_ADDRESS } from '@infra/constants';
+import { HttpException } from '@infra/exceptions';
+import { HttpResponseProcessor } from '@infra/http-processing/http-response-processor';
 
-import { HttpResponseProcessor } from './http-processing/http-response-processor';
+import { toIncomingHttpHeaders } from './helpers/axios-headers-to-incoming-http-headers.helper';
+import { CookieParserService } from './services/cookie-parser.service';
 
 @injectable()
-export class HttpClient implements IFetcher, IHttpClient {
-  private cookies?: string;
-  private defaultHeaders?: IncomingHttpHeaders;
-  private readonly client: AxiosInstance;
-  private readonly proxyAgent?: HttpsProxyAgent;
-  private static readonly defaultHttpsAgent: HttpsAgent = new HttpsAgent();
+export class HttpClient implements IHttpClient {
+  private readonly axios: AxiosInstance;
 
   constructor(
-    @inject(PROXY_ADDRESS)
-    private readonly proxyAddress: string,
-    @inject('AxiosInstance')
-    client: AxiosInstance,
-    private readonly httpResponseProcessor: HttpResponseProcessor,
+    @inject(HttpResponseProcessor)
+    private readonly responseProcessor: HttpResponseProcessor,
+    @inject(CookieParserService)
+    private readonly cookieParser: CookieParserService,
+    @inject(PROXY_ADDRESS) private readonly proxyAddress?: string,
   ) {
-    if (this.proxyAddress) {
-      this.proxyAgent = new HttpsProxyAgent({
-        keepAlive: true,
-        proxy: this.proxyAddress,
-      });
+    this.axios = axios.create({
+      jar: new CookieJar(),
+      withCredentials: true,
+    });
+    if (this.proxyAddress && this.proxyAddress.length > 0) {
+      this.axios.defaults.httpsAgent = new SocksProxyAgent(this.proxyAddress);
     }
-
-    this.client = client || Axios.create(this.getClientConstructor());
   }
 
-  private getClientConstructor(): CreateAxiosDefaults {
-    return {
-      httpsAgent: this.getAgent(),
-      responseType: 'json',
-      timeout: DEFAULT_REQUEST_TIMEOUT,
-      validateStatus: (statusCode) => statusCode >= 200 && statusCode < 300,
+  public setDefaultHeaders(headers: Record<string, string>): void {
+    this.axios.defaults.headers.common = {
+      ...this.axios.defaults.headers.common,
+      ...headers,
     };
   }
 
-  private getAgent(): HttpsProxyAgent | HttpsAgent {
-    return this?.proxyAgent || HttpClient.defaultHttpsAgent;
-  }
-
-  public destroy(): void {
-    if (this.proxyAgent) {
-      this.proxyAgent.destroy();
+  public setDefaultCookies(cookies: string): void {
+    const parsedCookies = this.cookieParser.parse(cookies);
+    for (const key in parsedCookies) {
+      (this.axios.defaults.jar as CookieJar).setCookieSync(
+        `${key}=${parsedCookies[key]}`,
+        'https://steamcommunity.com',
+      );
     }
   }
 
-  public setDefaultHeaders(headers: IncomingHttpHeaders): this {
-    this.defaultHeaders = headers;
-    return this;
-  }
-
-  public setDefaultCookies(cookies: string): this {
-    this.cookies = cookies;
-    return this;
-  }
-
-  public async execute(
+  async execute(
     props: HttpClientGetProps,
-  ): Promise<InventoryPageResult> {
-    const { url, headers: propsHeaders, params } = props;
-
-    const requestHeaders = { ...this.defaultHeaders, ...propsHeaders };
-    const requestCookies = [this.cookies, propsHeaders?.cookie]
-      .filter(Boolean)
-      .join('; ');
-
-    if (requestCookies) {
-      requestHeaders.cookie = requestCookies;
-    }
-
-    const options: AxiosRequestConfig<never> = {
-      headers: requestHeaders,
+  ): Promise<InventoryPageResult | undefined> {
+    const { url, params, headers } = props;
+    const config: AxiosRequestConfig = {
+      headers: { ...this.axios.defaults.headers.common, ...headers },
       params,
     };
 
+    const request: HttpRequest = {
+      headers: config.headers ? toIncomingHttpHeaders(config.headers) : {},
+      params,
+      url,
+    };
     try {
       const {
         data,
-        headers: incomingHeaders,
         status,
-      } = await this.client.get<
-        InventoryPageResult,
-        AxiosResponse<InventoryPageResult, never>,
-        never
-      >(url, options);
-
-      const response: HttpClientResponse<InventoryPageResult> = {
+        headers: responseHeaders,
+      } = await this.axios.get(url, config);
+      const response: HttpResponse<InventoryPageResult> = {
         data,
-        headers: incomingHeaders as IncomingHttpHeaders,
+        headers: toIncomingHttpHeaders(responseHeaders),
         statusCode: status,
       };
-      return this.httpResponseProcessor.execute({
-        response,
-        request: { url, headers: requestHeaders, params },
-      });
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : 'An unknown error occurred';
-      let response: Partial<HttpClientResponse<unknown>> = {};
-
-      if (Axios.isAxiosError(e)) {
-        response = {
-          data: e.response?.data,
-          headers: (e.response?.headers as IncomingHttpHeaders) || {},
-          statusCode: e.response?.status,
-        };
+      return this.responseProcessor.execute({ request, response });
+    } catch (error) {
+      if (isAxiosError(error)) {
+        const httpException = new HttpException({
+          message: error.message,
+          request,
+          response: error.response
+            ? {
+                data: error.response.data,
+                headers: toIncomingHttpHeaders(error.response.headers),
+                statusCode: error.response.status,
+              }
+            : {},
+        });
+        return this.responseProcessor.execute({
+          error: httpException,
+          request,
+        });
       }
-
-      const error = new HttpException({
-        message,
-        request: { url, headers: requestHeaders, params },
-        response,
-      });
-
-      return this.httpResponseProcessor.execute({
-        error,
-        request: { url, headers: requestHeaders, params },
-        response: response as HttpClientResponse<InventoryPageResult>,
-      });
+      throw error;
     }
+  }
+
+  public destroy(): void {
+    // The factory should handle agent destruction if needed.
   }
 }

@@ -35,3 +35,6 @@ Thumbs.db
 
 # Cursor
 .cursor*
+
+# Wakatime
+.wakatime-project

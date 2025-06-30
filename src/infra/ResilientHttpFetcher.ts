@@ -2,11 +2,9 @@ import { StatusCode } from 'status-code-enum';
 
 import { DEFAULT_REQUEST_MAX_RETRIES } from '@application/constants';
 import { IFetcher } from '@application/ports/fetcher.port';
-import { HttpException } from '@domain/exceptions/http.exception';
-import {
-  HttpClientGetProps,
-} from '@domain/types/http-response.type';
+import { HttpClientGetProps } from '@domain/types/http-response.type';
 import { InventoryPageResult } from '@domain/types/inventory-page-result.type';
+import { HttpException } from '@infra/exceptions';
 import { parseRetryAfter } from '@infra/helpers/parse-retry-after.helper';
 import sleep from '@infra/helpers/sleep.helper';
 
@@ -53,7 +51,7 @@ export class ResilientHttpFetcher implements IFetcher {
           const retryAfter = error.props.response?.headers?.['retry-after'];
           const delay = parseRetryAfter(retryAfter);
           await sleep(delay);
-          return this.tryExecute(props, attempt + 1);
+          return await this.tryExecute(props, attempt + 1);
         }
       }
 
@@ -61,7 +59,7 @@ export class ResilientHttpFetcher implements IFetcher {
       const jitter = Math.floor(Math.random() * 1000);
       const delay = 2 ** attempt * 1000 + jitter;
       await sleep(delay);
-      return this.tryExecute(props, attempt + 1);
+      return await this.tryExecute(props, attempt + 1);
     }
   }
 }

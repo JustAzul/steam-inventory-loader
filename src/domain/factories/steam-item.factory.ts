@@ -23,7 +23,7 @@ export default class SteamItemFactory {
     for (const asset of assets) {
       const key = `${asset.classid}_${asset.instanceid}`;
       const description = descriptionsMap[key];
-      if (description) {
+      if (description !== undefined) {
         try {
           const processedDescription = this.processDescription(
             asset,

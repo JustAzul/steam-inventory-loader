@@ -1,4 +1,3 @@
- 
 import type { InnerItemDescription } from './inner-item-description.type';
 import type { ItemActions } from './item-actions.type';
 import type { rawTag } from './raw-tag.type';

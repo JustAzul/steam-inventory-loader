@@ -1,7 +1,5 @@
-import { STEAM_CDN_IMAGE_URL } from '../constants';
 import DomainException from '../exceptions/domain.exception';
 import { IAppSpecificLogic } from '../strategies/app-specific/IAppSpecificLogic';
-import { CardType } from '../types/card-type.type';
 import { InnerItemDescription } from '../types/inner-item-description.type';
 import { InventoryPageAsset } from '../types/inventory-page-asset.type';
 import { InventoryPageDescription } from '../types/inventory-page-description.type';
@@ -9,9 +7,9 @@ import { ItemActions } from '../types/item-actions.type';
 
 import SteamItemTag from './steam-item-tag.entity';
 
-enum CardBorderInternalName {
-  Foil = 'cardborder_1',
-  Normal = 'cardborder_0',
+export enum CardBorderInternalName {
+  FOIL = 'cardborder_1',
+  NORMAL = 'cardborder_0',
 }
 
 export type SteamItemProps = {
@@ -27,12 +25,7 @@ export default class SteamItemEntity {
   private readonly strategy: IAppSpecificLogic;
   private readonly tagsInternal?: SteamItemTag[];
 
-  private constructor({
-    asset,
-    description,
-    strategy,
-    tags,
-  }: SteamItemProps) {
+  private constructor({ asset, description, strategy, tags }: SteamItemProps) {
     this.asset = asset;
     this.description = description;
     this.strategy = strategy;
@@ -72,7 +65,11 @@ export default class SteamItemEntity {
   }
 
   public get id(): string {
-    if (this.is_currency && !!this.asset?.currencyid) {
+    if (
+      this.is_currency &&
+      this.asset?.currencyid !== undefined &&
+      this.asset.currencyid !== null
+    ) {
       return this.asset.currencyid;
     }
 
@@ -116,19 +113,19 @@ export default class SteamItemEntity {
   }
 
   public get owner_descriptions(): InnerItemDescription[] | undefined {
-    return this.description?.owner_descriptions || undefined;
+    return this.description?.owner_descriptions;
   }
 
   public get item_expiration(): string | undefined {
-    return this.description?.item_expiration || undefined;
+    return this.description?.item_expiration;
   }
 
   public get fraudwarnings(): unknown[] {
-    return this.description?.fraudwarnings || [];
+    return this.description?.fraudwarnings ?? [];
   }
 
   public get descriptions(): InnerItemDescription[] {
-    return this.description?.descriptions || [];
+    return this.description?.descriptions ?? [];
   }
 
   public getMarketTradableRestriction(): number {
@@ -144,7 +141,7 @@ export default class SteamItemEntity {
   }
 
   public get actions(): ItemActions[] {
-    return this.description?.actions || [];
+    return this.description?.actions ?? [];
   }
 
   public get background_color(): string {
@@ -177,7 +174,11 @@ export default class SteamItemEntity {
 
   public get owner(): Record<string, unknown> | undefined {
     if (Object.prototype.hasOwnProperty.call(this.description, 'owner')) {
-      if (JSON.stringify(this.description.owner) === '{}') {
+      if (
+        typeof this.description.owner !== 'object' ||
+        !this.description.owner ||
+        JSON.stringify(this.description.owner) === '{}'
+      ) {
         return undefined;
       }
 
@@ -192,42 +193,12 @@ export default class SteamItemEntity {
   }
 
   public findTag(categoryToFind: string): SteamItemTag | undefined {
-    return this.tagsInternal?.find(({ category }) => category === categoryToFind);
+    return this.tagsInternal?.find(
+      ({ category }) => category === categoryToFind,
+    );
   }
 
-  public getCacheExpiration(): string | undefined {
-    return this.strategy.getCacheExpiration(this);
-  }
-
-  public getCardBorderType(): CardType | null {
-    const itemClass = this.findTag('item_class');
-
-    if (itemClass && itemClass.internal_name === 'item_class_2') {
-      const cardBorder = this.findTag('cardborder');
-
-      if (cardBorder) {
-        if (cardBorder.internal_name === CardBorderInternalName.Normal)
-          return 'Normal';
-
-        if (cardBorder.internal_name === CardBorderInternalName.Foil)
-          return 'Foil';
-      }
-    }
-
-    return null;
-  }
-
-  public getImageUrl(size?: 'normal' | 'large'): string {
-    const isLarge = size === 'large';
-
-    if (isLarge && this.icon_url_large) {
-      return `${STEAM_CDN_IMAGE_URL}/${this.icon_url_large}`;
-    }
-
-    return `${STEAM_CDN_IMAGE_URL}/${this.icon_url}`;
-  }
-
-  public getMarketFeeApp(): number | undefined {
-    return this.strategy.getMarketFeeApp(this);
+  public getStrategy(): IAppSpecificLogic {
+    return this.strategy;
   }
 }

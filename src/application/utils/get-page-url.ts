@@ -66,4 +66,4 @@ export const getPageUrl = (props: GetPageUrlProps): GetPageUrlResult => {
   }
 
   return { params, url };
-}; 
+};

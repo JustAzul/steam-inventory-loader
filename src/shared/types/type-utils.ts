@@ -20,4 +20,4 @@ export type PropType<TObj, TProp extends keyof TObj> = TObj[TProp];
 
 export type DataOrError<TError = ErrorPayload | ErrorCode, TData = unknown> =
   | [error: TError]
-  | [error: undefined, data: TData]; 
+  | [error: undefined, data: TData];

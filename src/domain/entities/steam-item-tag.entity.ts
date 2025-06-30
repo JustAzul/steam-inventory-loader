@@ -2,17 +2,20 @@ import DomainException from '../exceptions/domain.exception';
 import { SteamTag } from '../types/steam-tag.type';
 
 export default class SteamItemTag {
-  private tag: SteamTag;
+  private readonly tag: SteamTag;
 
   private constructor(tag: SteamTag) {
     this.tag = tag;
   }
 
-  public static create(tag: SteamTag) {
-    if (!tag.internal_name) {
-      throw new DomainException(`SteamItemTag`, `Tag internal_name cannot be empty`);
+  public static create(tag: SteamTag): SteamItemTag {
+    if (!tag.internal_name || tag.internal_name.length === 0) {
+      throw new DomainException(
+        `SteamItemTag`,
+        `Tag internal_name cannot be empty`,
+      );
     }
-    if (!tag.category) {
+    if (!tag.category || tag.category.length === 0) {
       throw new DomainException(`SteamItemTag`, `Tag category cannot be empty`);
     }
     return new SteamItemTag(tag);
@@ -23,7 +26,7 @@ export default class SteamItemTag {
   }
 
   public get name(): string | undefined {
-    return this.tag?.localized_tag_name || this.tag.name;
+    return this.tag?.localized_tag_name ?? this.tag.name;
   }
 
   public get category(): string | undefined {
@@ -35,6 +38,6 @@ export default class SteamItemTag {
   }
 
   public get category_name(): string | undefined {
-    return this.tag?.localized_category_name || this.tag.category_name;
+    return this.tag?.localized_category_name ?? this.tag.category_name;
   }
 }
