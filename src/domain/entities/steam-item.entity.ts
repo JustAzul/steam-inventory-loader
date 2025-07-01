@@ -33,7 +33,7 @@ export default class SteamItemEntity {
     this.adapter = new SteamItemAdapter(asset, description);
   }
 
-  private get is_currency(): boolean {
+  public get is_currency(): boolean {
     return (
       Boolean(this.asset.is_currency) ||
       Boolean(this.asset.currency) ||

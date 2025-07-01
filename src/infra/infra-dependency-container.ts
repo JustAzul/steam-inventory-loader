@@ -11,7 +11,7 @@ import { HttpResponseValidationHandler } from './http-processing/chain/http-resp
 import { SteamBodyValidationHandler } from './http-processing/chain/steam-body-validation.handler';
 import { HttpResponseProcessor } from './http-processing/http-response-processor';
 import { ResilientHttpFetcher } from './ResilientHttpFetcher';
-import CookieParserService from './services/cookie-parser.service';
+import { CookieParserService } from './services/cookie-parser.service';
 
 export function registerInfraDependencies(
   container: DependencyContainer,

@@ -19,11 +19,11 @@ const config: Config.InitialOptions = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   transformIgnorePatterns: [
-    '/node_modules/(?!(axios-cookiejar-support|tsyringe|reflect-metadata|ssr-window|dom7)/)',
+    '/node_modules/(?!(axios-cookiejar-support|http-cookie-agent|tsyringe|reflect-metadata|ssr-window|dom7)/)',
   ],
   testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
   roots: ['<rootDir>/src'],
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   collectCoverage: true,
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
@@ -40,8 +40,8 @@ const config: Config.InitialOptions = {
       branches: 80,
       functions: 80,
       lines: 80,
-      statements: 80
-    }
+      statements: 80,
+    },
   },
   extensionsToTreatAsEsm: ['.ts'],
   globals: {

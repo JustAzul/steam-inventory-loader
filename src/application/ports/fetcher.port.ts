@@ -4,5 +4,5 @@ import { InventoryPageResult } from '@domain/types/inventory-page-result.type';
 export interface IFetcher {
   execute(
     httpClientGetProps: Readonly<HttpClientGetProps>,
-  ): Promise<InventoryPageResult>;
+  ): Promise<InventoryPageResult | undefined>;
 }

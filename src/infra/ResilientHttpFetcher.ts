@@ -38,6 +38,9 @@ export class ResilientHttpFetcher implements IFetcher {
   ): Promise<InventoryPageResult> {
     try {
       const result = await this.decoratedFetcher.execute(props);
+      if (!result) {
+        throw new Error('No result from fetcher');
+      }
       return result;
     } catch (error) {
       const maxRetries = this.props.maxRetries ?? DEFAULT_REQUEST_MAX_RETRIES;
