@@ -44,7 +44,7 @@ describe('Presentation :: SteamItemPresenter', () => {
 
   describe('getImageUrl', () => {
     it('should return the normal icon_url when size is not specified', () => {
-      const entity = SteamItemEntity.create({
+      const entity = new SteamItemEntity({
         asset: mockAsset,
         description: { ...mockDescription, tags: [] },
         strategy: mockStrategy,
@@ -55,7 +55,7 @@ describe('Presentation :: SteamItemPresenter', () => {
     });
 
     it('should return the normal icon_url when size is "normal"', () => {
-      const entity = SteamItemEntity.create({
+      const entity = new SteamItemEntity({
         asset: mockAsset,
         description: { ...mockDescription, tags: [] },
         strategy: mockStrategy,
@@ -66,7 +66,7 @@ describe('Presentation :: SteamItemPresenter', () => {
     });
 
     it('should return the large icon_url when size is "large"', () => {
-      const entity = SteamItemEntity.create({
+      const entity = new SteamItemEntity({
         asset: mockAsset,
         description: { ...mockDescription, tags: [] },
         strategy: mockStrategy,
@@ -82,7 +82,7 @@ describe('Presentation :: SteamItemPresenter', () => {
         icon_url_large: '',
         tags: [],
       };
-      const entityWithoutLargeIcon = SteamItemEntity.create({
+      const entityWithoutLargeIcon = new SteamItemEntity({
         asset: mockAsset,
         description: descriptionWithoutLargeIcon,
         strategy: mockStrategy,

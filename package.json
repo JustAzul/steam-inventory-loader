@@ -5,6 +5,11 @@
   "type": "module",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "package.json"
+  ],
   "keywords": [
     "azul",
     "inventory",
@@ -39,6 +44,7 @@
     "agentkeepalive": "^4.2.1",
     "axios": "^1.10.0",
     "axios-cookiejar-support": "^6.0.3",
+    "axios-retry": "^4.5.0",
     "cookie": "^1.0.2",
     "hpagent": "^1.1.0",
     "inversify": "^7.5.4",

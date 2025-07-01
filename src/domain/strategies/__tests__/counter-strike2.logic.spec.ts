@@ -17,12 +17,14 @@ describe('CounterStrike2Logic', () => {
   });
 
   it('should return item_expiration if it exists', () => {
-    const { asset, description: baseDescription } = steamItemsMocks.page1[0];
+    const { adapter } = steamItemsMocks.page1[0];
+    const { asset } = adapter as any;
+    const { description: baseDescription } = adapter as any;
     const description = {
       ...baseDescription,
       item_expiration: '2024-01-01T00:00:00.000Z',
     };
-    const item = SteamItemEntity.create({
+    const item = new SteamItemEntity({
       asset,
       description,
       strategy: new CounterStrike2Logic(),
@@ -33,10 +35,12 @@ describe('CounterStrike2Logic', () => {
   });
 
   it('should return tradable date from owner_descriptions', () => {
-    const { asset, description: baseDescription } = steamItemsMocks.page1[0];
+    const { adapter } = steamItemsMocks.page1[0];
+    const { asset } = adapter as any;
+    const { description: baseDescription } = adapter as any;
     const description = {
       ...baseDescription,
-      owner_descriptions: [
+      descriptions: [
         {
           color: 'z',
           type: 'text',
@@ -44,37 +48,41 @@ describe('CounterStrike2Logic', () => {
         },
       ],
     };
-    const item = SteamItemEntity.create({
+    const item = new SteamItemEntity({
       asset,
       description,
       strategy: new CounterStrike2Logic(),
     });
-    jest.spyOn(item, 'contextid', 'get').mockReturnValue('2');
+    jest.spyOn(item.adapter, 'contextid', 'get').mockReturnValue('2');
     const expiration = logic.getCacheExpiration(item);
     expect(expiration).toBe('2025-01-01T00:00:00.000Z');
   });
 
   it('should return undefined if no expiration is found', () => {
-    const { asset, description: baseDescription } = steamItemsMocks.page1[0];
+    const { adapter } = steamItemsMocks.page1[0];
+    const { asset } = adapter as any;
+    const { description: baseDescription } = adapter as any;
     const description = {
       ...baseDescription,
-      owner_descriptions: [],
+      descriptions: [],
     };
-    const item = SteamItemEntity.create({
+    const item = new SteamItemEntity({
       asset,
       description,
       strategy: new CounterStrike2Logic(),
     });
-    jest.spyOn(item, 'contextid', 'get').mockReturnValue('2');
+    jest.spyOn(item.adapter, 'contextid', 'get').mockReturnValue('2');
     const expiration = logic.getCacheExpiration(item);
     expect(expiration).toBeUndefined();
   });
 
   it('should return undefined if the date is invalid', () => {
-    const { asset, description: baseDescription } = steamItemsMocks.page1[0];
+    const { adapter } = steamItemsMocks.page1[0];
+    const { asset } = adapter as any;
+    const { description: baseDescription } = adapter as any;
     const description = {
       ...baseDescription,
-      owner_descriptions: [
+      descriptions: [
         {
           color: 'z',
           type: 'text',
@@ -82,12 +90,12 @@ describe('CounterStrike2Logic', () => {
         },
       ],
     };
-    const item = SteamItemEntity.create({
+    const item = new SteamItemEntity({
       asset,
       description,
       strategy: new CounterStrike2Logic(),
     });
-    jest.spyOn(item, 'contextid', 'get').mockReturnValue('2');
+    jest.spyOn(item.adapter, 'contextid', 'get').mockReturnValue('2');
     const expiration = logic.getCacheExpiration(item);
     expect(expiration).toBeUndefined();
   });

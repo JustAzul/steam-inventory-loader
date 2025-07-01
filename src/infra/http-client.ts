@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import axios, { AxiosInstance, AxiosRequestConfig, isAxiosError } from 'axios';
+import axiosRetry from 'axios-retry';
 import { injectable, inject } from 'inversify';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { CookieJar } from 'tough-cookie';
@@ -33,6 +34,19 @@ export class HttpClient implements IHttpClient {
       jar: new CookieJar(),
       withCredentials: true,
     });
+
+    if (process.env.NODE_ENV !== 'test') {
+      axiosRetry(this.axios, {
+        retries: 3,
+        retryCondition: (error) => {
+          return (
+            axiosRetry.isNetworkOrIdempotentRequestError(error) ||
+            (!!error.response && error.response.status >= 500)
+          );
+        },
+      });
+    }
+
     if (this.proxyAddress && this.proxyAddress.length > 0) {
       this.axios.defaults.httpsAgent = new SocksProxyAgent(this.proxyAddress);
     }

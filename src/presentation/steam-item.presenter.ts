@@ -7,10 +7,10 @@ export class SteamItemPresenter {
   public getImageUrl(size?: 'normal' | 'large'): string {
     const isLarge = size === 'large';
 
-    if (isLarge && this.item.icon_url_large) {
-      return `${STEAM_CDN_IMAGE_URL}/${this.item.icon_url_large}`;
+    if (isLarge && this.item.adapter.icon_url_large) {
+      return `${STEAM_CDN_IMAGE_URL}/${this.item.adapter.icon_url_large}`;
     }
 
-    return `${STEAM_CDN_IMAGE_URL}/${this.item.icon_url}`;
+    return `${STEAM_CDN_IMAGE_URL}/${this.item.adapter.icon_url}`;
   }
 }

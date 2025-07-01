@@ -99,6 +99,7 @@ export const inventoryPageResultMock: {
         classid: '123',
         instanceid: '456',
         market_hash_name: 'Operation Breakout Weapon Case',
+        market_name: 'Operation Breakout Weapon Case',
         name: 'Operation Breakout Weapon Case',
         tradable: 1,
       },
@@ -126,6 +127,7 @@ export const inventoryPageResultMock: {
         classid: '789',
         instanceid: '101',
         market_hash_name: 'Chroma 2 Case',
+        market_name: 'Chroma 2 Case',
         name: 'Chroma 2 Case',
         tradable: 0,
       },
@@ -137,37 +139,39 @@ export const inventoryPageResultMock: {
   },
 };
 
+const appSpecificLogicFactory = new AppSpecificLogicFactory();
+
 export const steamItemsMocks = {
   mixedTradablePage: [
-    SteamItemEntity.create({
+    new SteamItemEntity({
       asset: inventoryPageResultMock.mixedTradablePage.assets[0],
       description: inventoryPageResultMock.mixedTradablePage.descriptions[0],
-      strategy: AppSpecificLogicFactory.create(
+      strategy: appSpecificLogicFactory.create(
         inventoryPageResultMock.mixedTradablePage.assets[0].appid,
       ),
     }),
-    SteamItemEntity.create({
+    new SteamItemEntity({
       asset: inventoryPageResultMock.mixedTradablePage.assets[1],
       description: inventoryPageResultMock.mixedTradablePage.descriptions[1],
-      strategy: AppSpecificLogicFactory.create(
+      strategy: appSpecificLogicFactory.create(
         inventoryPageResultMock.mixedTradablePage.assets[1].appid,
       ),
     }),
   ],
   page1: [
-    SteamItemEntity.create({
+    new SteamItemEntity({
       asset: inventoryPageResultMock.page1.assets[0],
       description: inventoryPageResultMock.page1.descriptions[0],
-      strategy: AppSpecificLogicFactory.create(
+      strategy: appSpecificLogicFactory.create(
         inventoryPageResultMock.page1.assets[0].appid,
       ),
     }),
   ],
   page2: [
-    SteamItemEntity.create({
+    new SteamItemEntity({
       asset: inventoryPageResultMock.page2.assets[0],
       description: inventoryPageResultMock.page2.descriptions[0],
-      strategy: AppSpecificLogicFactory.create(
+      strategy: appSpecificLogicFactory.create(
         inventoryPageResultMock.page2.assets[0].appid,
       ),
     }),

@@ -9,12 +9,12 @@ export class CounterStrike2Logic implements IAppSpecificLogic {
     item: SteamItemEntity,
   ): InnerItemDescription | undefined {
     if (
-      item.contextid !== STEAM_CONTEXT_IDS.INVENTORY ||
-      !item.owner_descriptions
+      item.adapter.contextid !== STEAM_CONTEXT_IDS.INVENTORY ||
+      !item.adapter.descriptions
     ) {
       return undefined;
     }
-    return item.owner_descriptions.find(
+    return item.adapter.descriptions.find(
       (description) =>
         description.value !== null &&
         description.value !== undefined &&
@@ -35,6 +35,24 @@ export class CounterStrike2Logic implements IAppSpecificLogic {
     } catch {
       return undefined;
     }
+  }
+
+  public getStickerInfo(
+    item: SteamItemEntity,
+  ): InnerItemDescription | undefined {
+    if (
+      item.adapter.contextid !== STEAM_CONTEXT_IDS.INVENTORY ||
+      !item.adapter.descriptions
+    ) {
+      return undefined;
+    }
+    return item.adapter.descriptions.find(
+      (description) =>
+        description.value !== null &&
+        description.value !== undefined &&
+        typeof description.value === 'string' &&
+        description.value.includes('sticker_info'),
+    );
   }
 
   public getCacheExpiration(item: SteamItemEntity): string | undefined {
@@ -62,13 +80,23 @@ export class CounterStrike2Logic implements IAppSpecificLogic {
     return undefined;
   }
 
-  public isFloat(item: SteamItemEntity): boolean {
+  public isTradable(item: SteamItemEntity): boolean {
     if (
-      item.market_hash_name !== null &&
-      item.market_hash_name !== undefined &&
-      item.market_hash_name !== ''
+      item.adapter.contextid !== STEAM_CONTEXT_IDS.INVENTORY ||
+      item.adapter.tradable === false
     ) {
-      return item.market_hash_name.includes('Float');
+      return false;
+    }
+    return true;
+  }
+
+  public hasSpecialAttributes(item: SteamItemEntity): boolean {
+    if (
+      item.adapter.market_hash_name !== null &&
+      item.adapter.market_hash_name !== undefined &&
+      item.adapter.market_hash_name !== ''
+    ) {
+      return item.adapter.market_hash_name.includes('Float');
     }
     return false;
   }
@@ -83,12 +111,42 @@ export class CounterStrike2Logic implements IAppSpecificLogic {
 
   public isStatTrak(item: SteamItemEntity): boolean {
     if (
-      item.market_hash_name !== null &&
-      item.market_hash_name !== undefined &&
-      item.market_hash_name !== ''
+      item.adapter.market_hash_name !== null &&
+      item.adapter.market_hash_name !== undefined &&
+      item.adapter.market_hash_name !== ''
     ) {
-      return item.market_hash_name.includes('StatTrak™');
+      return item.adapter.market_hash_name.includes('StatTrak™');
     }
     return false;
+  }
+
+  public isFloat(item: SteamItemEntity): boolean {
+    if (
+      item.adapter.market_hash_name !== null &&
+      item.adapter.market_hash_name !== undefined &&
+      item.adapter.market_hash_name !== ''
+    ) {
+      return item.adapter.market_hash_name.includes('Float');
+    }
+    return false;
+  }
+
+  public getStickerName(item: SteamItemEntity): string | undefined {
+    if (
+      !item.adapter.descriptions ||
+      item.adapter.descriptions.length === 0
+    ) {
+      return;
+    }
+    const description = item.adapter.descriptions.find(
+      (d) => d.value.includes('sticker_info'),
+    );
+    if (description) {
+      const stickerName = description.value.match(/<br>Sticker: (.*?)<\/center>/);
+      if (stickerName && stickerName[1]) {
+        return stickerName[1];
+      }
+    }
+    return undefined;
   }
 }

@@ -1,84 +1,79 @@
+import { injectable, inject } from 'tsyringe';
+
 import SteamItemTag from '../entities/steam-item-tag.entity';
 import SteamItemEntity from '../entities/steam-item.entity';
 import DomainException from '../exceptions/domain.exception';
+import { IAppSpecificLogic } from '../strategies/app-specific/IAppSpecificLogic';
 import { AppSpecificLogicFactory } from '../strategies/app-specific.factory';
 import { InventoryPageAsset } from '../types/inventory-page-asset.type';
 import { InventoryPageDescription } from '../types/inventory-page-description.type';
 
-export default class SteamItemFactory {
-  public static createFromInventoryPage(
+type CreateProps = {
+  asset: InventoryPageAsset;
+  description: InventoryPageDescription;
+  strategy: IAppSpecificLogic;
+  tags?: SteamItemTag[];
+};
+
+@injectable()
+export class SteamItemFactory {
+  constructor(
+    @inject(AppSpecificLogicFactory)
+    private readonly appSpecificLogicFactory: AppSpecificLogicFactory,
+  ) {}
+
+  public createFromInventoryPage(
     assets: InventoryPageAsset[],
     descriptions: InventoryPageDescription[],
   ): SteamItemEntity[] {
-    const descriptionsMap = descriptions.reduce(
-      (acc, desc) => {
-        const key = `${desc.classid}_${desc.instanceid}`;
-        acc[key] = desc;
-        return acc;
-      },
-      {} as Record<string, InventoryPageDescription>,
+    const descriptionMap = new Map<string, InventoryPageDescription>(
+      descriptions.map((d) => [`${d.classid}-${d.instanceid}`, d]),
     );
 
-    const items: SteamItemEntity[] = [];
-    for (const asset of assets) {
-      const key = `${asset.classid}_${asset.instanceid}`;
-      const description = descriptionsMap[key];
-      if (description !== undefined) {
-        try {
-          const processedDescription = this.processDescription(
+    return assets
+      .map((asset) => {
+        const description = descriptionMap.get(
+          `${asset.classid}-${asset.instanceid}`,
+        );
+
+        if (!description) {
+          return undefined;
+        }
+
+        const strategy = this.appSpecificLogicFactory.create(
+          Number(asset.appid),
+        );
+
+        return this.create({
             asset,
             description,
-          );
-          const tags = this.createTags(processedDescription);
-          const strategy = AppSpecificLogicFactory.create(asset.appid);
-          const entity = SteamItemEntity.create({
+          strategy,
+        });
+      })
+      .filter((item): item is SteamItemEntity => item !== undefined);
+  }
+
+  public create({
             asset,
-            description: processedDescription,
+    description,
             strategy,
             tags,
-          });
-          items.push(entity);
-        } catch (error) {
-          if (error instanceof DomainException) {
-            // console.warn(
-            //   `Skipping item due to validation error: ${error.message}`,
-            // );
-          }
-        }
-      }
-    }
-    return items;
+  }: CreateProps): SteamItemEntity {
+    if (!asset.assetid) {
+      throw new DomainException('SteamItemFactory', 'assetid is required');
   }
-
-  private static processDescription(
-    asset: InventoryPageAsset,
-    description: InventoryPageDescription,
-  ): InventoryPageDescription {
-    const listingKey = `${asset.classid}_${asset.instanceid}`;
-    if (Object.prototype.hasOwnProperty.call(description, listingKey)) {
-      return description[listingKey as never] as InventoryPageDescription;
+    if (!asset.appid) {
+      throw new DomainException('SteamItemFactory', 'appid is required');
     }
-    return description;
-  }
-
-  private static createTags(
-    description: InventoryPageDescription,
-  ): SteamItemTag[] | undefined {
-    if (Object.prototype.hasOwnProperty.call(description, 'tags')) {
-      return description.tags.reduce((acc, tag) => {
-        try {
-          const tagEntity = SteamItemTag.create(tag);
-          acc.push(tagEntity);
-        } catch (error) {
-          if (error instanceof DomainException) {
-            // console.warn(
-            //   `Skipping tag due to validation error: ${error.message}`,
-            // );
-          }
-        }
-        return acc;
-      }, [] as SteamItemTag[]);
+    if (!asset.classid) {
+      throw new DomainException('SteamItemFactory', 'classid is required');
     }
-    return undefined;
-  }
-}
+    if (!description.market_hash_name) {
+      throw new DomainException(
+        'SteamItemFactory',
+        'market_hash_name is required',
+      );
+    }
+    return new SteamItemEntity({ asset, description, strategy, tags });
+    }
+} 

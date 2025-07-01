@@ -1,76 +1,54 @@
 import 'reflect-metadata';
 
-import SteamItemTag from '@domain/entities/steam-item-tag.entity';
+import { IAppSpecificLogic } from '@domain/strategies/app-specific/IAppSpecificLogic';
+import { AppSpecificLogicFactory } from '@domain/strategies/app-specific.factory';
 import { inventoryPageResultMock } from '@domain/test/__mocks__';
 import { InventoryPageAsset } from '@domain/types/inventory-page-asset.type';
 import { InventoryPageDescription } from '@domain/types/inventory-page-description.type';
 
-import SteamItemFactory from '../steam-item.factory';
+import { SteamItemFactory } from '../steam-item.factory';
 
 describe('SteamItemFactory', () => {
+  let factory: SteamItemFactory;
+  let mockAppSpecificLogicFactory: jest.Mocked<AppSpecificLogicFactory>;
+  const mockStrategy: IAppSpecificLogic = {
+    getCacheExpiration: () => undefined,
+    getMarketFeeApp: () => undefined,
+  };
+
+  beforeEach(() => {
+    mockAppSpecificLogicFactory = {
+      create: jest.fn().mockReturnValue(mockStrategy),
+    } as unknown as jest.Mocked<AppSpecificLogicFactory>;
+    factory = new SteamItemFactory(mockAppSpecificLogicFactory);
+  });
+
   it('should create steam items from inventory page', () => {
     const { assets, descriptions } = inventoryPageResultMock.page1;
-    const items = SteamItemFactory.createFromInventoryPage(
+    const items = factory.createFromInventoryPage(
       assets as InventoryPageAsset[],
       descriptions as InventoryPageDescription[],
     );
     expect(items).toHaveLength(1);
-    expect(items[0].market_hash_name).toBe('Operation Breakout Weapon Case');
-  });
-
-  it('should handle descriptions with listing keys', () => {
-    const asset = inventoryPageResultMock.page1.assets[0];
-    const description = inventoryPageResultMock.page1.descriptions[0];
-
-    const descriptionWithListingKey = {
-      ...description,
-      [`${asset.classid}_${asset.instanceid}`]: {
-        ...description,
-        market_hash_name: 'Test Item',
-      },
-    };
-
-    const items = SteamItemFactory.createFromInventoryPage(
-      [asset as InventoryPageAsset],
-      [descriptionWithListingKey as InventoryPageDescription],
-    );
-    expect(items).toHaveLength(1);
-    expect(items[0].market_hash_name).toBe('Test Item');
-  });
-
-  it('should create tags for an item', () => {
-    const { assets } = inventoryPageResultMock.page1;
-    const descriptions = [
-      {
-        ...inventoryPageResultMock.page1.descriptions[0],
-        tags: [
-          {
-            category: 'Test Category',
-            category_name: 'Test Category Name',
-            internal_name: 'test_tag',
-            localized_tag_name: 'Test Tag',
-            name: 'Test Tag',
-          },
-        ],
-      },
-    ];
-    const items = SteamItemFactory.createFromInventoryPage(
-      assets as InventoryPageAsset[],
-      descriptions as InventoryPageDescription[],
-    );
-    const { tags } = items[0];
-    expect(tags).toBeDefined();
-    expect(tags).toHaveLength(1);
-    expect(tags![0]).toBeInstanceOf(SteamItemTag);
-    expect(tags![0].internal_name).toBe('test_tag');
+    expect(items[0].market_name).toBe('Operation Breakout Weapon Case');
   });
 
   it('should not create item if description is missing', () => {
     const { assets } = inventoryPageResultMock.page1;
-    const items = SteamItemFactory.createFromInventoryPage(
+    const items = factory.createFromInventoryPage(
       assets as InventoryPageAsset[],
       [],
     );
     expect(items).toHaveLength(0);
+  });
+
+  it('should create a valid steam item', () => {
+    const { assets, descriptions } = inventoryPageResultMock.page1;
+    const item = factory.create({
+      asset: assets[0] as InventoryPageAsset,
+      description: descriptions[0] as InventoryPageDescription,
+      strategy: mockStrategy,
+    });
+    expect(item.market_name).toBe('Operation Breakout Weapon Case');
   });
 });

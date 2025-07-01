@@ -15,15 +15,14 @@ jobs:
       
       - uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: "18.x"
           registry-url: https://registry.npmjs.org/
       
       - run: npm ci
 
+      - run: npm test
+
       - run: npm run build
-      
-      - name: Clean useless production files
-        run: rm -rf ./src ./tests ./.github .gitignore ./.vscode tsconfig.json .wakatime-project .eslint*
       
       - run: npm publish
         env:

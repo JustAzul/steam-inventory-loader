@@ -47,7 +47,7 @@ describe('Domain :: Services :: SteamItemLogicService', () => {
 
   const createEntityWithTags = (tags: SteamTag[]): SteamItemEntity => {
     const steamItemTags = tags.map((tag) => SteamItemTag.create(tag));
-    return SteamItemEntity.create({
+    return new SteamItemEntity({
       asset: mockAsset,
       description: { ...mockDescription, tags: [] }, // Pass empty tags here
       strategy: mockStrategy,

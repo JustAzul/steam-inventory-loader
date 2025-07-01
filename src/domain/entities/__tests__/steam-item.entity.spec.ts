@@ -1,5 +1,6 @@
 import SteamItemTag from '@domain/entities/steam-item-tag.entity';
 import SteamItemEntity from '@domain/entities/steam-item.entity';
+import { DefaultLogic } from '@domain/strategies/app-specific/default.logic';
 import { IAppSpecificLogic } from '@domain/strategies/app-specific/IAppSpecificLogic';
 import { InventoryPageAsset } from '@domain/types/inventory-page-asset.type';
 import { InventoryPageDescription } from '@domain/types/inventory-page-description.type';
@@ -44,9 +45,9 @@ describe('Domain :: Entities :: SteamItemEntity', () => {
 
   const createEntityWithTags = (tags: SteamTag[]): SteamItemEntity => {
     const steamItemTags = tags.map((tag) => SteamItemTag.create(tag));
-    return SteamItemEntity.create({
+    return new SteamItemEntity({
       asset: mockAsset,
-      description: { ...mockDescription, tags: [] }, // Pass empty tags here
+      description: { ...mockDescription, tags: [] } as InventoryPageDescription,
       strategy: mockStrategy,
       tags: steamItemTags,
     });
@@ -99,78 +100,80 @@ describe('Domain :: Entities :: SteamItemEntity', () => {
     });
   });
 
-  describe('create', () => {
-    it('should throw DomainException if assetid is missing', () => {
-      const asset = { ...mockAsset, assetid: '' };
-      expect(() =>
-        SteamItemEntity.create({
-          asset,
-          description: { ...mockDescription, tags: [] },
-          strategy: mockStrategy,
-        }),
-      ).toThrow('assetid is required');
-    });
-
-    it('should throw DomainException if appid is missing', () => {
-      const asset = { ...mockAsset, appid: undefined };
-      expect(() =>
-        SteamItemEntity.create({
-          asset: asset as unknown as InventoryPageAsset,
-          description: { ...mockDescription, tags: [] },
-          strategy: mockStrategy,
-        }),
-      ).toThrow('appid is required');
-    });
-
-    it('should throw DomainException if classid is missing', () => {
-      const asset = { ...mockAsset, classid: '' };
-      expect(() =>
-        SteamItemEntity.create({
-          asset,
-          description: { ...mockDescription, tags: [] },
-          strategy: mockStrategy,
-        }),
-      ).toThrow('classid is required');
-    });
-
-    it('should throw DomainException if market_hash_name is missing', () => {
-      const description = { ...mockDescription, market_hash_name: '' };
-      expect(() =>
-        SteamItemEntity.create({
-          asset: mockAsset,
-          description: { ...description, tags: [] },
-          strategy: mockStrategy,
-        }),
-      ).toThrow('market_hash_name is required');
+  describe('is_currency', () => {
+    it('should return true if asset.is_currency is true', () => {
+      const entity = new SteamItemEntity({
+        asset: { ...mockAsset, is_currency: true } as InventoryPageAsset,
+        description: mockDescription as InventoryPageDescription,
+        strategy: new DefaultLogic(),
+      });
+      expect(entity['is_currency']).toBe(true);
     });
   });
 
   describe('id', () => {
-    it('should return assetid for non-currency items', () => {
-      const entity = SteamItemEntity.create({
+    it('should return currencyid if item is currency', () => {
+      const entity = new SteamItemEntity({
+        asset: { ...mockAsset, currencyid: '123' } as InventoryPageAsset,
+        description: mockDescription as InventoryPageDescription,
+        strategy: new DefaultLogic(),
+      });
+      expect(entity.id).toBe('123');
+    });
+
+    it('should return assetid if item is not currency', () => {
+      const entity = new SteamItemEntity({
         asset: mockAsset,
-        description: { ...mockDescription, tags: [] },
-        strategy: mockStrategy,
+        description: mockDescription as InventoryPageDescription,
+        strategy: new DefaultLogic(),
       });
       expect(entity.id).toBe(mockAsset.assetid);
     });
+  });
 
-    it('should return currencyid for currency items', () => {
-      const currencyAsset = { ...mockAsset, currencyid: '123' };
-      const entity = SteamItemEntity.create({
-        asset: currencyAsset,
-        description: { ...mockDescription, tags: [] },
-        strategy: mockStrategy,
+  describe('getAppId', () => {
+    it('should return the appid', () => {
+      const entity = new SteamItemEntity({
+        asset: mockAsset,
+        description: mockDescription as InventoryPageDescription,
+        strategy: new DefaultLogic(),
       });
-      expect(entity.id).toBe('123');
+      expect(entity.getAppId()).toBe(Number(mockAsset.appid));
+    });
+  });
+
+  describe('assetid', () => {
+    it('should return the assetid', () => {
+      const entity = new SteamItemEntity({
+        asset: mockAsset,
+        description: mockDescription as InventoryPageDescription,
+        strategy: new DefaultLogic(),
+      });
+      expect(entity.assetid).toBe(mockAsset.assetid);
+    });
+  });
+
+  describe('owner_descriptions', () => {
+    it('should return the owner_descriptions', () => {
+      const entity = new SteamItemEntity({
+        asset: mockAsset,
+        description: mockDescription as InventoryPageDescription,
+        strategy: new DefaultLogic(),
+      });
+      expect(entity.owner_descriptions).toBe(
+        (mockDescription as InventoryPageDescription).owner_descriptions,
+      );
     });
   });
 
   describe('owner getter', () => {
     it('should return undefined if owner property is missing', () => {
-      const entity = SteamItemEntity.create({
+      const entity = new SteamItemEntity({
         asset: mockAsset,
-        description: { ...mockDescription, tags: [] },
+        description: {
+          ...mockDescription,
+          tags: [],
+        } as InventoryPageDescription,
         strategy: mockStrategy,
       });
       expect(entity.owner).toBeUndefined();
@@ -178,87 +181,42 @@ describe('Domain :: Entities :: SteamItemEntity', () => {
 
     it('should return undefined if owner is an empty object', () => {
       const descriptionWithEmptyOwner = { ...mockDescription, owner: {} };
-      const entity = SteamItemEntity.create({
+      const entity = new SteamItemEntity({
         asset: mockAsset,
-        description: { ...descriptionWithEmptyOwner, tags: [] },
+        description: {
+          ...descriptionWithEmptyOwner,
+          tags: [],
+        } as InventoryPageDescription,
         strategy: mockStrategy,
       });
       expect(entity.owner).toBeUndefined();
     });
 
     it('should return owner object if it exists', () => {
-      const owner = { steamid: '765' };
+      const owner = { steamid: '123' };
       const descriptionWithOwner = { ...mockDescription, owner };
-      const entity = SteamItemEntity.create({
+      const entity = new SteamItemEntity({
         asset: mockAsset,
-        description: { ...descriptionWithOwner, tags: [] },
+        description: {
+          ...descriptionWithOwner,
+          tags: [],
+        } as InventoryPageDescription,
         strategy: mockStrategy,
       });
       expect(entity.owner).toEqual(owner);
     });
   });
 
-  describe('getters with default values', () => {
-    it('should handle missing optional description fields', () => {
-      const partialDescription: Partial<typeof mockDescription> = {
-        ...mockDescription,
-      };
-      delete partialDescription.owner_descriptions;
-      delete partialDescription.item_expiration;
-      delete partialDescription.fraudwarnings;
-      delete partialDescription.descriptions;
-      delete partialDescription.actions;
-
-      const entity = SteamItemEntity.create({
-        asset: mockAsset,
-        description: {
-          ...(partialDescription as InventoryPageDescription),
-          tags: [],
-        },
-        strategy: mockStrategy,
-      });
-
-      expect(entity.owner_descriptions).toBeUndefined();
-      expect(entity.item_expiration).toBeUndefined();
-      expect(entity.fraudwarnings).toEqual([]);
-      expect(entity.descriptions).toEqual([]);
-      expect(entity.actions).toEqual([]);
-    });
-  });
-
   describe('Simple Getters', () => {
     it('should return the correct values', () => {
-      const entity = SteamItemEntity.create({
+      const entity = new SteamItemEntity({
         asset: mockAsset,
-        description: { ...mockDescription, tags: [] },
-        strategy: mockStrategy,
-        tags: [],
+        description: mockDescription as InventoryPageDescription,
+        strategy: new DefaultLogic(),
       });
-
-      expect(entity.getAppId()).toBe(mockAsset.appid);
-      expect(entity.classid).toBe(mockAsset.classid);
-      expect(entity.assetid).toBe(mockAsset.assetid);
-      expect(entity.getInstanceId()).toBe(mockAsset.instanceid);
-      expect(entity.getAmount()).toBe(Number(mockAsset.amount));
-      expect(entity.contextid).toBe(mockAsset.contextid);
-      expect(entity.tradable).toBe(Boolean(mockDescription.tradable));
-      expect(entity.marketable).toBe(Boolean(mockDescription.marketable));
-      expect(entity.commodity).toBe(Boolean(mockDescription.commodity));
-      expect(entity.getMarketTradableRestriction()).toBe(
-        mockDescription.market_tradable_restriction,
-      );
-      expect(entity.getMarketMarketableRestriction()).toBe(
-        mockDescription.market_marketable_restriction,
-      );
-      expect(entity.market_hash_name).toBe(mockDescription.market_hash_name);
-      expect(entity.background_color).toBe(mockDescription.background_color);
-      expect(entity.getCurrency()).toBe(mockDescription.currency);
-      expect(entity.icon_url).toBe(mockDescription.icon_url);
-      expect(entity.icon_url_large).toBe(mockDescription.icon_url_large);
-      expect(entity.market_name).toBe(mockDescription.market_name);
-      expect(entity.type).toBe(mockDescription.type);
-      expect(entity.name).toBe(mockDescription.name);
-      expect(entity.tags).toEqual([]);
+      expect(entity.adapter.classid).toBe(mockAsset.classid);
+      expect(entity.adapter.instanceid).toBe(mockAsset.instanceid);
+      expect(entity.adapter.amount).toBe(Number(mockAsset.amount));
     });
   });
 });

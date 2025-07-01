@@ -9,7 +9,7 @@ import ApplicationException from '@application/exceptions/application.exception'
 import { IFetcher } from '@application/ports/fetcher.port';
 import { getPageUrl } from '@application/utils/get-page-url';
 import SteamItemEntity from '@domain/entities/steam-item.entity';
-import SteamItemFactory from '@domain/factories/steam-item.factory';
+import { SteamItemFactory } from '@domain/factories/steam-item.factory';
 import { InventoryPageAsset } from '@domain/types/inventory-page-asset.type';
 import { InventoryPageDescription } from '@domain/types/inventory-page-description.type';
 import { LoaderConfig } from '@domain/types/loader-config.type';
@@ -26,6 +26,8 @@ export default class LoadInventoryUseCase {
   constructor(
     @inject('IFetcher')
     private readonly fetcher: IFetcher,
+    @inject(SteamItemFactory)
+    private readonly steamItemFactory: SteamItemFactory,
   ) {}
 
   private validate(props: LoadInventoryPageUseCaseProps): void {
@@ -97,7 +99,7 @@ export default class LoadInventoryUseCase {
         ));
       }
 
-      const items = SteamItemFactory.createFromInventoryPage(
+      const items = this.steamItemFactory.createFromInventoryPage(
         assets,
         descriptions,
       );
