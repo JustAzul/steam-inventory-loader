@@ -1,19 +1,41 @@
 {
   "name": "azul-steam-inventory-loader",
-  "version": "3.8.1",
-  "description": "a modern steam inventory loader with built-in error retry, request delay, proxy url support, and memory-friendly.",
-  "main": "index.js",
+  "version": "4.0.0-alpha.0",
+  "description": "Steam inventory loader with field selection, LRU cache, provider chain fallback, and adaptive workers",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "keywords": [
-    "azul",
-    "justazul",
-    "justazul.xyz",
-    "justazul.com"
+    "steam",
+    "inventory",
+    "loader",
+    "steam-inventory",
+    "trading",
+    "cs2",
+    "justazul"
   ],
   "scripts": {
-    "build": "tsc",
-    "prebuild": "rimraf ./dist",
-    "prettier": "prettier --config .prettierrc 'src/**/*.ts' --write",
-    "test": "npm run build && NODE_ENV=development node ./tests/azul-raw.js --expose-gc"
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist coverage .tsbuildinfo",
+    "update-fields": "node scripts/update-fields.mjs",
+    "prepare": "node -e \"if(!process.env.CI){require('child_process').execSync('node scripts/update-fields.mjs --local',{stdio:'inherit'})}\""
   },
   "author": "https://justazul.com",
   "repository": {
@@ -25,31 +47,22 @@
   },
   "homepage": "https://github.com/JustAzul/steam-inventory-loader",
   "license": "ISC",
-  "dependencies": {
-    "agentkeepalive": "^4.2.1",
-    "axios": "^1.7.8",
-    "hpagent": "^1.1.0",
-    "tough-cookie": "^4.1.3"
-  },
   "engines": {
-    "node": ">=12.0.0"
+    "node": ">=18"
+  },
+  "dependencies": {
+    "agentkeepalive": "^4.5.0",
+    "axios": "^1.7.8",
+    "hpagent": "^1.2.0",
+    "lru-cache": "^10.4.3",
+    "steamid": "^2.1.0",
+    "tough-cookie": "^5.1.2"
   },
   "devDependencies": {
-    "@types/node": "^16.18.2",
-    "@types/steamid": "^1.1.0",
-    "@types/tough-cookie": "^4.0.1",
-    "@typescript-eslint/eslint-plugin": "^4.33.0",
-    "@typescript-eslint/parser": "^4.33.0",
-    "azul-tools": "^1.9.20",
-    "eslint": "^7.32.0",
-    "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-import-resolver-typescript": "^2.5.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "prettier": "^2.7.1",
-    "rimraf": "^3.0.2",
-    "steamcommunity": "^3.43.1",
-    "typescript": "^4.5.4"
+    "@types/node": "^20.14.0",
+    "@types/tough-cookie": "^4.0.5",
+    "tsup": "^8.3.5",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
   }
 }

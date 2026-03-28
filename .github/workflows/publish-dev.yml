@@ -1,0 +1,27 @@
+name: Publish Dev
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          registry-url: https://registry.npmjs.org/
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Set pre-release version
+        run: |
+          CURRENT=$(npm view azul-steam-inventory-loader dist-tags.dev 2>/dev/null || echo "4.0.0-alpha.-1")
+          ALPHA_NUM=$(echo "$CURRENT" | grep -oP 'alpha\.\K\d+' || echo "-1")
+          NEXT=$((ALPHA_NUM + 1))
+          npm version "4.0.0-alpha.${NEXT}" --no-git-tag-version
+      - run: npm publish --tag dev
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}

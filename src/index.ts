@@ -1,51 +1,35 @@
-import InventoryLoader from './loader';
-import type { InventoryLoaderConstructor } from './loader/types/inventory-loader-constructor.type';
-import type { LoaderResponse } from './loader/types/loader-response';
-import type { OptionalConfig } from './types/optional-config.type';
-import Utils from './utils';
+// v4 public API
 
-type AzulInventoryResponse = LoaderResponse;
+// Main loader
+export { Loader } from './loader/loader.js';
 
-const LoaderDictionary: Map<
-  keyof OptionalConfig,
-  keyof InventoryLoaderConstructor
-> = new Map([
-  ['Language', 'language'],
-  ['SteamCommunity_Jar', 'steamCommunityJar'],
-]);
-export default class AzulSteamInventoryLoader extends Utils {
-  public static readonly InventoryLoader = InventoryLoader;
+// Types & enums
+export { Fields } from './types.js';
+export type {
+  HttpRequest,
+  HttpResponse,
+  ICacheStore,
+  IHttpClient,
+  IInventoryProvider,
+  IInventoryRepository,
+  IStrategy,
+  IWorkerPool,
+  InnerItemDescription,
+  InventoryPage,
+  ItemActions,
+  ItemAsset,
+  ItemDescription,
+  ItemDetails,
+  LoaderConfig,
+  LoaderResponse,
+  OptionalConfig,
+  PageRequest,
+  ParseConfig,
+  SteamErrorInfo,
+  SteamErrorType,
+  SteamTag,
+  Tag,
+} from './types.js';
 
-  public static Loader(
-    SteamID64: string,
-    appID: string | number,
-    contextID: string | number,
-    optionalConfig?: OptionalConfig,
-  ): Promise<AzulInventoryResponse> {
-    const setup: InventoryLoaderConstructor = {
-      appID,
-      contextID,
-      steamID64: SteamID64,
-    };
-
-    if (optionalConfig) {
-      const keys = Object.keys(optionalConfig) as Array<keyof OptionalConfig>;
-
-      for (let i = 0; i < keys.length; i += 1) {
-        const key = keys[i];
-
-        const setupKey =
-          LoaderDictionary.get(key) ||
-          (key as keyof InventoryLoaderConstructor);
-
-        if (Object.prototype.hasOwnProperty.call(optionalConfig, key)) {
-          const setupValue = optionalConfig[key];
-          (setup[setupKey] as typeof setupValue) = setupValue;
-        }
-      }
-    }
-
-    const loaderInterface = new AzulSteamInventoryLoader.InventoryLoader(setup);
-    return loaderInterface.loadInventory();
-  }
-}
+// Utilities (v3 compat)
+export { getTag, getImageURL, getLargeImageURL, isCardType } from './compat/utils.js';
