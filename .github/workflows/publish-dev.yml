@@ -14,8 +14,8 @@ jobs:
           node-version: 18
           registry-url: https://registry.npmjs.org/
       - run: npm ci
-      - run: npm test
       - run: npm run build
+      - run: npm test
       - name: Set pre-release version
         run: |
           CURRENT=$(npm view azul-steam-inventory-loader dist-tags.dev 2>/dev/null || echo "4.0.0-alpha.-1")
