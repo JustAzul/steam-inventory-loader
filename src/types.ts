@@ -322,6 +322,8 @@ export interface LoaderConfig {
   customEndpoint?: string;
   proxy?: string;
   cookies?: string[];
+  /** Max worker threads for adaptive worker pool (FR61). Default: cpus - 1, clamped to [1, 8]. */
+  maxWorkers?: number;
 }
 
 /** User-facing optional config (v3 compat keys accepted via v3ConfigMapper). */
@@ -346,4 +348,6 @@ export interface OptionalConfig {
   SteamCommunity_Jar?: unknown;
   /** v3 compat: language (capitalized key). */
   Language?: string;
+  /** Max worker threads for adaptive worker pool (FR61). */
+  maxWorkers?: number;
 }

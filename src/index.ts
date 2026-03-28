@@ -31,5 +31,10 @@ export type {
   Tag,
 } from './types.js';
 
+// Workers (FR58-FR61)
+export { PiscinaWorkerPool } from './worker/piscina-worker-pool.js';
+export type { WorkerPoolOptions } from './worker/piscina-worker-pool.js';
+export { shouldUseWorker, ITEM_THRESHOLD, ACTIVE_LOAD_THRESHOLD } from './worker/adaptive-decision.js';
+
 // Utilities (v3 compat)
 export { getTag, getImageURL, getLargeImageURL, isCardType } from './compat/utils.js';

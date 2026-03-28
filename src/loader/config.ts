@@ -47,6 +47,7 @@ export function normalizeConfig(
     proxy: mapped.proxy,
     cookies: (mapped as { cookies?: string[] }).cookies,
     fields: mapped.fields,
+    maxWorkers: mapped.maxWorkers,
   };
 
   // FR38: Paid API forces delay=0 when not explicit
