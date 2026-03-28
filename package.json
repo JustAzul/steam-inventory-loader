@@ -46,7 +46,7 @@
     "url": "https://github.com/JustAzul/steam-inventory-loader/issues"
   },
   "homepage": "https://github.com/JustAzul/steam-inventory-loader",
-  "license": "ISC",
+  "license": "MIT",
   "engines": {
     "node": ">=18"
   },
