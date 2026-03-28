@@ -22,7 +22,7 @@ export class RetryPolicy {
    * FR31: always increment before retry.
    */
   shouldRetry(retryCount: number): boolean {
-    return retryCount < this.maxRetries;
+    return retryCount <= this.maxRetries;
   }
 
   /**

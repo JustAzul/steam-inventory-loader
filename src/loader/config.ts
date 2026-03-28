@@ -21,6 +21,7 @@ const DEFAULTS: Omit<LoaderConfig, 'steamId' | 'appId' | 'contextId'> = {
  */
 function isGroupedConfig(config: OptionalConfig): config is LoadConfig {
   return 'providers' in config
+    || 'rateLimit' in config
     || (typeof (config as LoadConfig).cache === 'object' && (config as LoadConfig).cache !== null);
 }
 
@@ -120,5 +121,5 @@ export function normalizeConfig(
  */
 export function buildCacheKey(config: LoaderConfig): string {
   const fieldsHash = config.fields ? [...config.fields].sort().join(',') : 'all';
-  return `${config.steamId}|${config.appId}|${config.contextId}|${config.tradableOnly}|${fieldsHash}`;
+  return `${config.steamId}|${config.appId}|${config.contextId}|${config.language}|${config.tradableOnly}|${fieldsHash}`;
 }

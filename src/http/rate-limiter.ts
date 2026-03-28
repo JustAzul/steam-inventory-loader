@@ -28,16 +28,11 @@ export class ProviderRateLimiter {
    * FIFO ordering via promise chaining — each caller waits for the previous.
    */
   async acquire(): Promise<void> {
-    // Fast path: no interval and no cooldown → instant
-    if (this.minInterval <= 0 && this.cooldownUntil <= Date.now()) {
-      this.lastRequestTime = Date.now();
-      return;
-    }
-
     this.pending++;
     const prev = this.tail;
-    this.tail = prev.then(() => this.waitForSlot());
-    await this.tail;
+    const slot = prev.then(() => this.waitForSlot());
+    this.tail = slot.catch(() => {}); // chain never rejects, prevents permanent stall
+    await slot;
     this.pending--;
   }
 
@@ -56,6 +51,11 @@ export class ProviderRateLimiter {
   /** Update the minimum interval between requests. */
   updateInterval(ms: number): void {
     this.minInterval = ms;
+  }
+
+  /** Update the default cooldown for 429 responses without Retry-After. */
+  updateDefaultCooldown(ms: number): void {
+    this.defaultCooldown = ms;
   }
 
   private async waitForSlot(): Promise<void> {
@@ -95,6 +95,7 @@ export function getRateLimiter(
     limiters.set(providerName, limiter);
   } else {
     limiter.updateInterval(minInterval);
+    if (defaultCooldown !== undefined) limiter.updateDefaultCooldown(defaultCooldown);
   }
   return limiter;
 }

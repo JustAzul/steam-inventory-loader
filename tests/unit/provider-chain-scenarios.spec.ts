@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { Loader } from '../../src/loader/loader.js';
@@ -41,6 +41,8 @@ function makeFixtureHttp(opts: {
 }
 
 describe('Provider Chain Scenarios', () => {
+  beforeEach(() => Loader.resetRateLimiters());
+
   it('fallback on rate limit: Community 429 → SteamApis succeeds', async () => {
     let reqCount = 0;
     const http: IHttpClient = {
@@ -177,6 +179,8 @@ describe('Provider Chain Scenarios', () => {
 });
 
 describe('Long-term Resilience', () => {
+  beforeEach(() => Loader.resetRateLimiters());
+
   it('handles unknown fields in API response gracefully', async () => {
     const http: IHttpClient = {
       async execute(): Promise<HttpResponse> {

@@ -173,11 +173,11 @@ export class Loader {
     Loader.activeLoads++;
     const config = normalizeConfig(steamId, appId, contextId, userConfig);
 
-    let autoPool: PiscinaWorkerPool | null = null;
-    if (!this.workerPool && config.maxWorkers) {
-      autoPool = new PiscinaWorkerPool({ maxWorkers: config.maxWorkers });
-      this.workerPool = autoPool;
-    }
+    // Local pool variable to avoid concurrent mutation of this.workerPool
+    const autoPool = !this.workerPool && config.maxWorkers
+      ? new PiscinaWorkerPool({ maxWorkers: config.maxWorkers })
+      : null;
+    const pool = this.workerPool ?? autoPool;
 
     try {
       // Cache hit → yield as single batch
@@ -206,7 +206,7 @@ export class Loader {
       for (let i = 0; i < chain.length; i++) {
         const canFallback = !hasYielded && i < chain.length - 1;
         try {
-          for await (const batch of this._streamPages(config, chain[i], parseConfig, canFallback)) {
+          for await (const batch of this._streamPages(config, chain[i], parseConfig, canFallback, pool)) {
             yield batch;
             hasYielded = true;
           }
@@ -226,10 +226,7 @@ export class Loader {
       throw lastError ?? new SteamError(SteamErrorType.RateLimited, 'All providers rate limited');
     } finally {
       Loader.activeLoads--;
-      if (autoPool) {
-        this.workerPool = null;
-        await autoPool.destroy();
-      }
+      if (autoPool) await autoPool.destroy();
     }
   }
 
@@ -243,20 +240,16 @@ export class Loader {
   ): Promise<LoaderResponse> {
     const config = normalizeConfig(steamId, appId, contextId, userConfig);
 
-    // Auto-create worker pool from config if no constructor pool (FR61)
-    let autoPool: PiscinaWorkerPool | null = null;
-    if (!this.workerPool && config.maxWorkers) {
-      autoPool = new PiscinaWorkerPool({ maxWorkers: config.maxWorkers });
-      this.workerPool = autoPool;
-    }
+    // Local pool variable to avoid concurrent mutation of this.workerPool
+    const autoPool = !this.workerPool && config.maxWorkers
+      ? new PiscinaWorkerPool({ maxWorkers: config.maxWorkers })
+      : null;
+    const pool = this.workerPool ?? autoPool;
 
     try {
-      return await this._loadInner(config);
+      return await this._loadInner(config, pool);
     } finally {
-      if (autoPool) {
-        this.workerPool = null;
-        await autoPool.destroy();
-      }
+      if (autoPool) await autoPool.destroy();
     }
   }
 
@@ -278,7 +271,7 @@ export class Loader {
 
   // ─── Internal: orchestration ─────────────────────────────────────────────
 
-  private async _loadInner(config: LoaderConfig): Promise<LoaderResponse> {
+  private async _loadInner(config: LoaderConfig, pool: IWorkerPool | null): Promise<LoaderResponse> {
     const cached = this.checkCache(config);
     if (cached) return cached;
 
@@ -301,7 +294,7 @@ export class Loader {
       const canFallback = i < chain.length - 1;
       try {
         const inventory: ItemDetails[] = [];
-        for await (const batch of this._streamPages(config, chain[i], parseConfig, canFallback)) {
+        for await (const batch of this._streamPages(config, chain[i], parseConfig, canFallback, pool)) {
           inventory.push(...batch);
         }
         return this.cacheAndReturn(inventory, config);
@@ -333,6 +326,7 @@ export class Loader {
     provider: IInventoryProvider,
     parseConfig: ParseConfig,
     canFallback: boolean,
+    pool: IWorkerPool | null,
   ): AsyncGenerator<ItemDetails[]> {
     const descStore = new DescriptionStore();
     const retryPolicy = new RetryPolicy({ maxRetries: config.maxRetries });
@@ -355,8 +349,8 @@ export class Loader {
         cursor,
       };
 
-      // Rate limit: acquire slot before fetching (first page is instant if no contention)
-      if (!isFirstPage) await limiter.acquire();
+      // Rate limit: acquire slot before every page (instant when no contention)
+      await limiter.acquire();
 
       const page = await this._fetchPage(provider, params, config, retryPolicy, canFallback, limiter);
 
@@ -370,14 +364,14 @@ export class Loader {
         items = this._processPageMainThread(page, parseConfig, descStore);
 
         if (isFirstPage) {
-          if (this.workerPool && shouldUseWorker(page.totalInventoryCount, Loader.activeLoads)) {
+          if (pool && shouldUseWorker(page.totalInventoryCount, Loader.activeLoads)) {
             useWorker = true;
           }
           isFirstPage = false;
         }
       } else {
         const result = await this._processPageWithWorker(
-          page, parseConfig, descStore, previousDescriptions, config,
+          page, parseConfig, descStore, previousDescriptions, config, pool!,
         );
         items = result.items;
         if (result.failed) {
@@ -534,6 +528,7 @@ export class Loader {
     descStore: DescriptionStore,
     previousDescriptions: ItemDescription[],
     config: LoaderConfig,
+    pool: IWorkerPool,
   ): Promise<{ items: ItemDetails[]; failed: boolean }> {
     try {
       const pageData: ProcessPageData = {
@@ -547,7 +542,7 @@ export class Loader {
           appId: config.appId,
         },
       };
-      const items = await this.workerPool!.run<ItemDetails[]>('processPage', pageData);
+      const items = await pool.run<ItemDetails[]>('processPage', pageData);
       return { items, failed: false };
     } catch {
       return { items: this._processPageMainThread(page, parseConfig, descStore), failed: true };

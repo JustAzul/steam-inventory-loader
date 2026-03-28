@@ -32,7 +32,7 @@ export function processAssets(
 
     let item = buildItem(asset, desc!, config.contextId);
     item = config.strategy.apply(item);
-    item = selectFields(item, config.fields);
+    item = config.fields ? selectFields(item, config.fields) as ItemDetails : selectFields(item);
     items.push(item);
   }
 

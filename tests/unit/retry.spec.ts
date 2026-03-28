@@ -19,20 +19,20 @@ describe('RetryPolicy', () => {
 
   it('shouldRetry returns true when under max retries (FR32)', () => {
     const policy = new RetryPolicy({ maxRetries: 3 });
-    expect(policy.shouldRetry(0)).toBe(true);
     expect(policy.shouldRetry(1)).toBe(true);
     expect(policy.shouldRetry(2)).toBe(true);
+    expect(policy.shouldRetry(3)).toBe(true);
   });
 
-  it('shouldRetry returns false at max retries (FR32)', () => {
+  it('shouldRetry returns false after max retries exhausted (FR32)', () => {
     const policy = new RetryPolicy({ maxRetries: 3 });
-    expect(policy.shouldRetry(3)).toBe(false);
+    expect(policy.shouldRetry(4)).toBe(false);
   });
 
   it('default maxRetries is 3', () => {
     const policy = new RetryPolicy();
-    expect(policy.shouldRetry(2)).toBe(true);
-    expect(policy.shouldRetry(3)).toBe(false);
+    expect(policy.shouldRetry(3)).toBe(true);
+    expect(policy.shouldRetry(4)).toBe(false);
   });
 
   it('respects Retry-After header in seconds (FR25)', () => {
