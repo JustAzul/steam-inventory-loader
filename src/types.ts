@@ -405,7 +405,7 @@ export interface LoadConfig {
   tradableOnly?: boolean;
   /** Select specific output fields (memory optimization). Undefined = all fields. */
   fields?: readonly Fields[];
-  /** Items per API page. Default: 2000. */
+  /** Items per API page. Default: 2500 (Steam max). */
   itemsPerPage?: number;
   /** Max retry attempts per page. Default: 3. */
   maxRetries?: number;

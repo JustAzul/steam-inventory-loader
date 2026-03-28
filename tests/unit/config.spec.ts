@@ -95,7 +95,7 @@ describe('normalizeConfig — grouped (LoadConfig)', () => {
 
     expect(result.language).toBe('english');
     expect(result.tradableOnly).toBe(true);
-    expect(result.itemsPerPage).toBe(2000);
+    expect(result.itemsPerPage).toBe(2500);
     expect(result.maxRetries).toBe(3);
     expect(result.requestDelay).toBe(4000);
     expect(result.cache).toBe(true);

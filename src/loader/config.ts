@@ -4,7 +4,7 @@ import { mapV3Config, coerceSteamId, coerceNumber } from '../compat/v3-compat.js
 const DEFAULTS: Omit<LoaderConfig, 'steamId' | 'appId' | 'contextId'> = {
   language: 'english',
   tradableOnly: true,
-  itemsPerPage: 2000,
+  itemsPerPage: 2500,
   maxRetries: 3,
   requestDelay: 4000,
   cache: true,
