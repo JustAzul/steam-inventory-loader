@@ -10,7 +10,7 @@
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { heapUsed, measureTime, measureHeap, formatBytes, formatMs } from './lib/measure.js';
-import { FixtureHttpClient, EmptyHttpClient } from './lib/fixture-http.js';
+import { FixtureHttpClient, EmptyHttpClient, DelayedFixtureHttpClient } from './lib/fixture-http.js';
 import { SyntheticHttpClient } from './lib/synthetic-http.js';
 import { formatTable, passFail } from './lib/format.js';
 
@@ -205,6 +205,53 @@ const speedup = (seqTime.median / concTime.median).toFixed(1);
 console.log(`Sequential: ${formatMs(seqTime.median)} | Concurrent: ${formatMs(concTime.median)} | Speedup: ${speedup}x`);
 console.log(`Note: Fixture benchmarks have 0ms network delay — worker spawn overhead is NOT hidden.`);
 console.log(`In production (200ms-4s network per page), POC B3 showed 3.6x speedup (634ms → 222ms).`);
+console.log('');
+
+// ─── Feature: Network Latency vs Workers ──────────────────────────────────
+
+console.log('### Feature: Network Latency — Sequential vs Workers (5 × 77k)\n');
+
+const latencies = [0, 10, 25, 50, 100, 200];
+const latencyRows = [];
+
+for (const latencyMs of latencies) {
+  // Sequential: 5 loads one at a time
+  const seqStart = performance.now();
+  for (let i = 0; i < 5; i++) {
+    const loader = new Loader(new DelayedFixtureHttpClient(39, latencyMs));
+    await loader.load(`lat-seq-${latencyMs}-${i}`, 753, 6, {
+      cache: false, requestDelay: 0, tradableOnly: false,
+    });
+  }
+  const seqMs = performance.now() - seqStart;
+
+  // Concurrent with workers: 5 loads at once
+  const latPool = new PiscinaWorkerPool({ maxWorkers: 4, filename: WORKER_FILE });
+  const concStart = performance.now();
+  const latLoaders = Array.from({ length: 5 }, () =>
+    new Loader(new DelayedFixtureHttpClient(39, latencyMs), undefined, latPool),
+  );
+  await Promise.all(
+    latLoaders.map((l, i) => l.load(`lat-conc-${latencyMs}-${i}`, 753, 6, {
+      cache: false, requestDelay: 0, tradableOnly: false,
+    })),
+  );
+  const concMs = performance.now() - concStart;
+  await latPool.destroy();
+
+  const latSpeedup = (seqMs / concMs).toFixed(1);
+  latencyRows.push([
+    `${latencyMs}ms`,
+    formatMs(seqMs),
+    formatMs(concMs),
+    `${latSpeedup}x`,
+  ]);
+}
+
+console.log(formatTable(
+  ['Network Latency', 'Sequential (5×77k)', 'Concurrent+Workers', 'Speedup'],
+  latencyRows,
+));
 console.log('');
 
 // ─── Summary ───────────────────────────────────────────────────────────────

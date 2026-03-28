@@ -53,6 +53,31 @@ export class FixtureHttpClient {
   destroy() {}
 }
 
+/**
+ * Mock HTTP client with simulated network latency.
+ * Adds a configurable delay before each response to model real-world conditions.
+ */
+export class DelayedFixtureHttpClient {
+  #inner;
+  #delayMs;
+
+  /**
+   * @param {number} maxPages - Number of pages to serve
+   * @param {number} delayMs - Simulated network latency per request (ms)
+   */
+  constructor(maxPages = 39, delayMs = 50) {
+    this.#inner = new FixtureHttpClient(maxPages);
+    this.#delayMs = delayMs;
+  }
+
+  async execute(request) {
+    await new Promise(resolve => setTimeout(resolve, this.#delayMs));
+    return this.#inner.execute(request);
+  }
+
+  destroy() {}
+}
+
 /** HTTP client returning empty inventory. */
 export class EmptyHttpClient {
   async execute() {
