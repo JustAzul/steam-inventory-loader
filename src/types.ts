@@ -327,8 +327,71 @@ export interface LoaderConfig {
   maxWorkers?: number;
 }
 
-/** User-facing optional config (v3 compat keys accepted via v3ConfigMapper). */
-export interface OptionalConfig {
+// ─── User-Facing Config ──────────────────────────────────────────────────
+
+/** Cache configuration options. */
+export interface CacheConfig {
+  /** Time-to-live in ms. Default: 30000. */
+  ttl?: number;
+  /** Max cached inventories. Default: 20. */
+  maxEntries?: number;
+  /** Max total cache size in bytes. Default: 512MB. */
+  maxSize?: number;
+}
+
+/** Provider chain configuration. */
+export interface ProviderConfig {
+  /** Provider priority order. Default: ['community']. Valid: 'community', 'steamApis', 'steamSupply', 'custom'. */
+  priority?: string[];
+  /** SteamApis.com API key. Enables 'steamApis' provider. */
+  steamApisKey?: string;
+  /** Steam.Supply API key. Enables 'steamSupply' provider. */
+  steamSupplyKey?: string;
+  /** Custom provider URL. Enables 'custom' provider. */
+  customEndpoint?: string;
+}
+
+/**
+ * Primary config interface — grouped by concern.
+ *
+ * @example
+ * ```typescript
+ * loader.load(steamId, 730, 2, {
+ *   tradableOnly: true,
+ *   fields: [Fields.MARKET_HASH_NAME, Fields.TRADABLE],
+ *   cache: { ttl: 5000, maxEntries: 10 },
+ *   providers: { steamApisKey: 'key', priority: ['steamApis', 'community'] },
+ * });
+ * ```
+ */
+export interface LoadConfig {
+  /** Steam API language. Default: 'english'. */
+  language?: string;
+  /** Only include tradable items. Default: true. */
+  tradableOnly?: boolean;
+  /** Select specific output fields (memory optimization). Undefined = all fields. */
+  fields?: Fields[];
+  /** Items per API page. Default: 2000. */
+  itemsPerPage?: number;
+  /** Max retry attempts per page. Default: 3. */
+  maxRetries?: number;
+  /** Delay between pages in ms. Default: 4000 (auto 0 for paid APIs). */
+  requestDelay?: number;
+  /** Cache config. `true` = defaults, `false` = disabled, object = custom. Default: true. */
+  cache?: boolean | CacheConfig;
+  /** Provider chain config (API keys, priority order, custom endpoint). */
+  providers?: ProviderConfig;
+  /** HTTP proxy URL. */
+  proxy?: string;
+  /** Max worker threads. Default: cpus-1, clamped [1, 8]. */
+  maxWorkers?: number;
+}
+
+/**
+ * Flat config — kept for backwards compatibility with v3 and v4-alpha consumers.
+ * @deprecated Use {@link LoadConfig} instead for better readability.
+ */
+export interface FlatConfig {
   language?: string;
   tradableOnly?: boolean;
   itemsPerPage?: number;
@@ -337,7 +400,7 @@ export interface OptionalConfig {
   cache?: boolean;
   cacheTTL?: number;
   cacheMaxEntries?: number;
-  /** Max total cache size in bytes. Default: 512MB. Prevents heap blowup from large inventories. */
+  /** Max total cache size in bytes. Default: 512MB. */
   cacheMaxSize?: number;
   fields?: Fields[];
   endpointPriority?: string[];
@@ -345,10 +408,13 @@ export interface OptionalConfig {
   steamSupplyKey?: string;
   customEndpoint?: string;
   proxy?: string;
-  /** v3 compat: SteamCommunity cookie jar or wrapper. */
+  /** @deprecated Use `language` instead. */
   SteamCommunity_Jar?: unknown;
-  /** v3 compat: language (capitalized key). */
+  /** @deprecated Use `language` instead. */
   Language?: string;
   /** Max worker threads for adaptive worker pool (FR61). */
   maxWorkers?: number;
 }
+
+/** User-facing config accepted by load() and loadStream(). */
+export type OptionalConfig = LoadConfig | FlatConfig;

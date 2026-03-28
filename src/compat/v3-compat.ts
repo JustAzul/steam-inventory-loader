@@ -1,4 +1,4 @@
-import type { OptionalConfig } from '../types.js';
+import type { FlatConfig } from '../types.js';
 
 const STEAM_COMMUNITY_URL = 'https://steamcommunity.com';
 
@@ -34,8 +34,8 @@ export function coerceNumber(input: string | number): number {
  * Map v3 config keys to v4 format (FR34).
  * Handles: Language→language, SteamCommunity_Jar→cookies.
  */
-export function mapV3Config(config: OptionalConfig): OptionalConfig & { cookies?: string[] } {
-  const result: OptionalConfig & { cookies?: string[] } = { ...config };
+export function mapV3Config(config: FlatConfig): FlatConfig & { cookies?: string[] } {
+  const result: FlatConfig & { cookies?: string[] } = { ...config };
 
   // Language key mapping
   if (config.Language && !config.language) {

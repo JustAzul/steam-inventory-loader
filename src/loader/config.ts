@@ -1,4 +1,4 @@
-import type { LoaderConfig, OptionalConfig } from '../types.js';
+import type { LoaderConfig, OptionalConfig, LoadConfig, FlatConfig, CacheConfig } from '../types.js';
 import { mapV3Config, coerceSteamId, coerceNumber } from '../compat/v3-compat.js';
 
 const DEFAULTS: Omit<LoaderConfig, 'steamId' | 'appId' | 'contextId'> = {
@@ -15,7 +15,53 @@ const DEFAULTS: Omit<LoaderConfig, 'steamId' | 'appId' | 'contextId'> = {
 };
 
 /**
+ * Detect grouped (LoadConfig) vs flat (FlatConfig) config.
+ * Grouped configs use `providers` or `cache` as an object.
+ */
+function isGroupedConfig(config: OptionalConfig): config is LoadConfig {
+  return 'providers' in config
+    || (typeof (config as LoadConfig).cache === 'object' && (config as LoadConfig).cache !== null);
+}
+
+/**
+ * Flatten a LoadConfig into the internal flat form for normalization.
+ */
+function flattenGroupedConfig(config: LoadConfig): FlatConfig & { cookies?: string[] } {
+  const flat: FlatConfig & { cookies?: string[] } = {
+    language: config.language,
+    tradableOnly: config.tradableOnly,
+    fields: config.fields,
+    itemsPerPage: config.itemsPerPage,
+    maxRetries: config.maxRetries,
+    requestDelay: config.requestDelay,
+    proxy: config.proxy,
+    maxWorkers: config.maxWorkers,
+  };
+
+  // Cache: boolean or object
+  if (typeof config.cache === 'object' && config.cache !== null) {
+    flat.cache = true;
+    flat.cacheTTL = config.cache.ttl;
+    flat.cacheMaxEntries = config.cache.maxEntries;
+    flat.cacheMaxSize = config.cache.maxSize;
+  } else {
+    flat.cache = config.cache as boolean | undefined;
+  }
+
+  // Providers
+  if (config.providers) {
+    flat.endpointPriority = config.providers.priority;
+    flat.steamApisKey = config.providers.steamApisKey;
+    flat.steamSupplyKey = config.providers.steamSupplyKey;
+    flat.customEndpoint = config.providers.customEndpoint;
+  }
+
+  return flat;
+}
+
+/**
  * Normalize user config into internal LoaderConfig.
+ * Accepts both grouped (LoadConfig) and flat (FlatConfig) forms.
  * Handles v3 key mapping, type coercion, and defaults.
  */
 export function normalizeConfig(
@@ -24,8 +70,10 @@ export function normalizeConfig(
   contextId: string | number,
   userConfig: OptionalConfig = {},
 ): LoaderConfig {
-  // Map v3 keys first
-  const mapped = mapV3Config(userConfig);
+  // Convert grouped config to flat form, or map v3 keys
+  const mapped: FlatConfig & { cookies?: string[] } = isGroupedConfig(userConfig)
+    ? flattenGroupedConfig(userConfig)
+    : mapV3Config(userConfig as FlatConfig);
 
   const config: LoaderConfig = {
     steamId: coerceSteamId(steamId),

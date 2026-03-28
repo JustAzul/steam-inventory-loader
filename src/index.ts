@@ -6,6 +6,8 @@ export { Loader } from './loader/loader.js';
 // Types & enums
 export { Fields, SteamErrorType } from './types.js';
 export type {
+  CacheConfig,
+  FlatConfig,
   HttpRequest,
   HttpResponse,
   ICacheStore,
@@ -20,11 +22,13 @@ export type {
   ItemAsset,
   ItemDescription,
   ItemDetails,
+  LoadConfig,
   LoaderConfig,
   LoaderResponse,
   OptionalConfig,
   PageRequest,
   ParseConfig,
+  ProviderConfig,
   SteamErrorInfo,
   SteamTag,
   Tag,
