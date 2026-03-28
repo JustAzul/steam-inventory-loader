@@ -6,8 +6,8 @@ test:
 build:
 	npx tsup
 
-bench:
-	node benchmarks/run.js
+bench: build
+	node --expose-gc benchmarks/run.js
 
 clean:
 	rm -rf dist coverage .tsbuildinfo
