@@ -57,6 +57,7 @@ function flattenGroupedConfig(config: LoadConfig): FlatConfig & { cookies?: stri
     flat.steamApisKey = config.providers.steamApisKey;
     flat.steamSupplyKey = config.providers.steamSupplyKey;
     flat.customEndpoint = config.providers.customEndpoint;
+    flat.customHeaders = config.providers.customHeaders;
   }
 
   return flat;
@@ -95,6 +96,7 @@ export function normalizeConfig(
     steamApisKey: mapped.steamApisKey,
     steamSupplyKey: mapped.steamSupplyKey,
     customEndpoint: mapped.customEndpoint,
+    customHeaders: mapped.customHeaders,
     proxy: mapped.proxy,
     cookies: (mapped as { cookies?: string[] }).cookies,
     fields: mapped.fields,

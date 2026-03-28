@@ -30,6 +30,7 @@ export class CustomProvider extends BaseInventoryProvider {
       method: 'GET',
       url,
       params: queryParams,
+      headers: config.customHeaders,
       proxy: config.proxy,
       // No API keys — custom endpoint clears them (FR05)
     };

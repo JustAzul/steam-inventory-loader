@@ -347,6 +347,7 @@ export interface LoaderConfig {
   steamApisKey?: string;
   steamSupplyKey?: string;
   customEndpoint?: string;
+  customHeaders?: Record<string, string>;
   proxy?: string;
   cookies?: string[];
   /** Max worker threads for adaptive worker pool (FR61). Default: cpus - 1, clamped to [1, 8]. */
@@ -377,6 +378,8 @@ export interface ProviderConfig {
   steamSupplyKey?: string;
   /** Custom provider URL. Enables 'custom' provider. */
   customEndpoint?: string;
+  /** Custom headers sent with custom provider requests (e.g., API keys). */
+  customHeaders?: Record<string, string>;
 }
 
 /** Rate limit coordination configuration. */
@@ -443,6 +446,7 @@ export interface FlatConfig {
   steamApisKey?: string;
   steamSupplyKey?: string;
   customEndpoint?: string;
+  customHeaders?: Record<string, string>;
   proxy?: string;
   /** @deprecated Use `language` instead. */
   SteamCommunity_Jar?: unknown;
