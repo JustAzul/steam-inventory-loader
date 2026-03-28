@@ -1,15 +1,16 @@
-import { SteamErrorType } from '../types.js';
+import { SteamErrorType, Fields } from '../types.js';
 import type {
   IHttpClient, ICacheStore, LoaderResponse, LoaderConfig,
   OptionalConfig, PageRequest, IInventoryProvider, SteamErrorInfo,
   IWorkerPool, IStrategy, ItemDetails, ItemDescription, ParseConfig,
-  InventoryPage, HttpResponse,
+  InventoryPage, HttpResponse, InferItem, PartialItem,
 } from '../types.js';
 import { AxiosHttpClient } from '../http/http-client.js';
 import { LruCacheStore } from '../cache/lru-cache.js';
 import { DescriptionStore } from '../repository/description-store.js';
 import { StrategyRegistry } from '../strategies/registry.js';
 import { RetryPolicy } from '../http/retry.js';
+import { getRateLimiter, resetRateLimiters, type ProviderRateLimiter } from '../http/rate-limiter.js';
 import { resolveProviderChain, isCursorCompatible, registerProvider as chainRegisterProvider } from '../providers/provider-chain.js';
 import { normalizeConfig, buildCacheKey } from './config.js';
 import { shouldUseWorker } from '../worker/adaptive-decision.js';
@@ -74,13 +75,21 @@ export class Loader {
    * Uses shared cache — multiple calls share the same cache.
    */
   static async Loader(
+    steamId: unknown, appId: string | number, contextId: string | number,
+    config?: OptionalConfig & { fields?: undefined },
+  ): Promise<LoaderResponse<ItemDetails>>;
+  static async Loader<const F extends readonly Fields[]>(
+    steamId: unknown, appId: string | number, contextId: string | number,
+    config: OptionalConfig & { fields: F },
+  ): Promise<LoaderResponse<InferItem<F>>>;
+  static async Loader(
     steamId: unknown,
     appId: string | number,
     contextId: string | number,
     config?: OptionalConfig,
   ): Promise<LoaderResponse> {
     const loader = new Loader();
-    return loader.load(steamId, appId, contextId, config);
+    return loader.load(steamId, appId, contextId, config as OptionalConfig & { fields?: undefined });
   }
 
   /**
@@ -106,11 +115,25 @@ export class Loader {
     sharedCache = cache;
   }
 
+  /** Reset all per-provider rate limiters. For test isolation. */
+  static resetRateLimiters(): void {
+    resetRateLimiters();
+  }
+
   // ─── Public API ──────────────────────────────────────────────────────────
 
   /**
    * Load a Steam inventory.
+   * When `fields` is specified, the returned items are narrowed to only those fields.
    */
+  async load(
+    steamId: unknown, appId: string | number, contextId: string | number,
+    userConfig?: OptionalConfig & { fields?: undefined },
+  ): Promise<LoaderResponse<ItemDetails>>;
+  async load<const F extends readonly Fields[]>(
+    steamId: unknown, appId: string | number, contextId: string | number,
+    userConfig: OptionalConfig & { fields: F },
+  ): Promise<LoaderResponse<InferItem<F>>>;
   async load(
     steamId: unknown,
     appId: string | number,
@@ -131,7 +154,16 @@ export class Loader {
    * Yields ItemDetails[] per page — consumers process incrementally.
    * Throws SteamError on failures (consumers see partial results via items already consumed).
    * Does not write to cache (streaming avoids holding all items in memory).
+   * When `fields` is specified, yielded items are narrowed to only those fields.
    */
+  loadStream(
+    steamId: unknown, appId: string | number, contextId: string | number,
+    userConfig?: OptionalConfig & { fields?: undefined },
+  ): AsyncGenerator<ItemDetails[]>;
+  loadStream<const F extends readonly Fields[]>(
+    steamId: unknown, appId: string | number, contextId: string | number,
+    userConfig: OptionalConfig & { fields: F },
+  ): AsyncGenerator<InferItem<F>[]>;
   async *loadStream(
     steamId: unknown,
     appId: string | number,
@@ -304,6 +336,7 @@ export class Loader {
   ): AsyncGenerator<ItemDetails[]> {
     const descStore = new DescriptionStore();
     const retryPolicy = new RetryPolicy({ maxRetries: config.maxRetries });
+    const limiter = getRateLimiter(provider.name, config.requestDelay, config.rateLimitCooldown);
     let cursor: string | null = null;
 
     // Worker offloading state (FR58-FR61)
@@ -322,7 +355,10 @@ export class Loader {
         cursor,
       };
 
-      const page = await this._fetchPage(provider, params, config, retryPolicy, canFallback);
+      // Rate limit: acquire slot before fetching (first page is instant if no contention)
+      if (!isFirstPage) await limiter.acquire();
+
+      const page = await this._fetchPage(provider, params, config, retryPolicy, canFallback, limiter);
 
       // Empty inventory early exit (FR06)
       if (page.totalInventoryCount === 0 && page.assets.length === 0) return;
@@ -359,8 +395,6 @@ export class Loader {
       const nextCursor = provider.getNextCursor(page);
       if (!nextCursor) return;
       cursor = nextCursor;
-
-      if (config.requestDelay > 0) await sleep(config.requestDelay);
     }
   }
 
@@ -376,11 +410,17 @@ export class Loader {
     config: LoaderConfig,
     retryPolicy: RetryPolicy,
     canFallback: boolean,
+    limiter: ProviderRateLimiter,
   ): Promise<InventoryPage> {
     for (let attempt = 1; ; attempt++) {
       const result = await this._attemptFetch(provider, params, config, retryPolicy);
 
       if (result.ok) return result.page;
+
+      // Report 429 to rate limiter → blocks other concurrent loads
+      if (result.error.type === SteamErrorType.RateLimited) {
+        limiter.reportRateLimit(result.retryAfterDelay);
+      }
 
       // Fallback-worthy → throw immediately, let provider loop handle
       if (result.shouldFallback && canFallback) throw result.error;
@@ -388,9 +428,12 @@ export class Loader {
       // Retries exhausted → throw
       if (!retryPolicy.shouldRetry(attempt)) throw result.error;
 
-      // Retry with backoff
+      // This load: exponential backoff
       const delay = result.retryAfterDelay ?? retryPolicy.getDelay(attempt - 1);
       await sleep(delay);
+
+      // Acquire rate limiter slot before retrying
+      await limiter.acquire();
     }
   }
 

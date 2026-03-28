@@ -7,7 +7,7 @@ import type { Fields, ItemDetails } from '../types.js';
  */
 export function selectFields(
   item: ItemDetails,
-  fields?: Fields[],
+  fields?: readonly Fields[],
 ): ItemDetails {
   if (!fields) return item;
 

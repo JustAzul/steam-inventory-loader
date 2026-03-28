@@ -12,6 +12,7 @@ const DEFAULTS: Omit<LoaderConfig, 'steamId' | 'appId' | 'contextId'> = {
   cacheMaxEntries: 20,
   cacheMaxSize: 512 * 1024 * 1024,
   endpointPriority: ['community'],
+  rateLimitCooldown: 30_000,
 };
 
 /**
@@ -26,8 +27,8 @@ function isGroupedConfig(config: OptionalConfig): config is LoadConfig {
 /**
  * Flatten a LoadConfig into the internal flat form for normalization.
  */
-function flattenGroupedConfig(config: LoadConfig): FlatConfig & { cookies?: string[] } {
-  const flat: FlatConfig & { cookies?: string[] } = {
+function flattenGroupedConfig(config: LoadConfig): FlatConfig & { cookies?: string[]; rateLimitCooldown?: number } {
+  const flat: FlatConfig & { cookies?: string[]; rateLimitCooldown?: number } = {
     language: config.language,
     tradableOnly: config.tradableOnly,
     fields: config.fields,
@@ -36,6 +37,7 @@ function flattenGroupedConfig(config: LoadConfig): FlatConfig & { cookies?: stri
     requestDelay: config.requestDelay,
     proxy: config.proxy,
     maxWorkers: config.maxWorkers,
+    rateLimitCooldown: config.rateLimit?.defaultCooldown,
   };
 
   // Cache: boolean or object
@@ -71,7 +73,7 @@ export function normalizeConfig(
   userConfig: OptionalConfig = {},
 ): LoaderConfig {
   // Convert grouped config to flat form, or map v3 keys
-  const mapped: FlatConfig & { cookies?: string[] } = isGroupedConfig(userConfig)
+  const mapped: FlatConfig & { cookies?: string[]; rateLimitCooldown?: number } = isGroupedConfig(userConfig)
     ? flattenGroupedConfig(userConfig)
     : mapV3Config(userConfig as FlatConfig);
 
@@ -96,6 +98,7 @@ export function normalizeConfig(
     cookies: (mapped as { cookies?: string[] }).cookies,
     fields: mapped.fields,
     maxWorkers: mapped.maxWorkers,
+    rateLimitCooldown: mapped.rateLimitCooldown ?? DEFAULTS.rateLimitCooldown,
   };
 
   // FR38: Paid API forces delay=0 when not explicit
@@ -116,6 +119,6 @@ export function normalizeConfig(
  * Build cache key from config (FR55).
  */
 export function buildCacheKey(config: LoaderConfig): string {
-  const fieldsHash = config.fields ? config.fields.sort().join(',') : 'all';
+  const fieldsHash = config.fields ? [...config.fields].sort().join(',') : 'all';
   return `${config.steamId}|${config.appId}|${config.contextId}|${config.tradableOnly}|${fieldsHash}`;
 }

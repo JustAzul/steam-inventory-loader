@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { Loader, Fields, getTag, getImageURL, getLargeImageURL, isCardType } from '../../src/index.js';
@@ -265,6 +265,8 @@ describe('Idempotency', () => {
 });
 
 describe('Error paths', () => {
+  beforeEach(() => Loader.resetRateLimiters());
+
   it('HTTP 429 → { success: false, error.type: rate_limited }', async () => {
     const http: IHttpClient = {
       execute: async () => ({ status: 429, data: {}, headers: {} }),

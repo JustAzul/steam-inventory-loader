@@ -181,6 +181,32 @@ export interface ItemDetails {
   type: string;
 }
 
+// ─── Field Selection Types ───────────────────────────────────────────────
+
+/** Maps a Fields enum value to its corresponding ItemDetails key. */
+type FieldToKey<F extends Fields> = F & keyof ItemDetails;
+
+/** Extracts the union of ItemDetails keys from a Fields array. */
+type FieldKeys<F extends readonly Fields[]> = FieldToKey<F[number]>;
+
+/** ItemDetails projected to selected fields. `assetid` is always included. */
+export type SelectedItem<F extends readonly Fields[]> =
+  Pick<ItemDetails, 'assetid' | FieldKeys<F>>;
+
+/** Safe fallback when `Fields[]` is not narrowed to specific members. */
+export type PartialItem = Partial<ItemDetails> & { assetid: string };
+
+/**
+ * Conditional item type based on field selection:
+ * - `undefined` → full `ItemDetails`
+ * - Narrowed tuple (e.g. `[Fields.NAME]`) → `Pick<ItemDetails, 'assetid' | 'name'>`
+ * - Wide `Fields[]` → `PartialItem`
+ */
+export type InferItem<F extends readonly Fields[] | undefined> =
+  F extends readonly Fields[]
+    ? Fields[] extends F ? PartialItem : SelectedItem<F>
+    : ItemDetails;
+
 // ─── Error Types (FR24) ──────────────────────────────────────────────────
 
 export enum SteamErrorType {
@@ -202,10 +228,10 @@ export interface SteamErrorInfo {
 
 // ─── Loader Response ──────────────────────────────────────────────────────
 
-export interface LoaderResponse {
+export interface LoaderResponse<T = ItemDetails> {
   success: boolean;
   count: number;
-  inventory: ItemDetails[];
+  inventory: T[];
   error?: SteamErrorInfo;
 }
 
@@ -297,7 +323,7 @@ export interface IWorkerPool {
 /** Parse configuration passed to repository/pipeline. */
 export interface ParseConfig {
   tradableOnly: boolean;
-  fields?: Fields[];
+  fields?: readonly Fields[];
   strategy: IStrategy;
   contextId: number;
 }
@@ -316,7 +342,7 @@ export interface LoaderConfig {
   cacheTTL: number;
   cacheMaxEntries: number;
   cacheMaxSize: number;
-  fields?: Fields[];
+  fields?: readonly Fields[];
   endpointPriority: string[];
   steamApisKey?: string;
   steamSupplyKey?: string;
@@ -325,6 +351,8 @@ export interface LoaderConfig {
   cookies?: string[];
   /** Max worker threads for adaptive worker pool (FR61). Default: cpus - 1, clamped to [1, 8]. */
   maxWorkers?: number;
+  /** Default cooldown in ms when a 429 has no Retry-After header. Default: 30000. */
+  rateLimitCooldown: number;
 }
 
 // ─── User-Facing Config ──────────────────────────────────────────────────
@@ -351,6 +379,12 @@ export interface ProviderConfig {
   customEndpoint?: string;
 }
 
+/** Rate limit coordination configuration. */
+export interface RateLimitConfig {
+  /** Default cooldown in ms when a 429 has no Retry-After header. Default: 30000. */
+  defaultCooldown?: number;
+}
+
 /**
  * Primary config interface — grouped by concern.
  *
@@ -370,7 +404,7 @@ export interface LoadConfig {
   /** Only include tradable items. Default: true. */
   tradableOnly?: boolean;
   /** Select specific output fields (memory optimization). Undefined = all fields. */
-  fields?: Fields[];
+  fields?: readonly Fields[];
   /** Items per API page. Default: 2000. */
   itemsPerPage?: number;
   /** Max retry attempts per page. Default: 3. */
@@ -385,6 +419,8 @@ export interface LoadConfig {
   proxy?: string;
   /** Max worker threads. Default: cpus-1, clamped [1, 8]. */
   maxWorkers?: number;
+  /** Rate limit coordination config. */
+  rateLimit?: RateLimitConfig;
 }
 
 /**
@@ -402,7 +438,7 @@ export interface FlatConfig {
   cacheMaxEntries?: number;
   /** Max total cache size in bytes. Default: 512MB. */
   cacheMaxSize?: number;
-  fields?: Fields[];
+  fields?: readonly Fields[];
   endpointPriority?: string[];
   steamApisKey?: string;
   steamSupplyKey?: string;

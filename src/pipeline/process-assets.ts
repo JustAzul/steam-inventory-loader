@@ -6,7 +6,7 @@ import { selectFields } from './field-selector.js';
 
 export interface ProcessAssetsConfig {
   tradableOnly: boolean;
-  fields?: Fields[];
+  fields?: readonly Fields[];
   strategy: IStrategy;
   contextId: number;
 }

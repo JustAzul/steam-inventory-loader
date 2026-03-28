@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { Loader } from '../../src/loader/loader.js';
@@ -123,6 +123,8 @@ class MockWorkerPool implements IWorkerPool {
 }
 
 describe('loadStream', () => {
+  beforeEach(() => Loader.resetRateLimiters());
+
   it('empty inventory yields nothing', async () => {
     const loader = new Loader(new EmptyHttpClient());
     const batches = await collectBatches(
@@ -336,6 +338,8 @@ describe('loadStream', () => {
 });
 
 describe('loadStream — adaptive workers', () => {
+  beforeEach(() => Loader.resetRateLimiters());
+
   it('worker offloading yields correct items', async () => {
     const pools: MockWorkerPool[] = [];
     const loaders: Loader[] = [];

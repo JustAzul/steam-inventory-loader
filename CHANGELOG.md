@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0-alpha.8] - 2026-03-28
+
+### Added
+- Type-safe field selection: `load()` and `loadStream()` narrow return types
+  based on selected `Fields` — consumers get `Pick<ItemDetails, ...>` instead
+  of full `ItemDetails` when using field selection
+- Exported utility types: `SelectedItem`, `PartialItem`, `InferItem`
+- Per-provider rate limit coordination (`ProviderRateLimiter`)
+  - FIFO request queue prevents thundering herd on concurrent loads
+  - Adaptive 429 cooldown: one load's rate limit blocks other concurrent loads
+  - Per-provider isolation: community rate limit doesn't block steamApis
+  - Zero overhead for single loads (fast path)
+- `RateLimitConfig` option (`rateLimit.defaultCooldown`) for 429 fallback
+- `Loader.resetRateLimiters()` static method for test isolation
+
+### Changed
+- `LoaderResponse` is now generic: `LoaderResponse<T = ItemDetails>`
+- `fields` config accepts `readonly Fields[]` (was `Fields[]`)
+- Page pacing replaced: `sleep(requestDelay)` → rate limiter `acquire()` with
+  coordinated inter-load scheduling
+
+### Fixed
+- CJS build warning: replaced `import.meta.url` with `__dirname` (tsup shim)
+- Cache key no longer mutates the `fields` array (uses spread before sort)
+
 ## [4.0.0-alpha.5] - 2026-03-28
 
 ### Added

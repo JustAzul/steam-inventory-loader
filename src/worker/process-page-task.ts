@@ -14,7 +14,7 @@ export interface ProcessPageData {
   previousDescriptions: ItemDescription[];
   config: {
     tradableOnly: boolean;
-    fields?: Fields[];
+    fields?: readonly Fields[];
     contextId: number;
     appId: number;
   };
