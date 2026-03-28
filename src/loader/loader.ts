@@ -2,7 +2,7 @@ import { SteamErrorType } from '../types.js';
 import type {
   IHttpClient, ICacheStore, LoaderResponse, LoaderConfig,
   OptionalConfig, PageRequest, IInventoryProvider, SteamErrorInfo,
-  IWorkerPool, IStrategy, ItemDetails, ItemDescription,
+  IWorkerPool, IStrategy, ItemDetails, ItemDescription, ParseConfig,
 } from '../types.js';
 import { AxiosHttpClient } from '../http/http-client.js';
 import { LruCacheStore } from '../cache/lru-cache.js';
@@ -15,6 +15,9 @@ import { shouldUseWorker } from '../worker/adaptive-decision.js';
 import { PiscinaWorkerPool } from '../worker/piscina-worker-pool.js';
 import type { ProcessPageData } from '../worker/process-page-task.js';
 import { SteamError } from '../errors/errors.js';
+
+/** Consecutive worker failures before disabling worker offloading for the current load. */
+const WORKER_CONSECUTIVE_FAILURE_LIMIT = 2;
 
 const strategyRegistry = new StrategyRegistry();
 
@@ -29,13 +32,14 @@ let sharedCache: ICacheStore<string, LoaderResponse> = new LruCacheStore();
  * Main Loader class — orchestrates provider chain + repository (FR01-FR06, FR65-FR66).
  * Constructor injection with production defaults (no DI container).
  *
- * Cache is shared by default across all Loader instances. Override via constructor
- * for testing or custom cache backends.
+ * Cache and strategy registry are shared by default across all Loader instances.
+ * Override via constructor for testing or custom backends.
  */
 export class Loader {
   private http: IHttpClient;
   private cache: ICacheStore<string, LoaderResponse>;
   private workerPool: IWorkerPool | null;
+  private registry: StrategyRegistry;
 
   /** Tracks concurrent active load() calls across all Loader instances (FR59). */
   static activeLoads = 0;
@@ -44,10 +48,12 @@ export class Loader {
     http?: IHttpClient,
     cache?: ICacheStore<string, LoaderResponse>,
     workerPool?: IWorkerPool,
+    registry?: StrategyRegistry,
   ) {
     this.http = http ?? new AxiosHttpClient();
     this.cache = cache ?? sharedCache;
     this.workerPool = workerPool ?? null;
+    this.registry = registry ?? strategyRegistry;
   }
 
   /**
@@ -66,6 +72,7 @@ export class Loader {
 
   /**
    * Register a custom strategy (FR68).
+   * Mutates the shared strategy registry — affects all Loader instances using the default.
    */
   static registerStrategy(appId: number, contextId: number, strategy: IStrategy): void {
     strategyRegistry.register(appId, contextId, strategy);
@@ -80,7 +87,7 @@ export class Loader {
 
   /**
    * Replace the shared cache instance.
-   * Use for custom backends (Redis, SQLite) or to reconfigure limits.
+   * Mutates module state — affects all Loader instances using the default cache.
    */
   static setSharedCache(cache: ICacheStore<string, LoaderResponse>): void {
     sharedCache = cache;
@@ -129,25 +136,40 @@ export class Loader {
     }
   }
 
-  private async _loadInner(config: LoaderConfig): Promise<LoaderResponse> {
-    // Cache check (FR53)
-    if (config.cache) {
-      const cacheKey = buildCacheKey(config);
-      const cached = this.cache.get(cacheKey);
-      if (cached) return cached;
-    }
+  private checkCache(config: LoaderConfig): LoaderResponse | undefined {
+    if (!config.cache) return undefined;
+    const cacheKey = buildCacheKey(config);
+    return this.cache.get(cacheKey);
+  }
 
-    // Resolve provider chain
+  private cacheAndReturn(inventory: ItemDetails[], config: LoaderConfig): LoaderResponse {
+    const result: LoaderResponse = {
+      success: true,
+      count: inventory.length,
+      inventory,
+    };
+    if (config.cache) this.cache.set(buildCacheKey(config), result);
+    return result;
+  }
+
+  private async _loadInner(config: LoaderConfig): Promise<LoaderResponse> {
+    const cached = this.checkCache(config);
+    if (cached) return cached;
+
     const chain = resolveProviderChain(config);
     if (chain.length === 0) {
       return errorResponse(new SteamError(SteamErrorType.BadStatus, 'No providers available'));
     }
 
-    // Strategy for this app/context
-    const strategy = strategyRegistry.get(config.appId, config.contextId);
+    const strategy = this.registry.get(config.appId, config.contextId);
     const retryPolicy = new RetryPolicy({ maxRetries: config.maxRetries });
+    const parseConfig: ParseConfig = {
+      tradableOnly: config.tradableOnly,
+      fields: config.fields,
+      strategy,
+      contextId: config.contextId,
+    };
 
-    // Try each provider in chain
     let lastError: SteamErrorInfo | SteamError | null = null;
 
     for (let providerIdx = 0; providerIdx < chain.length; providerIdx++) {
@@ -231,9 +253,7 @@ export class Loader {
 
           // Empty inventory early exit (FR06)
           if (page.totalInventoryCount === 0 && page.assets.length === 0) {
-            const result: LoaderResponse = { success: true, count: 0, inventory: [] };
-            if (config.cache) this.cache.set(buildCacheKey(config), result);
-            return result;
+            return this.cacheAndReturn([], config);
           }
 
           // Anomalous empty: success but no assets (malformed)
@@ -249,12 +269,7 @@ export class Loader {
           // After page 1: decide whether to use workers (FR58-FR61)
           if (isFirstPage) {
             // Page 1 always on main thread — reveals totalInventoryCount
-            repo.addPage(page, {
-              tradableOnly: config.tradableOnly,
-              fields: config.fields,
-              strategy,
-              contextId: config.contextId,
-            });
+            repo.addPage(page, parseConfig);
 
             if (this.workerPool && shouldUseWorker(page.totalInventoryCount, Loader.activeLoads)) {
               useWorker = true;
@@ -281,26 +296,15 @@ export class Loader {
               previousDescriptions = page.descriptions;
             } catch {
               // Graceful fallback: process this page on main thread.
-              // Disable workers permanently after 2 consecutive failures.
               workerFailures++;
-              if (workerFailures >= 2) {
+              if (workerFailures >= WORKER_CONSECUTIVE_FAILURE_LIMIT) {
                 useWorker = false;
               }
-              repo.addPage(page, {
-                tradableOnly: config.tradableOnly,
-                fields: config.fields,
-                strategy,
-                contextId: config.contextId,
-              });
+              repo.addPage(page, parseConfig);
             }
           } else {
             // Main thread processing (default path)
-            repo.addPage(page, {
-              tradableOnly: config.tradableOnly,
-              fields: config.fields,
-              strategy,
-              contextId: config.contextId,
-            });
+            repo.addPage(page, parseConfig);
           }
 
           // Pagination
@@ -336,13 +340,7 @@ export class Loader {
         const inventory = workerResults.length > 0
           ? [...repoItems, ...workerResults]
           : repoItems;
-        const result: LoaderResponse = {
-          success: true,
-          count: inventory.length,
-          inventory,
-        };
-        if (config.cache) this.cache.set(buildCacheKey(config), result);
-        return result;
+        return this.cacheAndReturn(inventory, config);
       }
     }
 

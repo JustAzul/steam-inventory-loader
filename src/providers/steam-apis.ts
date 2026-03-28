@@ -1,12 +1,12 @@
 import { SteamErrorType } from '../types.js';
-import type { IInventoryProvider, HttpRequest, InventoryPage, PageRequest, LoaderConfig, SteamErrorInfo } from '../types.js';
-import { parseInventoryPage } from '../pipeline/parser.js';
+import type { HttpRequest, PageRequest, LoaderConfig, SteamErrorInfo } from '../types.js';
 import { SteamError } from '../errors/errors.js';
+import { BaseInventoryProvider } from './base-provider.js';
 
 /**
  * SteamApis.com provider — paid, credit-based (FR03).
  */
-export class SteamApisProvider implements IInventoryProvider {
+export class SteamApisProvider extends BaseInventoryProvider {
   readonly name = 'steamApis';
   readonly method = 'steam-api'; // Same cursor format as Steam Community
 
@@ -32,22 +32,10 @@ export class SteamApisProvider implements IInventoryProvider {
     };
   }
 
-  parseResponse(raw: unknown): InventoryPage {
-    return parseInventoryPage(JSON.stringify(raw));
-  }
-
-  getNextCursor(page: InventoryPage): string | null {
-    return page.moreItems ? page.lastAssetId : null;
-  }
-
   classifyError(status: number, _body: unknown): SteamErrorInfo {
     if (status === 429) return new SteamError(SteamErrorType.RateLimited);
     if (status === 402) return new SteamError(SteamErrorType.InsufficientBalance);
     if (status === 401) return new SteamError(SteamErrorType.AuthFailed, 'Invalid SteamApis API key');
     return SteamError.badStatus(status);
-  }
-
-  shouldFallback(error: SteamErrorInfo): boolean {
-    return error.type === SteamErrorType.RateLimited;
   }
 }
