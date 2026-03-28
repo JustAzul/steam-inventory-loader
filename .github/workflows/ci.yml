@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        node-version: [18, 20, 22, 24]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,3 +22,15 @@ jobs:
       - run: npm run type-check
       - run: npm run build
       - run: npm test
+      - name: Coverage check
+        if: matrix.node-version == 22
+        run: npx vitest run --coverage
+      - name: Bundle size check
+        if: matrix.node-version == 22
+        run: |
+          SIZE=$(wc -c < dist/index.js)
+          echo "ESM bundle: ${SIZE} bytes"
+          if [ "$SIZE" -gt 100000 ]; then
+            echo "::error::Bundle too large (>100KB): ${SIZE} bytes"
+            exit 1
+          fi

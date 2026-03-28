@@ -10,6 +10,7 @@ export default defineConfig([
     clean: true,
     splitting: false,
     sourcemap: true,
+    minify: true,
   },
   // Worker entry point — separate file for Piscina to load in worker threads
   {
@@ -19,6 +20,7 @@ export default defineConfig([
     clean: false,
     splitting: false,
     sourcemap: true,
+    minify: true,
     outDir: 'dist',
   },
 ]);

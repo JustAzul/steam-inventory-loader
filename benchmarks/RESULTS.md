@@ -55,6 +55,23 @@ Memory usage is consistent across all versions (~81MB for 500k items).
 Fixture benchmarks have 0ms network delay so worker spawn overhead (~80ms) is not hidden.
 In production with real network latency (200ms-4s per page), POC B3 showed 3.6x speedup.
 
+## Network Latency — Sequential vs Workers (5 x 77k)
+
+Workers break even at ~10ms network latency per page. Below that, spawn overhead
+(~80ms) and structured clone cost make workers slower than sequential.
+
+| Network Latency | Sequential (5×77k) | Workers (5×77k) | Speedup |
+|-----------------|---------------------|------------------|---------|
+| 0ms | 1,629ms | 3,023ms | 0.5x (workers hurt) |
+| 10ms | 3,244ms | 2,944ms | 1.1x (break-even) |
+| 25ms | 6,235ms | 3,085ms | 2.0x |
+| 50ms | 11,248ms | 3,678ms | 3.1x |
+| 100ms | 21,157ms | 4,985ms | 4.2x |
+| 200ms | 40,935ms | 8,954ms | 4.6x |
+
+Real Steam API latency is 100-200ms+ per page, so workers deliver 4-5x speedup
+in production when concurrency threshold is met (≥3 active loads, ≥5k items).
+
 ## How to reproduce
 
 ```bash
