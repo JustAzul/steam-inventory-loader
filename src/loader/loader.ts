@@ -1,3 +1,4 @@
+import { SteamErrorType } from '../types.js';
 import type {
   IHttpClient, ICacheStore, LoaderResponse, LoaderConfig,
   OptionalConfig, PageRequest, IInventoryProvider, SteamErrorInfo,
@@ -13,6 +14,7 @@ import { normalizeConfig, buildCacheKey } from './config.js';
 import { shouldUseWorker } from '../worker/adaptive-decision.js';
 import { PiscinaWorkerPool } from '../worker/piscina-worker-pool.js';
 import type { ProcessPageData } from '../worker/process-page-task.js';
+import { SteamError } from '../errors/errors.js';
 
 const strategyRegistry = new StrategyRegistry();
 
@@ -138,7 +140,7 @@ export class Loader {
     // Resolve provider chain
     const chain = resolveProviderChain(config);
     if (chain.length === 0) {
-      return errorResponse({ type: 'bad_status', message: 'No providers available' });
+      return errorResponse(new SteamError(SteamErrorType.BadStatus, 'No providers available'));
     }
 
     // Strategy for this app/context
@@ -146,7 +148,7 @@ export class Loader {
     const retryPolicy = new RetryPolicy({ maxRetries: config.maxRetries });
 
     // Try each provider in chain
-    let lastError: SteamErrorInfo | null = null;
+    let lastError: SteamErrorInfo | SteamError | null = null;
 
     for (let providerIdx = 0; providerIdx < chain.length; providerIdx++) {
       const provider = chain[providerIdx];
@@ -210,12 +212,11 @@ export class Loader {
 
           // Check for API-level errors
           if (!page.success) {
-            const error: SteamErrorInfo = {
-              type: page.eresult ? 'bad_status' : 'invalid_response',
-              message: page.error ?? 'Unknown error',
-              ...(page.eresult ? { eresult: page.eresult } : {}),
-            };
-            return errorResponse(error);
+            return errorResponse(
+              page.eresult
+                ? new SteamError(SteamErrorType.BadStatus, page.error ?? 'Unknown error', page.eresult)
+                : new SteamError(SteamErrorType.InvalidResponse, page.error ?? 'Unknown error'),
+            );
           }
 
           // fake_redirect → retry (FR30)
@@ -225,7 +226,7 @@ export class Loader {
               await sleep(retryPolicy.getDelay(retryCount - 1));
               continue;
             }
-            return errorResponse({ type: 'malformed_data', message: 'Persistent fake redirect' });
+            return errorResponse(new SteamError(SteamErrorType.MalformedData, 'Persistent fake redirect'));
           }
 
           // Empty inventory early exit (FR06)
@@ -242,7 +243,7 @@ export class Loader {
               await sleep(retryPolicy.getDelay(retryCount - 1));
               continue;
             }
-            return errorResponse({ type: 'malformed_data', message: 'Success but no assets in response' });
+            return errorResponse(new SteamError(SteamErrorType.MalformedData, 'Success but no assets in response'));
           }
 
           // After page 1: decide whether to use workers (FR58-FR61)
@@ -323,10 +324,9 @@ export class Loader {
             await sleep(retryPolicy.getDelay(retryCount - 1));
             continue;
           }
-          return errorResponse({
-            type: 'network_error',
-            message: err instanceof Error ? err.message : 'Network error',
-          });
+          return errorResponse(
+            new SteamError(SteamErrorType.NetworkError, err instanceof Error ? err.message : undefined),
+          );
         }
       }
 
@@ -347,12 +347,13 @@ export class Loader {
     }
 
     // All providers exhausted
-    return errorResponse(lastError ?? { type: 'rate_limited', message: 'All providers rate limited' });
+    return errorResponse(lastError ?? new SteamError(SteamErrorType.RateLimited, 'All providers rate limited'));
   }
 }
 
-function errorResponse(error: SteamErrorInfo): LoaderResponse {
-  return { success: false, count: 0, inventory: [], error };
+function errorResponse(error: SteamErrorInfo | SteamError): LoaderResponse {
+  const info = error instanceof SteamError ? error.toErrorInfo() : error;
+  return { success: false, count: 0, inventory: [], error: info };
 }
 
 function sleep(ms: number): Promise<void> {

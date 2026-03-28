@@ -1,11 +1,24 @@
-import type { SteamErrorInfo, SteamErrorType } from '../types.js';
+import { SteamErrorType } from '../types.js';
+import type { SteamErrorInfo } from '../types.js';
+
+const DEFAULT_MESSAGES: Record<SteamErrorType, string> = {
+  [SteamErrorType.RateLimited]: 'Rate limited by Steam',
+  [SteamErrorType.PrivateProfile]: 'This profile is private.',
+  [SteamErrorType.AuthFailed]: 'Authentication failed',
+  [SteamErrorType.InsufficientBalance]: 'Insufficient balance',
+  [SteamErrorType.InvalidResponse]: 'Invalid response from Steam',
+  [SteamErrorType.MalformedData]: 'Malformed data in response',
+  [SteamErrorType.NetworkError]: 'Network error',
+  [SteamErrorType.BadStatus]: 'Bad status',
+};
 
 export class SteamError extends Error {
   readonly type: SteamErrorType;
   readonly eresult?: number;
+  readonly statusCode?: number;
 
-  constructor(type: SteamErrorType, message: string, eresult?: number) {
-    super(message);
+  constructor(type: SteamErrorType, message?: string, eresult?: number) {
+    super(message ?? DEFAULT_MESSAGES[type]);
     this.type = type;
     this.eresult = eresult;
     this.name = 'SteamError';
@@ -18,63 +31,11 @@ export class SteamError extends Error {
     }
     return info;
   }
-}
 
-export class RateLimitError extends SteamError {
-  constructor(message = 'Rate limited by Steam') {
-    super('rate_limited', message);
-    this.name = 'RateLimitError';
-  }
-}
-
-export class PrivateProfileError extends SteamError {
-  constructor(message = 'This profile is private.') {
-    super('private_profile', message);
-    this.name = 'PrivateProfileError';
-  }
-}
-
-export class AuthFailedError extends SteamError {
-  constructor(message = 'Authentication failed') {
-    super('auth_failed', message);
-    this.name = 'AuthFailedError';
-  }
-}
-
-export class InsufficientBalanceError extends SteamError {
-  constructor(message = 'Insufficient balance') {
-    super('insufficient_balance', message);
-    this.name = 'InsufficientBalanceError';
-  }
-}
-
-export class InvalidResponseError extends SteamError {
-  constructor(message = 'Invalid response from Steam') {
-    super('invalid_response', message);
-    this.name = 'InvalidResponseError';
-  }
-}
-
-export class MalformedDataError extends SteamError {
-  constructor(message = 'Malformed data in response') {
-    super('malformed_data', message);
-    this.name = 'MalformedDataError';
-  }
-}
-
-export class NetworkError extends SteamError {
-  constructor(message = 'Network error') {
-    super('network_error', message);
-    this.name = 'NetworkError';
-  }
-}
-
-export class BadStatusError extends SteamError {
-  readonly statusCode: number;
-
-  constructor(statusCode: number, message?: string) {
-    super('bad_status', message ?? `Bad status code: ${statusCode}`);
-    this.statusCode = statusCode;
-    this.name = 'BadStatusError';
+  /** Factory for bad_status with HTTP status code context. */
+  static badStatus(statusCode: number, message?: string, eresult?: number): SteamError {
+    const err = new SteamError(SteamErrorType.BadStatus, message ?? `Bad status code: ${statusCode}`, eresult);
+    (err as { statusCode: number }).statusCode = statusCode;
+    return err;
   }
 }

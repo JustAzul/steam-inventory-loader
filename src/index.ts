@@ -4,7 +4,7 @@
 export { Loader } from './loader/loader.js';
 
 // Types & enums
-export { Fields } from './types.js';
+export { Fields, SteamErrorType } from './types.js';
 export type {
   HttpRequest,
   HttpResponse,
@@ -26,7 +26,6 @@ export type {
   PageRequest,
   ParseConfig,
   SteamErrorInfo,
-  SteamErrorType,
   SteamTag,
   Tag,
 } from './types.js';
@@ -35,6 +34,9 @@ export type {
 export { PiscinaWorkerPool } from './worker/piscina-worker-pool.js';
 export type { WorkerPoolOptions } from './worker/piscina-worker-pool.js';
 export { shouldUseWorker, ITEM_THRESHOLD, ACTIVE_LOAD_THRESHOLD } from './worker/adaptive-decision.js';
+
+// Error class
+export { SteamError } from './errors/errors.js';
 
 // Utilities (v3 compat)
 export { getTag, getImageURL, getLargeImageURL, isCardType } from './compat/utils.js';

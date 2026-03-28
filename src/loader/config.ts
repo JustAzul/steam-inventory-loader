@@ -69,5 +69,5 @@ export function normalizeConfig(
  */
 export function buildCacheKey(config: LoaderConfig): string {
   const fieldsHash = config.fields ? config.fields.sort().join(',') : 'all';
-  return `${config.steamId}_${config.appId}_${config.contextId}_${config.tradableOnly}_${fieldsHash}`;
+  return `${config.steamId}|${config.appId}|${config.contextId}|${config.tradableOnly}|${fieldsHash}`;
 }

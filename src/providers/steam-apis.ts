@@ -1,5 +1,7 @@
+import { SteamErrorType } from '../types.js';
 import type { IInventoryProvider, HttpRequest, InventoryPage, PageRequest, LoaderConfig, SteamErrorInfo } from '../types.js';
 import { parseInventoryPage } from '../pipeline/parser.js';
+import { SteamError } from '../errors/errors.js';
 
 /**
  * SteamApis.com provider — paid, credit-based (FR03).
@@ -26,6 +28,7 @@ export class SteamApisProvider implements IInventoryProvider {
       method: 'GET',
       url: `https://api.steamapis.com/steam/inventory/${params.steamId}/${params.appId}/${params.contextId}`,
       params: queryParams,
+      proxy: config.proxy,
     };
   }
 
@@ -38,13 +41,13 @@ export class SteamApisProvider implements IInventoryProvider {
   }
 
   classifyError(status: number, _body: unknown): SteamErrorInfo {
-    if (status === 429) return { type: 'rate_limited', message: 'Rate limited by SteamApis' };
-    if (status === 402) return { type: 'insufficient_balance', message: 'Insufficient SteamApis balance' };
-    if (status === 401) return { type: 'auth_failed', message: 'Invalid SteamApis API key' };
-    return { type: 'bad_status', message: `HTTP ${status}` };
+    if (status === 429) return new SteamError(SteamErrorType.RateLimited);
+    if (status === 402) return new SteamError(SteamErrorType.InsufficientBalance);
+    if (status === 401) return new SteamError(SteamErrorType.AuthFailed, 'Invalid SteamApis API key');
+    return SteamError.badStatus(status);
   }
 
   shouldFallback(error: SteamErrorInfo): boolean {
-    return error.type === 'rate_limited';
+    return error.type === SteamErrorType.RateLimited;
   }
 }

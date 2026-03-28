@@ -1,4 +1,5 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
+import { HttpProxyAgent, HttpsProxyAgent } from 'hpagent';
 import type { IHttpClient, HttpRequest, HttpResponse } from '../types.js';
 
 const DEFAULT_TIMEOUT = 40_000; // FR37: 40s
@@ -13,8 +14,6 @@ export class AxiosHttpClient implements IHttpClient {
   constructor() {
     this.client = axios.create({
       timeout: DEFAULT_TIMEOUT,
-      // Keep-alive is handled by the default Node.js agent in modern Node
-      // agentkeepalive/hpagent are available for proxy scenarios
       maxRedirects: 0,
       validateStatus: () => true, // Don't throw on non-2xx
     });
@@ -35,6 +34,12 @@ export class AxiosHttpClient implements IHttpClient {
         ...config.headers,
         Cookie: request.cookies.join('; '),
       };
+    }
+
+    // Proxy support via hpagent (FR42)
+    if (request.proxy) {
+      config.httpAgent = new HttpProxyAgent({ proxy: request.proxy });
+      config.httpsAgent = new HttpsProxyAgent({ proxy: request.proxy });
     }
 
     const response = await this.client.request(config);

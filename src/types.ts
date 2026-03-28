@@ -183,15 +183,16 @@ export interface ItemDetails {
 
 // ─── Error Types (FR24) ──────────────────────────────────────────────────
 
-export type SteamErrorType =
-  | 'rate_limited'
-  | 'private_profile'
-  | 'auth_failed'
-  | 'insufficient_balance'
-  | 'invalid_response'
-  | 'malformed_data'
-  | 'network_error'
-  | 'bad_status';
+export enum SteamErrorType {
+  RateLimited = 'rate_limited',
+  PrivateProfile = 'private_profile',
+  AuthFailed = 'auth_failed',
+  InsufficientBalance = 'insufficient_balance',
+  InvalidResponse = 'invalid_response',
+  MalformedData = 'malformed_data',
+  NetworkError = 'network_error',
+  BadStatus = 'bad_status',
+}
 
 export interface SteamErrorInfo {
   type: SteamErrorType;

@@ -1,5 +1,7 @@
+import { SteamErrorType } from '../types.js';
 import type { IInventoryProvider, HttpRequest, InventoryPage, PageRequest, LoaderConfig, SteamErrorInfo } from '../types.js';
 import { parseInventoryPage } from '../pipeline/parser.js';
+import { SteamError } from '../errors/errors.js';
 
 /**
  * Custom provider — user-provided endpoint (FR05).
@@ -28,6 +30,7 @@ export class CustomProvider implements IInventoryProvider {
       method: 'GET',
       url,
       params: queryParams,
+      proxy: config.proxy,
       // No API keys — custom endpoint clears them (FR05)
     };
   }
@@ -41,12 +44,12 @@ export class CustomProvider implements IInventoryProvider {
   }
 
   classifyError(status: number, _body: unknown): SteamErrorInfo {
-    if (status === 429) return { type: 'rate_limited', message: 'Rate limited' };
-    if (status === 403) return { type: 'private_profile', message: 'This profile is private.' };
-    return { type: 'bad_status', message: `HTTP ${status}` };
+    if (status === 429) return new SteamError(SteamErrorType.RateLimited);
+    if (status === 403) return new SteamError(SteamErrorType.PrivateProfile);
+    return SteamError.badStatus(status);
   }
 
   shouldFallback(error: SteamErrorInfo): boolean {
-    return error.type === 'rate_limited';
+    return error.type === SteamErrorType.RateLimited;
   }
 }

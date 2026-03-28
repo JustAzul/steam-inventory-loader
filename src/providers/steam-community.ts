@@ -1,5 +1,7 @@
+import { SteamErrorType } from '../types.js';
 import type { IInventoryProvider, HttpRequest, InventoryPage, PageRequest, LoaderConfig, SteamErrorInfo } from '../types.js';
 import { parseInventoryPage } from '../pipeline/parser.js';
+import { SteamError } from '../errors/errors.js';
 
 /**
  * Steam Community provider — default Steam API endpoint (FR01).
@@ -34,6 +36,7 @@ export class SteamCommunityProvider implements IInventoryProvider {
       },
       params: queryParams,
       cookies: config.cookies,
+      proxy: config.proxy,
     };
   }
 
@@ -45,14 +48,14 @@ export class SteamCommunityProvider implements IInventoryProvider {
     return page.moreItems ? page.lastAssetId : null;
   }
 
-  classifyError(status: number, body: unknown): SteamErrorInfo {
-    if (status === 429) return { type: 'rate_limited', message: 'Rate limited by Steam' };
-    if (status === 403) return { type: 'private_profile', message: 'This profile is private.' };
-    if (status === 401) return { type: 'auth_failed', message: 'Authentication failed' };
-    return { type: 'bad_status', message: `HTTP ${status}` };
+  classifyError(status: number, _body: unknown): SteamErrorInfo {
+    if (status === 429) return new SteamError(SteamErrorType.RateLimited);
+    if (status === 403) return new SteamError(SteamErrorType.PrivateProfile);
+    if (status === 401) return new SteamError(SteamErrorType.AuthFailed);
+    return SteamError.badStatus(status);
   }
 
   shouldFallback(error: SteamErrorInfo): boolean {
-    return error.type === 'rate_limited';
+    return error.type === SteamErrorType.RateLimited;
   }
 }
