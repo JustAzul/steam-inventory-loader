@@ -1,6 +1,7 @@
 import type {
   IHttpClient, ICacheStore, LoaderResponse, LoaderConfig,
   OptionalConfig, PageRequest, IInventoryProvider, SteamErrorInfo,
+  IWorkerPool, IStrategy, ItemDetails, ItemDescription,
 } from '../types.js';
 import { AxiosHttpClient } from '../http/http-client.js';
 import { LruCacheStore } from '../cache/lru-cache.js';
@@ -9,7 +10,9 @@ import { StrategyRegistry } from '../strategies/registry.js';
 import { RetryPolicy } from '../http/retry.js';
 import { resolveProviderChain, isCursorCompatible, registerProvider as chainRegisterProvider } from '../providers/provider-chain.js';
 import { normalizeConfig, buildCacheKey } from './config.js';
-import type { IStrategy } from '../types.js';
+import { shouldUseWorker } from '../worker/adaptive-decision.js';
+import { PiscinaWorkerPool } from '../worker/piscina-worker-pool.js';
+import type { ProcessPageData } from '../worker/process-page-task.js';
 
 const strategyRegistry = new StrategyRegistry();
 
@@ -30,13 +33,19 @@ let sharedCache: ICacheStore<string, LoaderResponse> = new LruCacheStore();
 export class Loader {
   private http: IHttpClient;
   private cache: ICacheStore<string, LoaderResponse>;
+  private workerPool: IWorkerPool | null;
+
+  /** Tracks concurrent active load() calls across all Loader instances (FR59). */
+  static activeLoads = 0;
 
   constructor(
     http?: IHttpClient,
     cache?: ICacheStore<string, LoaderResponse>,
+    workerPool?: IWorkerPool,
   ) {
     this.http = http ?? new AxiosHttpClient();
     this.cache = cache ?? sharedCache;
+    this.workerPool = workerPool ?? null;
   }
 
   /**
@@ -84,8 +93,41 @@ export class Loader {
     contextId: string | number,
     userConfig?: OptionalConfig,
   ): Promise<LoaderResponse> {
+    Loader.activeLoads++;
+
+    try {
+      return await this._load(steamId, appId, contextId, userConfig);
+    } finally {
+      Loader.activeLoads--;
+    }
+  }
+
+  private async _load(
+    steamId: unknown,
+    appId: string | number,
+    contextId: string | number,
+    userConfig?: OptionalConfig,
+  ): Promise<LoaderResponse> {
     const config = normalizeConfig(steamId, appId, contextId, userConfig);
 
+    // Auto-create worker pool from config if no constructor pool (FR61)
+    let autoPool: PiscinaWorkerPool | null = null;
+    if (!this.workerPool && config.maxWorkers) {
+      autoPool = new PiscinaWorkerPool({ maxWorkers: config.maxWorkers });
+      this.workerPool = autoPool;
+    }
+
+    try {
+      return await this._loadInner(config);
+    } finally {
+      if (autoPool) {
+        this.workerPool = null;
+        await autoPool.destroy();
+      }
+    }
+  }
+
+  private async _loadInner(config: LoaderConfig): Promise<LoaderResponse> {
     // Cache check (FR53)
     if (config.cache) {
       const cacheKey = buildCacheKey(config);
@@ -111,6 +153,13 @@ export class Loader {
       const repo = new InMemoryInventoryRepository();
       let cursor: string | null = null;
       let retryCount = 0;
+
+      // Worker offloading state (FR58-FR61)
+      let isFirstPage = true;
+      let useWorker = false;
+      let workerFailures = 0;
+      let previousDescriptions: ItemDescription[] = [];
+      let workerResults: ItemDetails[] = [];
 
       // If switching from a different-method provider, start fresh
       if (providerIdx > 0 && !isCursorCompatible(chain[providerIdx - 1], provider)) {
@@ -196,13 +245,62 @@ export class Loader {
             return errorResponse({ type: 'malformed_data', message: 'Success but no assets in response' });
           }
 
-          // Process page through repository pipeline
-          repo.addPage(page, {
-            tradableOnly: config.tradableOnly,
-            fields: config.fields,
-            strategy,
-            contextId: config.contextId,
-          });
+          // After page 1: decide whether to use workers (FR58-FR61)
+          if (isFirstPage) {
+            // Page 1 always on main thread — reveals totalInventoryCount
+            repo.addPage(page, {
+              tradableOnly: config.tradableOnly,
+              fields: config.fields,
+              strategy,
+              contextId: config.contextId,
+            });
+
+            if (this.workerPool && shouldUseWorker(page.totalInventoryCount, Loader.activeLoads)) {
+              useWorker = true;
+            }
+            previousDescriptions = page.descriptions;
+            isFirstPage = false;
+          } else if (useWorker) {
+            // Offload to worker thread (FR58)
+            try {
+              const pageData: ProcessPageData = {
+                assets: page.assets,
+                descriptions: page.descriptions,
+                previousDescriptions,
+                config: {
+                  tradableOnly: config.tradableOnly,
+                  fields: config.fields,
+                  contextId: config.contextId,
+                  appId: config.appId,
+                },
+              };
+              const items = await this.workerPool!.run<ItemDetails[]>('processPage', pageData);
+              workerResults.push(...items);
+              workerFailures = 0; // Reset on success — only consecutive failures trigger fallback
+              previousDescriptions = page.descriptions;
+            } catch {
+              // Graceful fallback: process this page on main thread.
+              // Disable workers permanently after 2 consecutive failures.
+              workerFailures++;
+              if (workerFailures >= 2) {
+                useWorker = false;
+              }
+              repo.addPage(page, {
+                tradableOnly: config.tradableOnly,
+                fields: config.fields,
+                strategy,
+                contextId: config.contextId,
+              });
+            }
+          } else {
+            // Main thread processing (default path)
+            repo.addPage(page, {
+              tradableOnly: config.tradableOnly,
+              fields: config.fields,
+              strategy,
+              contextId: config.contextId,
+            });
+          }
 
           // Pagination
           const nextCursor = provider.getNextCursor(page);
@@ -234,10 +332,14 @@ export class Loader {
 
       // If we completed pagination on this provider, return result
       if (pagesDone) {
+        const repoItems = repo.getItems();
+        const inventory = workerResults.length > 0
+          ? [...repoItems, ...workerResults]
+          : repoItems;
         const result: LoaderResponse = {
           success: true,
-          count: repo.getItemCount(),
-          inventory: repo.getItems(),
+          count: inventory.length,
+          inventory,
         };
         if (config.cache) this.cache.set(buildCacheKey(config), result);
         return result;
