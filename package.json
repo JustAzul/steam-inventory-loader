@@ -1,6 +1,6 @@
 {
   "name": "azul-steam-inventory-loader",
-  "version": "4.0.0-alpha.4",
+  "version": "4.0.0-alpha.5",
   "description": "Steam inventory loader with field selection, LRU cache, provider chain fallback, and adaptive workers",
   "type": "module",
   "exports": {
