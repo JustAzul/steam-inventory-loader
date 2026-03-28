@@ -1,6 +1,6 @@
 {
   "name": "azul-steam-inventory-loader",
-  "version": "4.0.0-alpha.5",
+  "version": "4.0.0-alpha.6",
   "description": "Steam inventory loader with field selection, LRU cache, provider chain fallback, and adaptive workers",
   "type": "module",
   "exports": {
@@ -35,7 +35,7 @@
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist coverage .tsbuildinfo",
     "update-fields": "node scripts/update-fields.mjs",
-    "prepare": "npm run build"
+    "prepublishOnly": "npm run build"
   },
   "author": "https://justazul.com",
   "repository": {
