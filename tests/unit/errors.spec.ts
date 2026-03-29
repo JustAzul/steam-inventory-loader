@@ -31,6 +31,7 @@ describe('SteamError', () => {
       [SteamErrorType.MalformedData, 'Malformed data in response'],
       [SteamErrorType.NetworkError, 'Network error'],
       [SteamErrorType.BadStatus, 'Bad status'],
+      [SteamErrorType.ValidationError, 'Validation error'],
     ];
 
     for (const [type, expected] of types) {

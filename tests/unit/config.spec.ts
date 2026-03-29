@@ -158,3 +158,20 @@ describe('normalizeConfig — flat (FlatConfig, backwards compat)', () => {
     expect(result.cache).toBe(true);
   });
 });
+
+describe('normalizeConfig — security', () => {
+  it('invalid customEndpoint error does NOT contain the raw URL (L5)', () => {
+    const maliciousUrl = 'not-a-url-<script>alert(1)</script>';
+    expect(() => normalizeConfig(STEAM_ID, 753, 6, {
+      providers: { customEndpoint: maliciousUrl },
+    })).toThrow('Invalid customEndpoint URL');
+
+    try {
+      normalizeConfig(STEAM_ID, 753, 6, {
+        providers: { customEndpoint: maliciousUrl },
+      });
+    } catch (e: any) {
+      expect(e.message).not.toContain(maliciousUrl);
+    }
+  });
+});

@@ -10,6 +10,14 @@ import type { ProcessPageData } from '../worker/process-page-task.js';
 
 const WORKER_CONSECUTIVE_FAILURE_LIMIT = 2;
 
+export interface PageProcessorDeps {
+  pool: IWorkerPool | null;
+  parseConfig: ParseConfig;
+  config: LoaderConfig;
+  activeLoadsGetter: () => number;
+  customStrategy: boolean;
+}
+
 export class PageProcessor {
   private readonly pool: IWorkerPool | null;
   private readonly parseConfig: ParseConfig;
@@ -23,18 +31,12 @@ export class PageProcessor {
   private isFirstPage = true;
   private previousDescriptions: ItemDescription[] = [];
 
-  constructor(
-    pool: IWorkerPool | null,
-    parseConfig: ParseConfig,
-    config: LoaderConfig,
-    activeLoadsGetter: () => number,
-    customStrategy: boolean,
-  ) {
-    this.pool = pool;
-    this.parseConfig = parseConfig;
-    this.config = config;
-    this.activeLoadsGetter = activeLoadsGetter;
-    this.customStrategy = customStrategy;
+  constructor(deps: PageProcessorDeps) {
+    this.pool = deps.pool;
+    this.parseConfig = deps.parseConfig;
+    this.config = deps.config;
+    this.activeLoadsGetter = deps.activeLoadsGetter;
+    this.customStrategy = deps.customStrategy;
   }
 
   async processPage(page: InventoryPage): Promise<ItemDetails[]> {
@@ -77,14 +79,20 @@ export class PageProcessor {
       return { items, failed: false };
     } catch (err) {
       if (isTransientWorkerError(err)) {
-        try {
-          const items = await this.runWorkerTask(page);
-          return { items, failed: false };
-        } catch {
-          return { items: this.processOnMainThread(page), failed: false };
-        }
+        return this.retryWorkerOnce(page);
       }
       return { items: this.processOnMainThread(page), failed: true };
+    }
+  }
+
+  private async retryWorkerOnce(
+    page: InventoryPage,
+  ): Promise<{ items: ItemDetails[]; failed: boolean }> {
+    try {
+      const items = await this.runWorkerTask(page);
+      return { items, failed: false };
+    } catch {
+      return { items: this.processOnMainThread(page), failed: false };
     }
   }
 

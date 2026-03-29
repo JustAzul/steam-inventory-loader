@@ -1,4 +1,6 @@
+import { SteamErrorType } from '../types.js';
 import type { FlatConfig } from '../types.js';
+import { SteamError } from '../errors/errors.js';
 
 const STEAM_COMMUNITY_URL = 'https://steamcommunity.com';
 
@@ -15,19 +17,30 @@ interface CookieJarLike {
  * Accepts: string, number, or SteamID object with getSteamID64().
  */
 export function coerceSteamId(input: unknown): string {
-  if (typeof input === 'string') return input;
-  if (typeof input === 'number') return String(input);
-  if (input && typeof (input as SteamIDLike).getSteamID64 === 'function') {
-    return (input as SteamIDLike).getSteamID64();
+  let result: string;
+  if (typeof input === 'string') result = input;
+  else if (typeof input === 'number') result = String(input);
+  else if (input && typeof (input as SteamIDLike).getSteamID64 === 'function') {
+    result = (input as SteamIDLike).getSteamID64();
+  } else {
+    result = String(input);
   }
-  return String(input);
+
+  if (!/^\d{17}$/.test(result)) {
+    throw new SteamError(SteamErrorType.ValidationError, 'Invalid Steam ID: must be exactly 17 digits');
+  }
+  return result;
 }
 
 /**
  * Coerce appID/contextID to number (FR41).
  */
 export function coerceNumber(input: string | number): number {
-  return typeof input === 'string' ? parseInt(input, 10) : input;
+  const result = typeof input === 'string' ? parseInt(input, 10) : input;
+  if (Number.isNaN(result)) {
+    throw new SteamError(SteamErrorType.ValidationError, `Invalid number: ${input}`);
+  }
+  return result;
 }
 
 /**

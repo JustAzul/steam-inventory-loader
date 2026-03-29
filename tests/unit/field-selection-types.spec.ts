@@ -16,7 +16,7 @@ describe('Type-safe field selection', () => {
     });
 
     it('specific fields → narrowed to selected fields + assetid', () => {
-      const fn = (l: Loader) => l.load('123', 730, 2, {
+      const fn = (l: Loader) => l.load('76561198000000123', 730, 2, {
         fields: [Fields.NAME, Fields.TRADABLE] as const,
       });
       type Result = Awaited<ReturnType<typeof fn>>;
@@ -25,7 +25,7 @@ describe('Type-safe field selection', () => {
     });
 
     it('single field → narrowed to that field + assetid', () => {
-      const fn = (l: Loader) => l.load('123', 730, 2, {
+      const fn = (l: Loader) => l.load('76561198000000123', 730, 2, {
         fields: [Fields.MARKET_HASH_NAME] as const,
       });
       type Result = Awaited<ReturnType<typeof fn>>;
@@ -34,7 +34,7 @@ describe('Type-safe field selection', () => {
     });
 
     it('wide Fields[] → PartialItem fallback', () => {
-      const fn = (l: Loader, f: Fields[]) => l.load('123', 730, 2, { fields: f });
+      const fn = (l: Loader, f: Fields[]) => l.load('76561198000000123', 730, 2, { fields: f });
       type Result = Awaited<ReturnType<typeof fn>>;
       expectTypeOf<Result>().toEqualTypeOf<LoaderResponse<PartialItem>>();
     });
@@ -49,7 +49,7 @@ describe('Type-safe field selection', () => {
 
     it('specific fields → AsyncGenerator<narrowed[]>', () => {
       // Type-only: verify narrowing via a typed function reference
-      const fn = (l: Loader) => l.loadStream('123', 730, 2, {
+      const fn = (l: Loader) => l.loadStream('76561198000000123', 730, 2, {
         fields: [Fields.NAME, Fields.TRADABLE] as const,
       });
       type Result = ReturnType<typeof fn>;
@@ -65,7 +65,7 @@ describe('Type-safe field selection', () => {
     });
 
     it('specific fields → narrowed', () => {
-      const fn = () => Loader.Loader('123', 730, 2, {
+      const fn = () => Loader.Loader('76561198000000123', 730, 2, {
         fields: [Fields.NAME] as const,
       });
       type Result = Awaited<ReturnType<typeof fn>>;

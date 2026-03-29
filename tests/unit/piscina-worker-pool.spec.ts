@@ -44,4 +44,14 @@ describe('PiscinaWorkerPool', () => {
     // Pool not yet initialized (no run() call) — destroy should be safe
     await expect(pool.destroy()).resolves.toBeUndefined();
   });
+
+  it('poolPromise is null before first access and null after destroy', async () => {
+    const { PiscinaWorkerPool } = await import('../../src/worker/piscina-worker-pool.js');
+    const pool = new PiscinaWorkerPool();
+    expect((pool as any).poolPromise).toBeNull();
+
+    // After destroy, poolPromise should be reset to null
+    await pool.destroy();
+    expect((pool as any).poolPromise).toBeNull();
+  });
 });

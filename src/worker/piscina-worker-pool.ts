@@ -19,6 +19,8 @@ export class PiscinaWorkerPool implements IWorkerPool {
   // Typed as any to avoid Piscina namespace/class DTS re-export issues.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private pool: any = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private poolPromise: Promise<any> | null = null;
   private readonly maxWorkers: number;
   private readonly filename: string;
 
@@ -31,16 +33,15 @@ export class PiscinaWorkerPool implements IWorkerPool {
     this.filename = options?.filename ?? resolve(base, 'process-page-task.js');
   }
 
-  private async getPool(): Promise<any> {
-    if (!this.pool) {
-      const { Piscina } = await import('piscina');
+  private getPool(): Promise<any> {
+    return this.poolPromise ??= import('piscina').then(({ Piscina }) => {
       this.pool = new Piscina({
         filename: this.filename,
         maxThreads: this.maxWorkers,
         minThreads: 1,
       });
-    }
-    return this.pool;
+      return this.pool;
+    });
   }
 
   async run<T>(task: string, data: unknown): Promise<T> {
@@ -53,5 +54,6 @@ export class PiscinaWorkerPool implements IWorkerPool {
       await this.pool.destroy();
       this.pool = null;
     }
+    this.poolPromise = null;
   }
 }

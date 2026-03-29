@@ -195,7 +195,7 @@ describe('loadStream', () => {
     // Cold load to populate cache
     const http1 = new FixtureHttpClient(3);
     const loader1 = new Loader(http1, cache);
-    await loader1.load('cache-test', 753, 6, {
+    await loader1.load('76561198000000002', 753, 6, {
       cache: true, requestDelay: 0, tradableOnly: false,
     });
 
@@ -203,7 +203,7 @@ describe('loadStream', () => {
     const http2 = new FixtureHttpClient(3);
     const loader2 = new Loader(http2, cache);
     const batches = await collectBatches(
-      loader2.loadStream('cache-test', 753, 6, {
+      loader2.loadStream('76561198000000002', 753, 6, {
         cache: true, requestDelay: 0, tradableOnly: false,
       }),
     );
@@ -223,7 +223,7 @@ describe('loadStream', () => {
 
     const loader = new Loader(new FixtureHttpClient(1), cache);
     await collectBatches(
-      loader.loadStream('no-cache-write', 753, 6, {
+      loader.loadStream('76561198000000003', 753, 6, {
         cache: true, requestDelay: 0,
       }),
     );
@@ -330,7 +330,7 @@ describe('loadStream', () => {
 
     const loader = new Loader(http);
     await collectBatches(
-      loader.loadStream('123', 753, 6, { cache: false, requestDelay: 0 }),
+      loader.loadStream('76561198000000123', 753, 6, { cache: false, requestDelay: 0 }),
     );
 
     expect(Loader.activeLoads).toBe(initial);

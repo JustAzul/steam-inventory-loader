@@ -10,6 +10,7 @@ const DEFAULT_MESSAGES: Record<SteamErrorType, string> = {
   [SteamErrorType.MalformedData]: 'Malformed data in response',
   [SteamErrorType.NetworkError]: 'Network error',
   [SteamErrorType.BadStatus]: 'Bad status',
+  [SteamErrorType.ValidationError]: 'Validation error',
 };
 
 export class SteamError extends Error {

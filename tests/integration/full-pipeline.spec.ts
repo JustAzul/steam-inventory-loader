@@ -232,10 +232,10 @@ describe('Cache integration', () => {
     };
     const loader = new Loader(http, isolated);
 
-    await loader.load('cache-miss-test', 753, 6, {
+    await loader.load('76561198000000004', 753, 6, {
       cache: true, requestDelay: 0, tradableOnly: false,
     });
-    await loader.load('cache-miss-test', 753, 6, {
+    await loader.load('76561198000000004', 753, 6, {
       cache: true, requestDelay: 0, tradableOnly: true, // different param → miss
     });
 
@@ -273,7 +273,7 @@ describe('Error paths', () => {
       destroy: () => {},
     };
     const loader = new Loader(http);
-    const result = await loader.load('123', 753, 6, {
+    const result = await loader.load('76561198000000123', 753, 6, {
       cache: false, requestDelay: 0, maxRetries: 0,
     });
     expect(result.success).toBe(false);
@@ -288,7 +288,7 @@ describe('Error paths', () => {
       destroy: () => {},
     };
     const loader = new Loader(http);
-    const result = await loader.load('123', 753, 6, {
+    const result = await loader.load('76561198000000123', 753, 6, {
       cache: false, requestDelay: 0, maxRetries: 0,
     });
     expect(result.success).toBe(false);
@@ -301,7 +301,7 @@ describe('Error paths', () => {
       destroy: () => {},
     };
     const loader = new Loader(http);
-    const result = await loader.load('123', 753, 6, {
+    const result = await loader.load('76561198000000123', 753, 6, {
       cache: false, requestDelay: 0, maxRetries: 0,
     });
     expect(result.success).toBe(false);
@@ -318,7 +318,7 @@ describe('Error paths', () => {
       destroy: () => {},
     };
     const loader = new Loader(http);
-    const result = await loader.load('123', 753, 6, {
+    const result = await loader.load('76561198000000123', 753, 6, {
       cache: false, requestDelay: 0, maxRetries: 0,
     });
     expect(result.success).toBe(false);

@@ -6,7 +6,7 @@ const ERESULT_PATTERN = /^(.+) \((\d+)\)$/;
  * Parse raw JSON string from Steam API into a typed InventoryPage.
  * Pure function — no side effects or external dependencies.
  */
-export function parseInventoryPage(json: string): InventoryPage {
+export function parseInventoryPage(json: string, onWarn?: (message: string) => void): InventoryPage {
   let raw: Record<string, unknown>;
 
   try {
@@ -44,8 +44,24 @@ export function parseInventoryPage(json: string): InventoryPage {
     }
   }
 
-  const assets = (Array.isArray(raw.assets) ? raw.assets : []) as ItemAsset[];
-  const descriptions = (Array.isArray(raw.descriptions) ? raw.descriptions : []) as ItemDescription[];
+  const rawAssets = Array.isArray(raw.assets) ? raw.assets as unknown[] : [];
+  const rawDescriptions = Array.isArray(raw.descriptions) ? raw.descriptions as unknown[] : [];
+
+  const assets = rawAssets.filter(
+    (a): a is ItemAsset => !!a && typeof (a as ItemAsset).assetid === 'string' && typeof (a as ItemAsset).classid === 'string',
+  );
+  const droppedAssets = rawAssets.length - assets.length;
+  if (droppedAssets > 0) {
+    onWarn?.(`[azul-steam-inventory-loader] Dropped ${droppedAssets} malformed asset(s) missing assetid/classid`);
+  }
+
+  const descriptions = rawDescriptions.filter(
+    (d): d is ItemDescription => !!d && typeof (d as ItemDescription).classid === 'string',
+  );
+  const droppedDescriptions = rawDescriptions.length - descriptions.length;
+  if (droppedDescriptions > 0) {
+    onWarn?.(`[azul-steam-inventory-loader] Dropped ${droppedDescriptions} malformed description(s) missing classid`);
+  }
 
   const moreItems = Boolean(raw.more_items);
   const lastAssetId = raw.last_assetid ? String(raw.last_assetid) : null;

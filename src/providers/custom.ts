@@ -3,6 +3,9 @@ import type { HttpRequest, PageRequest, LoaderConfig, SteamErrorInfo } from '../
 import { SteamError } from '../errors/errors.js';
 import { BaseInventoryProvider } from './base-provider.js';
 
+/** Headers that should not be overridden by customHeaders — may break HTTP transport. */
+const DANGEROUS_HEADERS = ['host', 'content-length', 'transfer-encoding', 'connection'];
+
 /**
  * Custom provider — user-provided endpoint (FR05).
  * Clears API keys when custom endpoint is configured.
@@ -26,6 +29,14 @@ export class CustomProvider extends BaseInventoryProvider {
       queryParams.start_assetid = params.cursor;
     }
 
+    if (config.customHeaders) {
+      const dangerous = Object.keys(config.customHeaders)
+        .filter(h => DANGEROUS_HEADERS.includes(h.toLowerCase()));
+      if (dangerous.length > 0) {
+        config.onWarn(`[azul-steam-inventory-loader] customHeaders contains dangerous header(s): ${dangerous.join(', ')}. These may break HTTP transport.`);
+      }
+    }
+
     return {
       method: 'GET',
       url,
@@ -37,7 +48,8 @@ export class CustomProvider extends BaseInventoryProvider {
   }
 
   classifyError(status: number, _body: unknown): SteamErrorInfo {
-    if (status === 429) return new SteamError(SteamErrorType.RateLimited);
+    const common = this.classifyCommonErrors(status);
+    if (common) return common;
     if (status === 403) return new SteamError(SteamErrorType.PrivateProfile);
     return SteamError.badStatus(status);
   }

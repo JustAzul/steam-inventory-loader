@@ -49,9 +49,13 @@ export class PaginationOrchestrator {
     this.limiter = getRateLimiter(
       deps.provider.name, deps.config.requestDelay, deps.config.rateLimitCooldown,
     );
-    this.processor = new PageProcessor(
-      deps.pool, deps.parseConfig, deps.config, deps.activeLoadsGetter, deps.customStrategy,
-    );
+    this.processor = new PageProcessor({
+      pool: deps.pool,
+      parseConfig: deps.parseConfig,
+      config: deps.config,
+      activeLoadsGetter: deps.activeLoadsGetter,
+      customStrategy: deps.customStrategy,
+    });
   }
 
   get lastCursor(): string | null {
@@ -141,7 +145,7 @@ export class PaginationOrchestrator {
       };
     }
 
-    const page = this.provider.parseResponse(response.data);
+    const page = this.provider.parseResponse(response.data, this.config.onWarn);
 
     if (!page.success) {
       return {

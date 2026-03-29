@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { coerceSteamId, coerceNumber, mapV3Config } from '../../src/compat/v3-compat.js';
 import { getTag, getLargeImageURL, isCardType } from '../../src/compat/utils.js';
+import { SteamErrorType } from '../../src/types.js';
 import type { Tag, ItemDetails } from '../../src/types.js';
 
 describe('coerceSteamId', () => {
@@ -8,14 +9,29 @@ describe('coerceSteamId', () => {
     expect(coerceSteamId('76561198356905764')).toBe('76561198356905764');
   });
 
-  it('number → string (note: large IDs lose precision)', () => {
-    // SteamID64 exceeds Number.MAX_SAFE_INTEGER — real usage is always string
-    expect(coerceSteamId(12345)).toBe('12345');
+  it('rejects non-17-digit number', () => {
+    expect(() => coerceSteamId(12345)).toThrow('Invalid Steam ID');
   });
 
   it('SteamID object → .getSteamID64() (FR40)', () => {
     const obj = { getSteamID64: () => '76561198356905764' };
     expect(coerceSteamId(obj)).toBe('76561198356905764');
+  });
+
+  it('rejects alphabetic string', () => {
+    expect(() => coerceSteamId('abc')).toThrow('Invalid Steam ID');
+  });
+
+  it('rejects too-short numeric string', () => {
+    expect(() => coerceSteamId('1234')).toThrow('Invalid Steam ID');
+  });
+
+  it('throws SteamError with ValidationError type', () => {
+    try {
+      coerceSteamId('bad');
+    } catch (err: any) {
+      expect(err.type).toBe(SteamErrorType.ValidationError);
+    }
   });
 });
 
@@ -26,6 +42,14 @@ describe('coerceNumber', () => {
 
   it('number passthrough', () => {
     expect(coerceNumber(6)).toBe(6);
+  });
+
+  it('rejects non-numeric string', () => {
+    expect(() => coerceNumber('abc')).toThrow('Invalid number');
+  });
+
+  it('rejects empty string', () => {
+    expect(() => coerceNumber('')).toThrow('Invalid number');
   });
 });
 

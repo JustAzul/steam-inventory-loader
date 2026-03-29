@@ -47,6 +47,11 @@ export function resolveProviderChain(config: LoaderConfig): IInventoryProvider[]
 
   // If priority list yielded nothing, fall back to community
   if (chain.length === 0) {
+    if (config.endpointPriority.length > 0) {
+      config.onWarn(
+        `[azul-steam-inventory-loader] Configured endpointPriority [${config.endpointPriority.join(', ')}] yielded no available providers. Falling back to community.`,
+      );
+    }
     const community = allProviders['community'];
     if (community && community.isAvailable(config)) {
       chain.push(community);

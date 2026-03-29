@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { Loader } from '../../src/loader/loader.js';
@@ -63,7 +63,7 @@ describe('Provider Chain Scenarios', () => {
     };
 
     const loader = new Loader(http);
-    const result = await loader.load('123', 753, 6, {
+    const result = await loader.load('76561198000000123', 753, 6, {
       cache: false, requestDelay: 0, maxRetries: 0,
       steamApisKey: 'test-key',
       endpointPriority: ['community', 'steamApis'],
@@ -84,7 +84,7 @@ describe('Provider Chain Scenarios', () => {
     };
 
     const loader = new Loader(http);
-    const result = await loader.load('123', 753, 6, {
+    const result = await loader.load('76561198000000123', 753, 6, {
       cache: false, requestDelay: 0, maxRetries: 0,
       steamApisKey: 'test-key',
       endpointPriority: ['community', 'steamApis'],
@@ -105,7 +105,7 @@ describe('Provider Chain Scenarios', () => {
     };
 
     const loader = new Loader(http);
-    const result = await loader.load('123', 753, 6, {
+    const result = await loader.load('76561198000000123', 753, 6, {
       cache: false, requestDelay: 0, maxRetries: 0,
       steamApisKey: 'key',
       endpointPriority: ['community', 'steamApis'],
@@ -113,6 +113,34 @@ describe('Provider Chain Scenarios', () => {
 
     expect(result.success).toBe(false);
     expect(result.error?.type).toBe('rate_limited');
+  });
+
+  it('warns when endpointPriority produces empty chain before falling back (M4)', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const http: IHttpClient = {
+      async execute(): Promise<HttpResponse> {
+        return {
+          status: 200,
+          data: { success: 1, total_inventory_count: 0, assets: [], descriptions: [] },
+          headers: {},
+        };
+      },
+      destroy() {},
+    };
+
+    const loader = new Loader(http);
+    await loader.load('76561198000000123', 753, 6, {
+      cache: false, requestDelay: 0,
+      endpointPriority: ['steamApis'], // no key → unavailable
+    });
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('steamApis'),
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Falling back to community'),
+    );
+    warnSpy.mockRestore();
   });
 
   it('all priority providers unavailable → fallback to community', async () => {
@@ -128,7 +156,7 @@ describe('Provider Chain Scenarios', () => {
     };
 
     const loader = new Loader(http);
-    const result = await loader.load('123', 753, 6, {
+    const result = await loader.load('76561198000000123', 753, 6, {
       cache: false, requestDelay: 0,
       // steamApis in priority but no key → unavailable → falls back to community
       endpointPriority: ['steamApis'],
@@ -152,7 +180,7 @@ describe('Provider Chain Scenarios', () => {
     };
 
     const loader = new Loader(http);
-    await loader.load('123', 753, 6, {
+    await loader.load('76561198000000123', 753, 6, {
       cache: false, requestDelay: 0,
       customEndpoint: 'https://my.proxy.com',
       steamApisKey: 'should-be-cleared',
@@ -169,11 +197,11 @@ describe('Provider Chain Scenarios', () => {
     // This is tested via config normalization, but verify end-to-end
     // The config normalizer sets delay=0 for paid APIs
     const { normalizeConfig } = await import('../../src/loader/config.js');
-    const config = normalizeConfig('123', 753, 6, { steamApisKey: 'key' });
+    const config = normalizeConfig('76561198000000123', 753, 6, { steamApisKey: 'key' });
     expect(config.requestDelay).toBe(0);
 
     // But explicit delay is preserved
-    const config2 = normalizeConfig('123', 753, 6, { steamApisKey: 'key', requestDelay: 2000 });
+    const config2 = normalizeConfig('76561198000000123', 753, 6, { steamApisKey: 'key', requestDelay: 2000 });
     expect(config2.requestDelay).toBe(2000);
   });
 });
@@ -209,7 +237,7 @@ describe('Long-term Resilience', () => {
     };
 
     const loader = new Loader(http);
-    const result = await loader.load('123', 753, 6, {
+    const result = await loader.load('76561198000000123', 753, 6, {
       cache: false, requestDelay: 0, tradableOnly: false,
     });
 
@@ -236,7 +264,7 @@ describe('Long-term Resilience', () => {
     };
 
     const loader = new Loader(http);
-    const result = await loader.load('123', 753, 6, {
+    const result = await loader.load('76561198000000123', 753, 6, {
       cache: false, requestDelay: 0, tradableOnly: false,
     });
 
@@ -269,7 +297,7 @@ describe('Long-term Resilience', () => {
     };
 
     const loader = new Loader(http);
-    const result = await loader.load('123', 753, 6, {
+    const result = await loader.load('76561198000000123', 753, 6, {
       cache: false, requestDelay: 0, tradableOnly: false,
     });
 
@@ -297,7 +325,7 @@ describe('Long-term Resilience', () => {
     };
 
     const loader = new Loader(http);
-    const result = await loader.load('123', 753, 6, {
+    const result = await loader.load('76561198000000123', 753, 6, {
       cache: false, requestDelay: 0, tradableOnly: false,
     });
 
@@ -323,7 +351,7 @@ describe('Long-term Resilience', () => {
     };
 
     const loader = new Loader(http);
-    const result = await loader.load('123', 753, 6, {
+    const result = await loader.load('76561198000000123', 753, 6, {
       cache: false, requestDelay: 0, tradableOnly: false,
     });
 
@@ -355,7 +383,7 @@ describe('Long-term Resilience', () => {
       };
 
       const loader = new Loader(http);
-      const result = await loader.load('123', 753, 6, {
+      const result = await loader.load('76561198000000123', 753, 6, {
         cache: false, requestDelay: 0, maxRetries: 0,
       });
 

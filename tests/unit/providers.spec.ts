@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { SteamCommunityProvider } from '../../src/providers/steam-community.js';
 import { SteamApisProvider } from '../../src/providers/steam-apis.js';
 import { SteamSupplyProvider } from '../../src/providers/steam-supply.js';
@@ -11,7 +11,9 @@ function makeConfig(overrides: Partial<LoaderConfig> = {}): LoaderConfig {
     steamId: '76561198356905764', appId: 753, contextId: 6,
     language: 'english', tradableOnly: true, itemsPerPage: 2000,
     maxRetries: 3, requestDelay: 4000, cache: true, cacheTTL: 60000,
-    cacheMaxEntries: 20, endpointPriority: ['community'],
+    cacheMaxEntries: 20, cacheMaxSize: 512 * 1024 * 1024,
+    endpointPriority: ['community'], rateLimitCooldown: 30000,
+    onWarn: console.warn,
     ...overrides,
   };
 }
@@ -129,6 +131,27 @@ describe('CustomProvider', () => {
   it('is available only when customEndpoint set', () => {
     expect(provider.isAvailable(makeConfig())).toBe(false);
     expect(provider.isAvailable(makeConfig({ customEndpoint: 'https://x.com' }))).toBe(true);
+  });
+
+  it('warns when customHeaders contains dangerous headers', () => {
+    const onWarn = vi.fn();
+    provider.buildRequest(makeParams(), makeConfig({
+      customEndpoint: 'https://my.api.com',
+      customHeaders: { Host: 'evil.com', 'X-Custom': 'safe' },
+      onWarn,
+    }));
+    expect(onWarn).toHaveBeenCalledOnce();
+    expect(onWarn.mock.calls[0][0]).toContain('Host');
+  });
+
+  it('does not warn when customHeaders has no dangerous headers', () => {
+    const onWarn = vi.fn();
+    provider.buildRequest(makeParams(), makeConfig({
+      customEndpoint: 'https://my.api.com',
+      customHeaders: { 'X-Api-Key': 'abc' },
+      onWarn,
+    }));
+    expect(onWarn).not.toHaveBeenCalled();
   });
 });
 

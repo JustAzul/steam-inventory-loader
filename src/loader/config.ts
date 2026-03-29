@@ -13,6 +13,7 @@ const DEFAULTS: Omit<LoaderConfig, 'steamId' | 'appId' | 'contextId'> = {
   cacheMaxSize: 512 * 1024 * 1024,
   endpointPriority: ['community'],
   rateLimitCooldown: 30_000,
+  onWarn: (msg: string) => { console.warn(msg); },
 };
 
 /**
@@ -39,6 +40,7 @@ function flattenGroupedConfig(config: LoadConfig): FlatConfig & { cookies?: stri
     proxy: config.proxy,
     maxWorkers: config.maxWorkers,
     rateLimitCooldown: config.rateLimit?.defaultCooldown,
+    onWarn: config.onWarn,
   };
 
   // Cache: boolean or object
@@ -103,8 +105,23 @@ export function buildLoaderConfig(
     fields: mapped.fields,
     maxWorkers: mapped.maxWorkers,
     rateLimitCooldown: mapped.rateLimitCooldown ?? DEFAULTS.rateLimitCooldown,
+    onWarn: mapped.onWarn ?? DEFAULTS.onWarn,
   };
 
+  applyBusinessRules(config, mapped);
+
+  return config;
+}
+
+/**
+ * Apply business rules on top of the normalized config:
+ * - FR38: Paid API forces delay=0 when not explicitly set
+ * - FR05: Custom endpoint validation + auto-routing + clears API keys
+ */
+function applyBusinessRules(
+  config: LoaderConfig,
+  mapped: FlatConfig & { cookies?: string[]; rateLimitCooldown?: number },
+): void {
   // FR38: Paid API forces delay=0 when not explicit
   if ((config.steamApisKey || config.steamSupplyKey) && mapped.requestDelay === undefined) {
     config.requestDelay = 0;
@@ -116,7 +133,7 @@ export function buildLoaderConfig(
     try {
       parsedUrl = new URL(config.customEndpoint);
     } catch {
-      throw new Error(`Invalid customEndpoint URL: ${config.customEndpoint}`);
+      throw new Error('Invalid customEndpoint URL');
     }
     if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
       throw new Error(`Unsupported protocol "${parsedUrl.protocol}" in customEndpoint — only http: and https: are allowed`);
@@ -130,8 +147,6 @@ export function buildLoaderConfig(
     config.steamApisKey = undefined;
     config.steamSupplyKey = undefined;
   }
-
-  return config;
 }
 
 /** @deprecated Use buildLoaderConfig instead. */

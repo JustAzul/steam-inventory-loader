@@ -95,8 +95,8 @@ describe('Loader', () => {
     };
 
     const loader = new Loader(http);
-    await loader.load('123', 753, 6, { cache: false, requestDelay: 0 });
-    await loader.load('123', 753, 6, { cache: false, requestDelay: 0 });
+    await loader.load('76561198000000123', 753, 6, { cache: false, requestDelay: 0 });
+    await loader.load('76561198000000123', 753, 6, { cache: false, requestDelay: 0 });
     expect(callCount).toBe(2);
   });
 
@@ -107,7 +107,7 @@ describe('Loader', () => {
     };
 
     const loader = new Loader(http);
-    const result = await loader.load('123', 753, 6, {
+    const result = await loader.load('76561198000000123', 753, 6, {
       cache: false, requestDelay: 0, maxRetries: 0,
     });
 
@@ -150,8 +150,8 @@ describe('Loader', () => {
     const loader1 = new Loader(http, shared);
     const loader2 = new Loader(http, shared);
 
-    await loader1.load('shared-test', 753, 6, { cache: true, requestDelay: 0 });
-    await loader2.load('shared-test', 753, 6, { cache: true, requestDelay: 0 });
+    await loader1.load('76561198000000001', 753, 6, { cache: true, requestDelay: 0 });
+    await loader2.load('76561198000000001', 753, 6, { cache: true, requestDelay: 0 });
 
     expect(callCount).toBe(1);
   });
@@ -325,7 +325,7 @@ describe('Loader — adaptive workers (FR58-FR61)', () => {
     };
 
     const loader = new Loader(http);
-    await loader.load('123', 753, 6, { cache: false, requestDelay: 0 });
+    await loader.load('76561198000000123', 753, 6, { cache: false, requestDelay: 0 });
 
     // After completion, should be back to initial
     expect(Loader.activeLoads).toBe(initial);

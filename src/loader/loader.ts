@@ -118,6 +118,13 @@ export class Loader {
     resetRateLimiters();
   }
 
+  private resolvePool(config: LoaderConfig): { pool: IWorkerPool | null; autoPool: PiscinaWorkerPool | null } {
+    const autoPool = !this.workerPool && config.maxWorkers
+      ? new PiscinaWorkerPool({ maxWorkers: config.maxWorkers })
+      : null;
+    return { pool: this.workerPool ?? autoPool, autoPool };
+  }
+
   // ─── Public API ──────────────────────────────────────────────────────────
 
   /**
@@ -171,10 +178,7 @@ export class Loader {
     Loader.activeLoads++;
     const config = buildLoaderConfig(steamId, appId, contextId, userConfig);
 
-    const autoPool = !this.workerPool && config.maxWorkers
-      ? new PiscinaWorkerPool({ maxWorkers: config.maxWorkers })
-      : null;
-    const pool = this.workerPool ?? autoPool;
+    const { pool, autoPool } = this.resolvePool(config);
 
     try {
       const cached = this.checkCache(config);
@@ -191,29 +195,12 @@ export class Loader {
       const parseConfig = this.buildParseConfig(config);
       const customStrategy = this.registry.hasCustomStrategy(config.appId, config.contextId);
 
-      let hasYielded = false;
-      let lastError: SteamError | null = null;
-
-      for (let i = 0; i < chain.length; i++) {
-        const canFallback = !hasYielded && i < chain.length - 1;
-        try {
-          const orchestrator = this.createOrchestrator(chain[i], config, parseConfig, canFallback, pool, customStrategy);
-          for await (const batch of orchestrator.streamPages()) {
-            yield batch;
-            hasYielded = true;
-          }
-          return;
-        } catch (err) {
-          const steamErr = toSteamError(err);
-          if (canFallback && chain[i].shouldFallback(steamErr)) {
-            lastError = steamErr;
-            continue;
-          }
-          throw steamErr;
-        }
+      for await (const { batch } of this.runProviderChain(chain, config, parseConfig, pool, customStrategy, {
+        canFallback: (i, hasYielded) => !hasYielded && i < chain.length - 1,
+        supportsCursorResume: false,
+      })) {
+        yield batch;
       }
-
-      throw lastError ?? new SteamError(SteamErrorType.RateLimited, 'All providers rate limited');
     } finally {
       Loader.activeLoads--;
       if (autoPool) await autoPool.destroy();
@@ -230,10 +217,7 @@ export class Loader {
   ): Promise<LoaderResponse> {
     const config = buildLoaderConfig(steamId, appId, contextId, userConfig);
 
-    const autoPool = !this.workerPool && config.maxWorkers
-      ? new PiscinaWorkerPool({ maxWorkers: config.maxWorkers })
-      : null;
-    const pool = this.workerPool ?? autoPool;
+    const { pool, autoPool } = this.resolvePool(config);
 
     try {
       return await this._loadInner(config, pool);
@@ -254,38 +238,67 @@ export class Loader {
     const parseConfig = this.buildParseConfig(config);
     const customStrategy = this.registry.hasCustomStrategy(config.appId, config.contextId);
 
+    try {
+      let inventory: ItemDetails[] = [];
+      for await (const { batch, resetInventory } of this.runProviderChain(chain, config, parseConfig, pool, customStrategy, {
+        canFallback: (i) => i < chain.length - 1,
+        supportsCursorResume: true,
+      })) {
+        if (resetInventory) inventory = [];
+        inventory.push(...batch);
+      }
+      return this.cacheAndReturn(inventory, config);
+    } catch (err) {
+      return errorResponse(toSteamError(err));
+    }
+  }
+
+  private async *runProviderChain(
+    chain: IInventoryProvider[],
+    config: LoaderConfig,
+    parseConfig: ParseConfig,
+    pool: IWorkerPool | null,
+    customStrategy: boolean,
+    opts: {
+      canFallback: (i: number, hasYielded: boolean) => boolean;
+      supportsCursorResume: boolean;
+    },
+  ): AsyncGenerator<{ batch: ItemDetails[]; resetInventory: boolean }> {
+    let hasYielded = false;
     let lastError: SteamError | null = null;
-    let inventory: ItemDetails[] = [];
     let cursor: string | null = null;
 
     for (let i = 0; i < chain.length; i++) {
-      const canFallback = i < chain.length - 1;
-      const orchestrator = this.createOrchestrator(chain[i], config, parseConfig, canFallback, pool, customStrategy);
+      const fallbackAllowed = opts.canFallback(i, hasYielded);
+      const orchestrator = this.createOrchestrator(chain[i], config, parseConfig, fallbackAllowed, pool, customStrategy);
       try {
         for await (const batch of orchestrator.streamPages(cursor)) {
-          inventory.push(...batch);
+          yield { batch, resetInventory: false };
+          hasYielded = true;
         }
-        return this.cacheAndReturn(inventory, config);
+        return; // Completed successfully
       } catch (err) {
         const steamErr = toSteamError(err);
-        if (canFallback && chain[i].shouldFallback(steamErr)) {
+        if (fallbackAllowed && chain[i].shouldFallback(steamErr)) {
           // Cursor-compatible fallback: resume from last cursor if next provider is compatible
-          if (i + 1 < chain.length && isCursorCompatible(chain[i], chain[i + 1]) && orchestrator.lastCursor) {
+          if (opts.supportsCursorResume && i + 1 < chain.length
+            && isCursorCompatible(chain[i], chain[i + 1]) && orchestrator.lastCursor) {
             cursor = orchestrator.lastCursor;
           } else {
             cursor = null;
-            inventory = [];
+            if (hasYielded) {
+              yield { batch: [], resetInventory: true };
+              hasYielded = false;
+            }
           }
           lastError = steamErr;
           continue;
         }
-        return errorResponse(steamErr);
+        throw steamErr;
       }
     }
 
-    return errorResponse(
-      lastError ?? new SteamError(SteamErrorType.RateLimited, 'All providers rate limited'),
-    );
+    throw lastError ?? new SteamError(SteamErrorType.RateLimited, 'All providers rate limited');
   }
 
   private checkCache(config: LoaderConfig): LoaderResponse | undefined {

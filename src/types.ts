@@ -218,6 +218,7 @@ export enum SteamErrorType {
   MalformedData = 'malformed_data',
   NetworkError = 'network_error',
   BadStatus = 'bad_status',
+  ValidationError = 'validation_error',
 }
 
 export interface SteamErrorInfo {
@@ -282,7 +283,7 @@ export interface IInventoryProvider {
   /** Build HTTP request for a single page. */
   buildRequest(params: PageRequest, config: LoaderConfig): HttpRequest;
   /** Parse raw HTTP response into InventoryPage. */
-  parseResponse(raw: unknown): InventoryPage;
+  parseResponse(raw: unknown, onWarn?: (message: string) => void): InventoryPage;
   /** Extract next cursor from parsed page, or null if done. */
   getNextCursor(page: InventoryPage): string | null;
   /** Classify HTTP error into typed SteamError. */
@@ -345,6 +346,11 @@ export interface LoaderConfig {
   fields?: readonly Fields[];
   endpointPriority: string[];
   steamApisKey?: string;
+  /**
+   * Steam.Supply API key.
+   * @warning Steam.Supply is a third-party service with no SLA guarantee.
+   * The key appears in the URL path (visible in logs and network traces).
+   */
   steamSupplyKey?: string;
   customEndpoint?: string;
   customHeaders?: Record<string, string>;
@@ -354,6 +360,8 @@ export interface LoaderConfig {
   maxWorkers?: number;
   /** Default cooldown in ms when a 429 has no Retry-After header. Default: 30000. */
   rateLimitCooldown: number;
+  /** Optional warning handler. Receives diagnostic messages (malformed data, fallback events). Default: console.warn. */
+  onWarn: (message: string) => void;
 }
 
 // ─── User-Facing Config ──────────────────────────────────────────────────
@@ -374,7 +382,11 @@ export interface ProviderConfig {
   priority?: string[];
   /** SteamApis.com API key. Enables 'steamApis' provider. */
   steamApisKey?: string;
-  /** Steam.Supply API key. Enables 'steamSupply' provider. */
+  /**
+   * Steam.Supply API key. Enables 'steamSupply' provider.
+   * @warning Steam.Supply is a third-party service with no SLA guarantee.
+   * The key appears in the URL path (visible in logs and network traces).
+   */
   steamSupplyKey?: string;
   /** Custom provider URL. Enables 'custom' provider. */
   customEndpoint?: string;
@@ -424,6 +436,8 @@ export interface LoadConfig {
   maxWorkers?: number;
   /** Rate limit coordination config. */
   rateLimit?: RateLimitConfig;
+  /** Optional warning handler. Default: console.warn. Pass a no-op to suppress. */
+  onWarn?: (message: string) => void;
 }
 
 /**
@@ -454,6 +468,8 @@ export interface FlatConfig {
   Language?: string;
   /** Max worker threads for adaptive worker pool (FR61). */
   maxWorkers?: number;
+  /** Optional warning handler. Default: console.warn. Pass a no-op to suppress. */
+  onWarn?: (message: string) => void;
 }
 
 /** User-facing config accepted by load() and loadStream(). */

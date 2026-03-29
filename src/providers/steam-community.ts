@@ -39,7 +39,8 @@ export class SteamCommunityProvider extends BaseInventoryProvider {
   }
 
   classifyError(status: number, _body: unknown): SteamErrorInfo {
-    if (status === 429) return new SteamError(SteamErrorType.RateLimited);
+    const common = this.classifyCommonErrors(status);
+    if (common) return common;
     if (status === 403) return new SteamError(SteamErrorType.PrivateProfile);
     if (status === 401) return new SteamError(SteamErrorType.AuthFailed);
     return SteamError.badStatus(status);

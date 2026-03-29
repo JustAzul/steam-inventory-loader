@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { parseInventoryPage } from '../../src/pipeline/parser.js';
@@ -139,5 +139,48 @@ describe('parseInventoryPage', () => {
     expect(page.error).toBeTruthy();
     expect(page.assets).toEqual([]);
     expect(page.descriptions).toEqual([]);
+  });
+
+  it('filters out assets missing assetid or classid (M6)', () => {
+    const onWarn = vi.fn();
+    const json = JSON.stringify({
+      success: 1,
+      total_inventory_count: 3,
+      assets: [
+        { appid: 753, contextid: '6', assetid: '1', classid: '1', instanceid: '0', amount: '1' },
+        { appid: 753, contextid: '6', classid: '2', instanceid: '0', amount: '1' }, // missing assetid
+        { appid: 753, contextid: '6', assetid: '3', instanceid: '0', amount: '1' }, // missing classid
+        { appid: 753, contextid: '6', assetid: 123, classid: '4', instanceid: '0', amount: '1' }, // assetid not string
+      ],
+      descriptions: [
+        { appid: 753, classid: '1', instanceid: '0' },
+      ],
+    });
+    const page = parseInventoryPage(json, onWarn);
+
+    expect(page.assets.length).toBe(1);
+    expect(page.assets[0].assetid).toBe('1');
+    expect(onWarn).toHaveBeenCalledWith(expect.stringContaining('3 malformed asset'));
+  });
+
+  it('filters out descriptions missing classid (M6)', () => {
+    const onWarn = vi.fn();
+    const json = JSON.stringify({
+      success: 1,
+      total_inventory_count: 1,
+      assets: [
+        { appid: 753, contextid: '6', assetid: '1', classid: '1', instanceid: '0', amount: '1' },
+      ],
+      descriptions: [
+        { appid: 753, classid: '1', instanceid: '0' },
+        { appid: 753, instanceid: '0' }, // missing classid
+        { appid: 753, classid: 999, instanceid: '0' }, // classid not string
+      ],
+    });
+    const page = parseInventoryPage(json, onWarn);
+
+    expect(page.descriptions.length).toBe(1);
+    expect(page.descriptions[0].classid).toBe('1');
+    expect(onWarn).toHaveBeenCalledWith(expect.stringContaining('2 malformed description'));
   });
 });
