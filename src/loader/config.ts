@@ -68,7 +68,7 @@ function flattenGroupedConfig(config: LoadConfig): FlatConfig & { cookies?: stri
  * Accepts both grouped (LoadConfig) and flat (FlatConfig) forms.
  * Handles v3 key mapping, type coercion, and defaults.
  */
-export function normalizeConfig(
+export function buildLoaderConfig(
   steamId: unknown,
   appId: string | number,
   contextId: string | number,
@@ -111,6 +111,21 @@ export function normalizeConfig(
 
   // FR05: Custom endpoint clears API keys
   if (config.customEndpoint) {
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(config.customEndpoint);
+    } catch {
+      throw new Error(`Invalid customEndpoint URL: ${config.customEndpoint}`);
+    }
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      throw new Error(`Unsupported protocol "${parsedUrl.protocol}" in customEndpoint — only http: and https: are allowed`);
+    }
+
+    // Auto-route: ensure 'custom' provider is in priority, remove 'community'
+    if (!config.endpointPriority.includes('custom')) {
+      config.endpointPriority = ['custom', ...config.endpointPriority.filter(p => p !== 'community')];
+    }
+
     config.steamApisKey = undefined;
     config.steamSupplyKey = undefined;
   }
@@ -118,10 +133,14 @@ export function normalizeConfig(
   return config;
 }
 
+export const normalizeConfig = buildLoaderConfig;
+
+const CACHE_VERSION = 1;
+
 /**
  * Build cache key from config (FR55).
  */
 export function buildCacheKey(config: LoaderConfig): string {
   const fieldsHash = config.fields ? [...config.fields].sort().join(',') : 'all';
-  return `${config.steamId}|${config.appId}|${config.contextId}|${config.language}|${config.tradableOnly}|${fieldsHash}`;
+  return `v${CACHE_VERSION}|${config.steamId}|${config.appId}|${config.contextId}|${config.language}|${config.tradableOnly}|${fieldsHash}`;
 }

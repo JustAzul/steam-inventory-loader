@@ -3,6 +3,7 @@ import { HttpProxyAgent, HttpsProxyAgent } from 'hpagent';
 import type { IHttpClient, HttpRequest, HttpResponse } from '../types.js';
 
 const DEFAULT_TIMEOUT = 40_000; // FR37: 40s
+const MAX_RESPONSE_SIZE = 50 * 1024 * 1024;
 
 /**
  * Axios-based HTTP client implementation (FR33).
@@ -15,6 +16,8 @@ export class AxiosHttpClient implements IHttpClient {
     this.client = axios.create({
       timeout: DEFAULT_TIMEOUT,
       maxRedirects: 0,
+      maxContentLength: MAX_RESPONSE_SIZE,
+      maxBodyLength: MAX_RESPONSE_SIZE,
       validateStatus: () => true, // Don't throw on non-2xx
     });
   }

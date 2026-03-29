@@ -15,9 +15,7 @@ export class SteamCommunityProvider extends BaseInventoryProvider {
   }
 
   buildRequest(params: PageRequest, config: LoaderConfig): HttpRequest {
-    const url = config.customEndpoint
-      ? `${config.customEndpoint}/${params.steamId}/${params.appId}/${params.contextId}`
-      : `https://steamcommunity.com/inventory/${params.steamId}/${params.appId}/${params.contextId}`;
+    const url = `https://steamcommunity.com/inventory/${params.steamId}/${params.appId}/${params.contextId}`;
 
     const queryParams: Record<string, string | number> = {
       l: params.language,

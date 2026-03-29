@@ -17,6 +17,7 @@ export interface ProcessPageData {
     fields?: readonly Fields[];
     contextId: number;
     appId: number;
+    skipStrategy?: boolean;
   };
 }
 
@@ -40,5 +41,6 @@ export function processPage(data: ProcessPageData): ItemDetails[] {
     fields: data.config.fields,
     strategy,
     contextId: data.config.contextId,
+    skipStrategy: data.config.skipStrategy,
   });
 }

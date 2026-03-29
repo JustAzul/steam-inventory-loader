@@ -7,6 +7,7 @@ import { selectFields } from './field-selector.js';
 export interface ProcessAssetsConfig {
   tradableOnly: boolean;
   fields?: readonly Fields[];
+  skipStrategy?: boolean;
   strategy: IStrategy;
   contextId: number;
 }
@@ -31,7 +32,7 @@ export function processAssets(
     }
 
     let item = buildItem(asset, desc!, config.contextId);
-    item = config.strategy.apply(item);
+    if (!config.skipStrategy) item = config.strategy.apply(item);
     item = config.fields ? selectFields(item, config.fields) as ItemDetails : selectFields(item);
     items.push(item);
   }

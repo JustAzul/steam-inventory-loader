@@ -3,7 +3,8 @@
  * Lazily initializes the pool — spawn overhead (~80ms) is hidden
  * behind the page-2 network fetch (200ms-4s).
  */
-import { resolve } from 'path';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { cpus } from 'os';
 import type { IWorkerPool } from '../types.js';
 
@@ -24,10 +25,10 @@ export class PiscinaWorkerPool implements IWorkerPool {
   constructor(options?: WorkerPoolOptions) {
     const cpuCount = cpus().length;
     this.maxWorkers = Math.max(1, Math.min(options?.maxWorkers ?? cpuCount - 1, 8));
-    this.filename = options?.filename ?? resolve(
-      __dirname,
-      'process-page-task.js',
-    );
+    const base = typeof __dirname !== 'undefined'
+      ? __dirname
+      : dirname(fileURLToPath(import.meta.url));
+    this.filename = options?.filename ?? resolve(base, 'process-page-task.js');
   }
 
   private async getPool(): Promise<any> {
