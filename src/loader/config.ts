@@ -64,9 +64,10 @@ function flattenGroupedConfig(config: LoadConfig): FlatConfig & { cookies?: stri
 }
 
 /**
- * Normalize user config into internal LoaderConfig.
+ * Build internal LoaderConfig from user input.
  * Accepts both grouped (LoadConfig) and flat (FlatConfig) forms.
- * Handles v3 key mapping, type coercion, and defaults.
+ * Phase 1: flatten, coerce types, apply defaults.
+ * Phase 2: apply business rules (FR38 paid API delay, FR05 custom endpoint clears keys).
  */
 export function buildLoaderConfig(
   steamId: unknown,
@@ -133,6 +134,7 @@ export function buildLoaderConfig(
   return config;
 }
 
+/** @deprecated Use buildLoaderConfig instead. */
 export const normalizeConfig = buildLoaderConfig;
 
 const CACHE_VERSION = 1;

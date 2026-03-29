@@ -68,6 +68,10 @@ export class Loader {
     );
   }
 
+  /**
+   * v3 compat static method: Loader.Loader(steamID64, appID, contextID, config)
+   * Uses shared cache — multiple calls share the same cache.
+   */
   static async Loader(
     steamId: unknown, appId: string | number, contextId: string | number,
     config?: OptionalConfig & { fields?: undefined },
@@ -95,6 +99,7 @@ export class Loader {
     strategyRegistry.register(appId, contextId, strategy);
   }
 
+  /** Register a custom provider (FR67). */
   static registerProvider(name: string, provider: IInventoryProvider): void {
     chainRegisterProvider(name, provider);
   }
@@ -108,12 +113,17 @@ export class Loader {
     sharedCache = cache;
   }
 
+  /** Reset all per-provider rate limiters. For test isolation. */
   static resetRateLimiters(): void {
     resetRateLimiters();
   }
 
   // ─── Public API ──────────────────────────────────────────────────────────
 
+  /**
+   * Load a Steam inventory.
+   * When `fields` is specified, the returned items are narrowed to only those fields.
+   */
   async load(
     steamId: unknown, appId: string | number, contextId: string | number,
     userConfig?: OptionalConfig & { fields?: undefined },
@@ -137,6 +147,13 @@ export class Loader {
     }
   }
 
+  /**
+   * Stream a Steam inventory page-by-page as an async iterable.
+   * Yields ItemDetails[] per page — consumers process incrementally.
+   * Throws SteamError on failures (consumers see partial results via items already consumed).
+   * Does not write to cache (streaming avoids holding all items in memory).
+   * When `fields` is specified, yielded items are narrowed to only those fields.
+   */
   loadStream(
     steamId: unknown, appId: string | number, contextId: string | number,
     userConfig?: OptionalConfig & { fields?: undefined },
