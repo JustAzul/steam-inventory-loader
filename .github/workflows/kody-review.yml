@@ -1,0 +1,90 @@
+name: Kody Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: kody-ephemeral
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  kody-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::247988977671:role/github-actions-kody
+          aws-region: us-east-2
+
+      - name: Start Kody infrastructure
+        id: start
+        run: |
+          STATE=$(aws ec2 describe-instances --instance-ids i-0a5065955987011c3 \
+            --query 'Reservations[0].Instances[0].State.Name' --output text)
+
+          if [ "$STATE" = "stopped" ]; then
+            echo "Starting EC2 instance..."
+            aws ec2 start-instances --instance-ids i-0a5065955987011c3
+            aws ec2 wait instance-status-ok --instance-ids i-0a5065955987011c3
+            echo "started=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "EC2 already in state: $STATE"
+            echo "started=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          DESIRED=$(aws ecs describe-services --cluster kody --services kody \
+            --query 'services[0].desiredCount' --output text)
+
+          if [ "$DESIRED" = "0" ]; then
+            echo "Scaling ECS service to 1..."
+            aws ecs update-service --cluster kody --service kody --desired-count 1 > /dev/null
+            echo "scaled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Service already at desired count: $DESIRED"
+            echo "scaled=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Wait for Kody healthy
+        run: |
+          echo "Waiting for ECS tasks to start..."
+          for i in $(seq 1 30); do
+            RUNNING=$(aws ecs describe-services --cluster kody --services kody \
+              --query 'services[0].runningCount' --output text)
+            if [ "$RUNNING" = "1" ]; then
+              echo "Kody is running! Waiting 60s for containers to initialize..."
+              sleep 60
+              exit 0
+            fi
+            echo "Attempt $i/30: running=$RUNNING, waiting 10s..."
+            sleep 10
+          done
+          echo "::warning::Kody did not reach healthy state in 5 minutes"
+
+      - name: Wait for review completion
+        run: |
+          echo "Waiting 5 minutes for GitHub webhook retry + Kody review..."
+          sleep 300
+
+      - name: Shutdown Kody infrastructure
+        if: always()
+        run: |
+          echo "Scaling ECS service to 0..."
+          aws ecs update-service --cluster kody --service kody --desired-count 0 > /dev/null || true
+
+          echo "Waiting for tasks to drain..."
+          for i in $(seq 1 12); do
+            RUNNING=$(aws ecs describe-services --cluster kody --services kody \
+              --query 'services[0].runningCount' --output text 2>/dev/null || echo "0")
+            if [ "$RUNNING" = "0" ]; then break; fi
+            sleep 10
+          done
+
+          echo "Stopping EC2 instance..."
+          aws ec2 stop-instances --instance-ids i-0a5065955987011c3 || true
