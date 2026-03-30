@@ -7,6 +7,7 @@ on:
 permissions:
   id-token: write
   contents: read
+  pull-requests: write
 
 jobs:
   kody-review:
@@ -80,7 +81,28 @@ jobs:
           done
           echo "::warning::Kody did not reach healthy state in 5 minutes"
 
-      - name: Wait for review
+      - name: Trigger Kody review
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          echo "Waiting 5 minutes for GitHub webhook retry + Kody review..."
-          sleep 300
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --body "@kody start-review"
+
+      - name: Wait for review
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Waiting for Kody to post review..."
+          for i in $(seq 1 30); do
+            COMMENTS=$(gh pr view ${{ github.event.pull_request.number }} \
+              --repo ${{ github.repository }} \
+              --json comments --jq '[.comments[] | select(.author.login == "kodus-review")] | length')
+            if [ "$COMMENTS" -gt 0 ]; then
+              echo "Kody review found after $((i * 10)) seconds!"
+              exit 0
+            fi
+            echo "Attempt $i/30: no review yet, waiting 10s..."
+            sleep 10
+          done
+          echo "::warning::Kody did not post a review within 5 minutes"
