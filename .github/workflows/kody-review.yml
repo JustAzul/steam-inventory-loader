@@ -1,0 +1,86 @@
+name: Kody Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  kody-review:
+    if: github.event.pull_request.user.login == 'JustAzul'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.KODY_AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.KODY_AWS_REGION }}
+
+      - name: Ensure Kody infrastructure is running
+        env:
+          EC2_TAG: ${{ secrets.KODY_EC2_TAG }}
+          CLUSTER: ${{ secrets.KODY_ECS_CLUSTER }}
+          SERVICE: ${{ secrets.KODY_ECS_SERVICE }}
+        run: |
+          TAG_KEY="${EC2_TAG%%=*}"
+          TAG_VALUE="${EC2_TAG##*=}"
+
+          INSTANCE_ID=$(aws ec2 describe-instances \
+            --filters "Name=tag:${TAG_KEY},Values=${TAG_VALUE}" "Name=instance-state-name,Values=stopped,running,pending" \
+            --query 'Reservations[0].Instances[0].InstanceId' --output text)
+
+          if [ "$INSTANCE_ID" = "None" ] || [ -z "$INSTANCE_ID" ]; then
+            echo "::error::No EC2 instance found"
+            exit 1
+          fi
+
+          STATE=$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" \
+            --query 'Reservations[0].Instances[0].State.Name' --output text)
+
+          if [ "$STATE" = "stopped" ]; then
+            echo "Starting EC2 instance..."
+            aws ec2 start-instances --instance-ids "$INSTANCE_ID"
+            aws ec2 wait instance-status-ok --instance-ids "$INSTANCE_ID"
+          elif [ "$STATE" = "running" ]; then
+            echo "EC2 already running"
+          else
+            echo "EC2 in state: $STATE, waiting..."
+            aws ec2 wait instance-status-ok --instance-ids "$INSTANCE_ID"
+          fi
+
+          DESIRED=$(aws ecs describe-services --cluster "$CLUSTER" --services "$SERVICE" \
+            --query 'services[0].desiredCount' --output text)
+
+          if [ "$DESIRED" = "0" ]; then
+            echo "Scaling ECS service to 1..."
+            aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --desired-count 1 > /dev/null
+          else
+            echo "ECS service already at desired count: $DESIRED"
+          fi
+
+      - name: Wait for Kody healthy
+        env:
+          CLUSTER: ${{ secrets.KODY_ECS_CLUSTER }}
+          SERVICE: ${{ secrets.KODY_ECS_SERVICE }}
+        run: |
+          for i in $(seq 1 30); do
+            RUNNING=$(aws ecs describe-services --cluster "$CLUSTER" --services "$SERVICE" \
+              --query 'services[0].runningCount' --output text)
+            if [ "$RUNNING" = "1" ]; then
+              echo "Kody is running! Waiting 60s for containers to initialize..."
+              sleep 60
+              exit 0
+            fi
+            echo "Attempt $i/30: running=$RUNNING, waiting 10s..."
+            sleep 10
+          done
+          echo "::warning::Kody did not reach healthy state in 5 minutes"
+
+      - name: Wait for review
+        run: |
+          echo "Waiting 5 minutes for GitHub webhook retry + Kody review..."
+          sleep 300

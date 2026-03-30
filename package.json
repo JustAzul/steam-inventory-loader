@@ -1,0 +1,55 @@
+{
+  "name": "azul-steam-inventory-loader",
+  "version": "3.8.1",
+  "description": "a modern steam inventory loader with built-in error retry, request delay, proxy url support, and memory-friendly.",
+  "main": "index.js",
+  "keywords": [
+    "azul",
+    "justazul",
+    "justazul.xyz",
+    "justazul.com"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prebuild": "rimraf ./dist",
+    "prettier": "prettier --config .prettierrc 'src/**/*.ts' --write",
+    "test": "npm run build && NODE_ENV=development node ./tests/azul-raw.js --expose-gc"
+  },
+  "author": "https://justazul.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JustAzul/steam-inventory-loader.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JustAzul/steam-inventory-loader/issues"
+  },
+  "homepage": "https://github.com/JustAzul/steam-inventory-loader",
+  "license": "ISC",
+  "dependencies": {
+    "agentkeepalive": "^4.2.1",
+    "axios": "^1.7.8",
+    "hpagent": "^1.1.0",
+    "tough-cookie": "^4.1.3"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^16.18.2",
+    "@types/steamid": "^1.1.0",
+    "@types/tough-cookie": "^4.0.1",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/parser": "^4.33.0",
+    "azul-tools": "^1.9.20",
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-import-resolver-typescript": "^2.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.7.1",
+    "rimraf": "^3.0.2",
+    "steamcommunity": "^3.43.1",
+    "typescript": "^4.5.4"
+  }
+}
