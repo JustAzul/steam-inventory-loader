@@ -10,6 +10,7 @@ export class CS2Strategy implements IStrategy {
     if (!item.owner_descriptions) return item;
 
     for (const desc of item.owner_descriptions) {
+      if (!desc.value) continue;
       const match = desc.value.match(TRADABLE_AFTER_PATTERN);
       if (match) {
         const dateStr = `${match[1]} ${match[2]} GMT`;

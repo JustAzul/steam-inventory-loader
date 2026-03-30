@@ -50,10 +50,12 @@ export class PiscinaWorkerPool implements IWorkerPool {
   }
 
   async destroy(): Promise<void> {
-    if (this.pool) {
-      await this.pool.destroy();
-      this.pool = null;
-    }
+    const pending = this.poolPromise;
     this.poolPromise = null;
+    if (pending) {
+      const pool = await pending;
+      await pool.destroy();
+    }
+    this.pool = null;
   }
 }

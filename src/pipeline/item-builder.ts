@@ -28,7 +28,7 @@ export function buildItem(asset: ItemAsset, desc: ItemDescription, contextId: nu
     classid: asset.classid,
     commodity: Boolean(desc.commodity),
     contextid: String(contextId),
-    currency: desc.currency != null ? null : null, // always null post-processing (FR17)
+    currency: null, // always null post-processing (FR17)
     descriptions: desc.descriptions ?? [],
     fraudwarnings: desc.fraudwarnings ?? [],
     icon_url: desc.icon_url ?? '',

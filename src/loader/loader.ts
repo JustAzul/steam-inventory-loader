@@ -280,16 +280,11 @@ export class Loader {
       } catch (err) {
         const steamErr = toSteamError(err);
         if (fallbackAllowed && chain[i].shouldFallback(steamErr)) {
-          // Cursor-compatible fallback: resume from last cursor if next provider is compatible
-          if (opts.supportsCursorResume && i + 1 < chain.length
-            && isCursorCompatible(chain[i], chain[i + 1]) && orchestrator.lastCursor) {
-            cursor = orchestrator.lastCursor;
-          } else {
-            cursor = null;
-            if (hasYielded) {
-              yield { batch: [], resetInventory: true };
-              hasYielded = false;
-            }
+          const fb = this.resolveFallbackCursor(chain, i, orchestrator, hasYielded, opts);
+          cursor = fb.cursor;
+          if (fb.resetInventory) {
+            yield { batch: [], resetInventory: true };
+            hasYielded = false;
           }
           lastError = steamErr;
           continue;
@@ -299,6 +294,20 @@ export class Loader {
     }
 
     throw lastError ?? new SteamError(SteamErrorType.RateLimited, 'All providers rate limited');
+  }
+
+  private resolveFallbackCursor(
+    chain: IInventoryProvider[],
+    i: number,
+    orchestrator: PaginationOrchestrator,
+    hasYielded: boolean,
+    opts: { supportsCursorResume: boolean },
+  ): { cursor: string | null; resetInventory: boolean } {
+    if (opts.supportsCursorResume && i + 1 < chain.length
+      && isCursorCompatible(chain[i], chain[i + 1]) && orchestrator.lastCursor) {
+      return { cursor: orchestrator.lastCursor, resetInventory: false };
+    }
+    return { cursor: null, resetInventory: hasYielded };
   }
 
   private checkCache(config: LoaderConfig): LoaderResponse | undefined {

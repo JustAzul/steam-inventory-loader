@@ -53,6 +53,18 @@ describe('CS2Strategy', () => {
     const result = strategy.apply(item);
     expect(result.cache_expiration).toBeUndefined();
   });
+
+  it('skips owner_descriptions entries with missing value', () => {
+    const item = makeItem({
+      owner_descriptions: [
+        { value: undefined as unknown as string },
+        { value: '' },
+        { value: 'Tradable After Jan 01, 2027 (00:00:00) GMT' },
+      ],
+    });
+    const result = strategy.apply(item);
+    expect(result.cache_expiration).toBe('2027-01-01T00:00:00.000Z');
+  });
 });
 
 describe('CommunityStrategy', () => {

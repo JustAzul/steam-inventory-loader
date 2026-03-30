@@ -8,6 +8,8 @@ import { processAssets } from '../pipeline/process-assets.js';
 import { StrategyRegistry } from '../strategies/registry.js';
 import type { ItemAsset, ItemDescription, ItemDetails, Fields } from '../types.js';
 
+const registry = new StrategyRegistry();
+
 export interface ProcessPageData {
   assets: ItemAsset[];
   descriptions: ItemDescription[];
@@ -34,7 +36,7 @@ export function processPage(data: ProcessPageData): ItemDetails[] {
   }
   descStore.addPage(data.descriptions);
 
-  const strategy = new StrategyRegistry().get(data.config.appId, data.config.contextId);
+  const strategy = registry.get(data.config.appId, data.config.contextId);
 
   return processAssets(data.assets, descStore, {
     tradableOnly: data.config.tradableOnly,
