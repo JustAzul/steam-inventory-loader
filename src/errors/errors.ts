@@ -18,8 +18,8 @@ export class SteamError extends Error {
   readonly eresult?: number;
   readonly statusCode?: number;
 
-  constructor(type: SteamErrorType, message?: string, eresult?: number) {
-    super(message ?? DEFAULT_MESSAGES[type]);
+  constructor(type: SteamErrorType, message?: string, eresult?: number, cause?: unknown) {
+    super(message ?? DEFAULT_MESSAGES[type], cause !== undefined ? { cause } : undefined);
     this.type = type;
     this.eresult = eresult;
     this.name = 'SteamError';

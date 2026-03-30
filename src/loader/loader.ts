@@ -270,7 +270,7 @@ export class Loader {
 
     for (let i = 0; i < chain.length; i++) {
       const fallbackAllowed = opts.canFallback(i, hasYielded);
-      const orchestrator = this.createOrchestrator(chain[i], config, parseConfig, fallbackAllowed, pool, customStrategy);
+      const orchestrator = this.createOrchestrator(chain[i], config, parseConfig, { canFallback: fallbackAllowed, pool, customStrategy });
       try {
         for await (const batch of orchestrator.streamPages(cursor)) {
           yield { batch, resetInventory: false };
@@ -338,19 +338,17 @@ export class Loader {
     provider: IInventoryProvider,
     config: LoaderConfig,
     parseConfig: ParseConfig,
-    canFallback: boolean,
-    pool: IWorkerPool | null,
-    customStrategy: boolean,
+    opts: { canFallback: boolean; pool: IWorkerPool | null; customStrategy: boolean },
   ): PaginationOrchestrator {
     return new PaginationOrchestrator({
       http: this.http,
       provider,
       config,
       parseConfig,
-      canFallback,
-      pool,
+      canFallback: opts.canFallback,
+      pool: opts.pool,
       activeLoadsGetter: () => Loader.activeLoads,
-      customStrategy,
+      customStrategy: opts.customStrategy,
     });
   }
 }
@@ -363,5 +361,6 @@ function errorResponse(error: SteamErrorInfo | SteamError): LoaderResponse {
 function toSteamError(err: unknown): SteamError {
   return err instanceof SteamError ? err
     : new SteamError(SteamErrorType.NetworkError,
-      err instanceof Error ? err.message : undefined);
+      err instanceof Error ? err.message : undefined,
+      undefined, err);
 }

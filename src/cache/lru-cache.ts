@@ -33,7 +33,7 @@ const DEFAULT_MAX_SIZE = 512 * 1024 * 1024;
  * inventories (~1.6MB each). This prevents large inventories from starving
  * the cache of smaller ones.
  */
-export class LruCacheStore<K extends string | number, V extends object> implements ICacheStore<K, V> {
+export class LruCacheStore<K extends string | number, V extends { count?: number; inventory?: unknown[] }> implements ICacheStore<K, V> {
   private cache: LRUCache<K, V>;
 
   constructor(options: LruCacheOptions = {}) {
@@ -42,9 +42,7 @@ export class LruCacheStore<K extends string | number, V extends object> implemen
       ttl: options.ttl ?? 30_000,
       maxSize: options.maxSize ?? DEFAULT_MAX_SIZE,
       sizeCalculation: (value: V) => {
-        // Estimate size from inventory item count
-        const asInventory = value as unknown as { count?: number; inventory?: unknown[] };
-        const itemCount = asInventory.count ?? asInventory.inventory?.length ?? 1;
+        const itemCount = value.count ?? value.inventory?.length ?? 1;
         return itemCount * ESTIMATED_BYTES_PER_ITEM;
       },
     });
