@@ -3,6 +3,8 @@ name: Kody Code Review
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
 
 permissions:
   id-token: write
@@ -11,7 +13,9 @@ permissions:
 
 jobs:
   kody-review:
-    if: github.event.pull_request.user.login == 'JustAzul'
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.user.login == 'JustAzul') ||
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request && github.event.comment.user.login == 'JustAzul' && contains(github.event.comment.body, '@kody'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -81,11 +85,23 @@ jobs:
           done
           echo "::warning::Kody did not reach healthy state in 5 minutes"
 
-      - name: Trigger Kody review
+      - name: Resolve PR number
+        id: pr
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} \
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "number=${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger Kody review
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment ${{ steps.pr.outputs.number }} \
             --repo ${{ github.repository }} \
             --body "@kody start-review"
 
@@ -95,7 +111,7 @@ jobs:
         run: |
           echo "Waiting for Kody to post review..."
           for i in $(seq 1 30); do
-            COMMENTS=$(gh pr view ${{ github.event.pull_request.number }} \
+            COMMENTS=$(gh pr view ${{ steps.pr.outputs.number }} \
               --repo ${{ github.repository }} \
               --json comments --jq '[.comments[] | select(.author.login == "kodus-review")] | length')
             if [ "$COMMENTS" -gt 0 ]; then
