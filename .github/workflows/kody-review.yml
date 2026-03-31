@@ -26,6 +26,7 @@ jobs:
           aws-region: ${{ secrets.KODY_AWS_REGION }}
 
       - name: Ensure Kody infrastructure is running
+        id: infra
         env:
           EC2_TAG: ${{ secrets.KODY_EC2_TAG }}
           CLUSTER: ${{ secrets.KODY_ECS_CLUSTER }}
@@ -42,6 +43,8 @@ jobs:
             echo "::error::No EC2 instance found"
             exit 1
           fi
+
+          echo "instance_id=$INSTANCE_ID" >> "$GITHUB_OUTPUT"
 
           STATE=$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" \
             --query 'Reservations[0].Instances[0].State.Name' --output text)
@@ -66,6 +69,13 @@ jobs:
           else
             echo "ECS service already at desired count: $DESIRED"
           fi
+
+      - name: Tag EC2 with activity timestamp
+        env:
+          INSTANCE_ID: ${{ steps.infra.outputs.instance_id }}
+        run: |
+          aws ec2 create-tags --resources "$INSTANCE_ID" \
+            --tags "Key=kody:last-activity,Value=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
       - name: Wait for Kody healthy
         env:
@@ -109,16 +119,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          echo "Waiting for Kody to post review..."
+          echo "Waiting for Kody to post review findings..."
           for i in $(seq 1 30); do
-            COMMENTS=$(gh pr view ${{ steps.pr.outputs.number }} \
+            COUNT=$(gh pr view ${{ steps.pr.outputs.number }} \
               --repo ${{ github.repository }} \
               --json comments --jq '[.comments[] | select(.author.login == "kodus-review")] | length')
-            if [ "$COMMENTS" -gt 0 ]; then
-              echo "Kody review found after $((i * 10)) seconds!"
+            if [ "$COUNT" -gt 1 ]; then
+              echo "Kody review findings found after $((i * 10)) seconds! ($COUNT comments)"
               exit 0
             fi
-            echo "Attempt $i/30: no review yet, waiting 10s..."
+            echo "Attempt $i/30: $COUNT kody comment(s), waiting 10s..."
             sleep 10
           done
-          echo "::warning::Kody did not post a review within 5 minutes"
+          echo "::warning::Kody did not post review findings within 5 minutes"
